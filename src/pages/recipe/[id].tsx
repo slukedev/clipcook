@@ -28,6 +28,8 @@ function hexToRgb(hex: string) {
         : null;
 }
 
+let accentColor: string;
+
 export function Home(props: any) {
     const user = useAuthUser();
     const [step, setStep] = useState(1);
@@ -212,6 +214,8 @@ export function Home(props: any) {
             const generatedTheme = await themeFromImage(imageElement);
             let theme = generatedTheme.schemes.dark;
 
+            accentColor = hexFromArgb(theme.primary);
+
             Object.keys(Object.entries(theme)[0][1]).forEach((prop: any) => {
                 const color = Object.entries(theme)[0][1][prop];
                 let colorCssName = prop.replace(/[^a-z]/g, function (letter: string) {
@@ -257,7 +261,7 @@ export function Home(props: any) {
                 <meta name="description" content="A recipe clipper, based on the Material You design system!" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <link rel="icon" href="/favicon.ico" />
-                <meta name="theme-color" content="#D0BCFF" />
+                <meta name="theme-color" content={accentColor || `#D0BCFF`} />
             </Head>
 
             <Main pageName="recipe" photoUrl={user.photoURL || undefined} useSvgLogo={true}>
