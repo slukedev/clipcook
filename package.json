@@ -1,0 +1,38 @@
+{
+  "name": "clipcook",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@material/material-color-utilities": "^0.2.6",
+    "@types/node": "18.15.5",
+    "@types/react": "18.0.28",
+    "@types/react-dom": "18.0.11",
+    "cheerio": "^1.0.0-rc.12",
+    "convert-units": "^2.3.4",
+    "eslint": "8.36.0",
+    "eslint-config-next": "13.2.4",
+    "firebase": "^9.19.1",
+    "firebase-admin": "^11.6.0",
+    "framer-motion": "^10.9.2",
+    "js-quantities": "^1.7.6",
+    "next": "13.2.4",
+    "next-firebase-auth": "^1.0.0-canary.19",
+    "next-pwa": "^5.6.0",
+    "npm": "^9.6.2",
+    "parse-iso-duration": "^1.1.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "sass": "^1.59.3",
+    "typescript": "5.0.2"
+  },
+  "devDependencies": {
+    "@types/convert-units": "^2.3.5",
+    "@types/js-quantities": "^1.6.3"
+  }
+}

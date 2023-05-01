@@ -1,0 +1,631 @@
+@import "./theme/typography.module.scss";
+
+.main {
+    padding-top: 64px;
+
+    &.index {
+        h1 {
+            @include headline-large;
+            margin: 16px;
+        }
+
+        &>div:first-of-type {
+            margin: 16px;
+            width: calc(100% - 32px);
+        }
+
+        & .loading {
+            display: flex !important;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: center;
+            align-items: center;
+            justify-content: center;
+
+            &,
+            &>* {
+                text-align: center;
+                display: block;
+                margin: 0 auto;
+            }
+
+            & h1 {
+                @include headline-large;
+                margin-bottom: 16px;
+            }
+
+            & p {
+                @include body-large;
+                margin-bottom: 16px;
+            }
+        }
+
+        & .couldntFind {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: center;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+
+            & * {
+                margin: 16px;
+            }
+        }
+
+        & .clipping {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: center;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 100px);
+
+            &>* {
+                margin: 16px;
+            }
+
+            & p {
+                @include body-large;
+            }
+
+            & h1 {
+                @include headline-large;
+            }
+
+            & svg {
+                height: 250px;
+                width: auto;
+
+                & path {
+                    stroke: var(--on-surface-variant);
+                    stroke-dasharray: 50;
+                    animation: dash 5s linear infinite;
+
+                    @keyframes dash {
+                        to {
+                            stroke-dashoffset: 1000;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    &.recipe {
+        padding: 0;
+        padding-top: 64px;
+
+        & .loading {
+            display: flex !important;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: center;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 64px);
+
+            &,
+            &>* {
+                text-align: center;
+                display: block;
+                margin: 0 auto;
+            }
+
+            & h1 {
+                @include headline-large;
+                margin-bottom: 16px;
+            }
+
+            & p {
+                @include body-large;
+                margin-bottom: 16px;
+            }
+        }
+
+        & .header {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-content: flex-start;
+            align-items: flex-start;
+            justify-content: space-between;
+
+            & h1 {
+                @include headline-large;
+            }
+
+            & img {
+                height: 200px;
+            }
+
+            & p {
+                @include body-large;
+            }
+
+            &>div:not(.image) {
+                padding: 16px;
+                padding-top: 0;
+                width: 75%;
+            }
+
+            & .image {
+                display: flex;
+                flex-direction: column;
+                flex-wrap: nowrap;
+                align-content: center;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                width: 50%;
+                height: 350px;
+                max-width: 500px;
+
+                &>img {
+                    width: 100%;
+                    height: auto;
+                }
+            }
+
+            & .author {
+                @include body-large;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-content: center;
+                align-items: center;
+                justify-content: flex-start;
+                margin-bottom: 16px;
+
+                &>*:not(:last-child) {
+                    margin-right: 8px;
+                }
+
+                & img {
+                    width: 35px;
+                    height: 35px;
+                    border-radius: 50%;
+                }
+            }
+
+            & .otherinfo {
+                & .rating {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-content: center;
+                    align-items: center;
+                    justify-content: flex-start;
+                    color: var(--on-surface-variant);
+                    @include body-small;
+
+                    & span {
+                        margin-right: 4px;
+                        font-size: 20px;
+
+                        &[fill*="1"] {
+                            color: var(--primary);
+                        }
+
+                        &.recipeRatingCount {
+                            @include body-large;
+                            margin-left: 8px;
+                        }
+                    }
+                }
+            }
+
+            & .externalInfo {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-content: flex-start;
+                align-items: flex-start;
+                justify-content: flex-start;
+                gap: 8px;
+                margin-top: 16px;
+            }
+
+            & .actions {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-content: flex-start;
+                align-items: flex-start;
+                justify-content: flex-start;
+                gap: 8px;
+                margin-top: 16px;
+
+                & .favButton {
+                    height: 40px;
+                    border-radius: 24px;
+                    border: 1px solid var(--outline);
+                    background: var(--surface);
+                    padding: 0 24px;
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-content: center;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    color: var(--on-surface);
+
+                    &.active {
+                        & span {
+                            animation: activate 0.4s ease-in-out;
+                            animation-fill-mode: forwards;
+
+                            @keyframes activate {
+                                0% {
+                                    transform: scale(0.75) rotate(10deg);
+                                }
+
+                                50% {
+                                    transform: scale(1.5) rotate(-10deg);
+                                }
+
+                                51% {
+                                    color: var(--primary);
+                                }
+
+                                100% {
+                                    transform: scale(1);
+                                    color: var(--primary);
+                                    font-variation-settings:
+                                        'FILL' 1,
+                                        'wght' 400,
+                                        'GRAD' 0,
+                                        'opsz' 48;
+                                }
+                            }
+
+                            @keyframes activateButFancy {}
+                        }
+                    }
+
+                    & span {
+                        transition: transform 0.2s ease-in-out;
+                    }
+
+                    &:hover {
+                        background: var(--surface-variant);
+
+                        & span {
+                            transform: scale(1.1);
+                        }
+                    }
+
+                    &:active {
+                        & span {
+                            transform: scale(0.75) rotate(10deg);
+                        }
+                    }
+                }
+            }
+        }
+
+        & .container {
+            width: calc(100% - 64px);
+            margin: 16px;
+            background: var(--surface);
+            outline: 1px solid var(--outline);
+            border-radius: 8px;
+            padding: 16px;
+
+            & .title {
+                @include headline-medium;
+                margin-bottom: 16px;
+                margin-top: 0;
+            }
+
+            & .ingredients {
+                background: var(--surface);
+
+                & .ingredient {
+                    height: 56px;
+                    padding: 8px 16px;
+                    padding-right: 24px;
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-content: center;
+                    align-items: center;
+                    justify-content: space-between;
+                    cursor: pointer;
+
+                    & span {
+                        color: var(--on-surface);
+                        @include body-large;
+                        padding-right: 16px;
+                    }
+                }
+            }
+
+            & .direction {
+                //This is a span
+                @include body-large;
+                margin-bottom: 16px;
+                color: var(--on-surface);
+                display: block;
+            }
+
+            & .directionNavigator {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-content: flex-start;
+                align-items: flex-start;
+                justify-content: space-between;
+                margin-top: 16px;
+
+                & h2 {
+                    @include body-large;
+                    text-align: center;
+                    margin-bottom: 0;
+                }
+            }
+
+            & .progress {
+                width: 100%;
+                height: 4px;
+                border-radius: 10px;
+                overflow: hidden;
+                background-image: url("data:image/svg+xml,%3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' enable-background='new 0 0 5 2' xml:space='preserve' viewBox='0 0 5 2' preserveAspectRatio='none slice'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23e6e6e6'/%3E%3C/svg%3E");
+                background-repeat: repeat-x;
+                background-size: 10px 4px;
+                background-position: 0 0;
+                animation: progress 2s linear infinite;
+
+                @keyframes progress {
+                    0% {
+                        background-position: 100px 0;
+                    }
+
+                    100% {
+                        background-position: 0 0;
+                    }
+                }
+
+                & .progressbar {
+                    height: 4px;
+                    background: var(--primary);
+                    transition: width 0.25s cubic-bezier(.4, 0, .6, 1);
+                }
+            }
+
+            & .nutrition {
+                &>* {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    align-content: center;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px;
+
+                    &:not(:last-child) {
+                        border-bottom: 1px solid var(--outline);
+                    }
+
+                    & h2 {
+                        @include body-large;
+                    }
+                }
+            }
+        }
+
+        & .otherImages {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 16px;
+
+            & img {
+                max-width: calc(100vw + 64px + 32px);
+            }
+        }
+    }
+
+    &.continue {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-content: center;
+        justify-content: center;
+        align-items: center;
+        height: calc(100vh - 100px);
+
+        & h1 {
+            @include display-large;
+        }
+    }
+
+    &.pageNotFound {
+        display: flex !important;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-content: center;
+        align-items: center;
+        justify-content: center;
+        height: calc(100vh - 100px);
+
+        &,
+        &>* {
+            text-align: center;
+            display: block;
+            margin: 0 auto;
+        }
+
+        & h1 {
+            @include headline-large;
+            margin-bottom: 16px;
+        }
+
+        & p {
+            @include body-large;
+            margin-bottom: 16px;
+        }
+    }
+
+}
+
+.chip {
+    border: 1px solid var(--outline);
+    background: var(--surface);
+    box-shadow: var(--elevation-1);
+    color: var(--on-surface);
+    @include label-large;
+    height: 32px;
+    border-radius: 8px;
+    padding: 0 8px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    align-items: center;
+    justify-content: flex-start;
+    width: fit-content;
+
+    & .icon {
+        color: var(--primary);
+        padding-right: 8px;
+    }
+}
+
+.fab {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    background: var(--primary-container);
+    width: 56px;
+    height: 56px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    cursor: pointer;
+    z-index: 90000;
+    overflow: hidden;
+
+    &>div {
+        width: 100%;
+        height: 100%;
+
+        & button {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-content: center;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            color: var(--on-primary-container);
+        }
+    }
+
+    &::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--on-primary-container);
+        opacity: 0;
+        z-index: -1;
+    }
+
+    &:hover {
+        &::after {
+            opacity: 0.12;
+        }
+    }
+
+    &:active,
+    &:focus {
+        &::after {
+            opacity: 0.16;
+        }
+    }
+}
+
+.sheet {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 90009;
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 16px;
+    max-width: 300px;
+    width: calc(100% - 80px);
+    max-height: 400px;
+    height: calc(100% - 130px);
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-content: stretch;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 16px;
+    overflow: auto;
+    overflow-x: hidden;
+
+    & .top {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-content: center;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    &>*:not(.top) {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-content: stretch;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 16px;
+
+        & .initialValue {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: stretch;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 16px;
+            width: 100% !important;
+
+            &>* {
+                width: 100% !important;
+            }
+        }
+
+        &>*,
+        & button {
+            width: 100% !important;
+        }
+    }
+}
