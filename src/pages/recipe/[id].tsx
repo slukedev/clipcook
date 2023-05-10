@@ -208,7 +208,29 @@ export function Home(props: any) {
         const res = await req.json();
 
         setRecipe(res.data);
+    }
 
+    useEffect(() => {
+        loadRecipe();
+
+        if (!("wakeLock" in navigator)) {
+            return;
+        }
+
+        try {
+            if (document.visibilityState === "visible") {
+                const wakeLockManager: any = navigator.wakeLock;
+                const wakeLock = wakeLockManager.request("screen");
+                wakeLock.start();
+            }
+        } catch (e: any) {
+            console.log(e.toString())
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    async function genImage() {
         if (typeof document != "undefined" && document.getElementById("recipeImage") != null) {
             console.log("Generating theme... ")
 
@@ -238,25 +260,7 @@ export function Home(props: any) {
         }
     }
 
-    useEffect(() => {
-        loadRecipe();
-
-        if (!("wakeLock" in navigator)) {
-            return;
-        }
-
-        try {
-            if (document.visibilityState === "visible") {
-                const wakeLockManager: any = navigator.wakeLock;
-                const wakeLock = wakeLockManager.request("screen");
-                wakeLock.start();
-            }
-        } catch (e: any) {
-            console.log(e.toString())
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    genImage();
 
     return (
         <>
