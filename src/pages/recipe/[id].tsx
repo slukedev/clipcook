@@ -209,10 +209,8 @@ export function Home(props: any) {
 
         setRecipe(res.data);
 
-        console.log("Got here x1")
-
         if (typeof document != "undefined" && document.getElementById("recipeImage") != null) {
-            console.log("Got here x2")
+            console.log("Generating theme... ")
 
             const imageElement = document.getElementById("recipeImage") as HTMLImageElement;
             const generatedTheme = await themeFromImage(imageElement);
