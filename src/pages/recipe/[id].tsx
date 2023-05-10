@@ -209,32 +209,34 @@ export function Home(props: any) {
 
         setRecipe(res.data);
 
-        if (typeof document != "undefined" && document.getElementById("recipeImage")) {
-            try {
-                const imageElement = document.getElementById("recipeImage") as HTMLImageElement;
-                const generatedTheme = await themeFromImage(imageElement);
-                let theme = generatedTheme.schemes.dark;
+        console.log("Got here x1")
 
-                accentColor = hexFromArgb(theme.primary);
+        if (typeof document != "undefined" && document.getElementById("recipeImage") != null) {
+            console.log("Got here x2")
 
-                Object.keys(Object.entries(theme)[0][1]).forEach((prop: any) => {
-                    const color = Object.entries(theme)[0][1][prop];
-                    let colorCssName = prop.replace(/[^a-z]/g, function (letter: string) {
-                        return "-" + letter.toLowerCase();
-                    });
-                    const colorHex = hexFromArgb(color);
-                    const colorRgb = hexToRgb(colorHex);
+            const imageElement = document.getElementById("recipeImage") as HTMLImageElement;
+            const generatedTheme = await themeFromImage(imageElement);
+            let theme = generatedTheme.schemes.dark;
 
-                    document.body.style.setProperty(`--md-sys-color-${colorCssName}`, colorHex);
-                    document.body.style.setProperty(`--md-sys-color-${colorCssName}-dark`, colorHex);
-                    document.body.style.setProperty(`--md-sys-color-${colorCssName}-rgb`, colorRgb);
-                    document.body.style.setProperty(`--md-sys-color-${colorCssName}-rgb-dark`, colorRgb);
+            console.log(theme)
 
-                    console.log(hexFromArgb(color));
+            accentColor = hexFromArgb(theme.primary);
+
+            Object.keys(Object.entries(theme)[0][1]).forEach((prop: any) => {
+                const color = Object.entries(theme)[0][1][prop];
+                let colorCssName = prop.replace(/[^a-z]/g, function (letter: string) {
+                    return "-" + letter.toLowerCase();
                 });
-            } catch (e: any) {
-                console.log("NOT WORKING!", e.toString());
-            }
+                const colorHex = hexFromArgb(color);
+                const colorRgb = hexToRgb(colorHex);
+
+                document.body.style.setProperty(`--md-sys-color-${colorCssName}`, colorHex);
+                document.body.style.setProperty(`--md-sys-color-${colorCssName}-dark`, colorHex);
+                document.body.style.setProperty(`--md-sys-color-${colorCssName}-rgb`, colorRgb);
+                document.body.style.setProperty(`--md-sys-color-${colorCssName}-rgb-dark`, colorRgb);
+
+                console.log(hexFromArgb(color));
+            });
         }
     }
 
