@@ -210,27 +210,31 @@ export function Home(props: any) {
         setRecipe(res.data);
 
         if (typeof document != "undefined" && document.getElementById("recipeImage")) {
-            const imageElement = document.getElementById("recipeImage") as HTMLImageElement;
-            const generatedTheme = await themeFromImage(imageElement);
-            let theme = generatedTheme.schemes.dark;
+            try {
+                const imageElement = document.getElementById("recipeImage") as HTMLImageElement;
+                const generatedTheme = await themeFromImage(imageElement);
+                let theme = generatedTheme.schemes.dark;
 
-            accentColor = hexFromArgb(theme.primary);
+                accentColor = hexFromArgb(theme.primary);
 
-            Object.keys(Object.entries(theme)[0][1]).forEach((prop: any) => {
-                const color = Object.entries(theme)[0][1][prop];
-                let colorCssName = prop.replace(/[^a-z]/g, function (letter: string) {
-                    return "-" + letter.toLowerCase();
+                Object.keys(Object.entries(theme)[0][1]).forEach((prop: any) => {
+                    const color = Object.entries(theme)[0][1][prop];
+                    let colorCssName = prop.replace(/[^a-z]/g, function (letter: string) {
+                        return "-" + letter.toLowerCase();
+                    });
+                    const colorHex = hexFromArgb(color);
+                    const colorRgb = hexToRgb(colorHex);
+
+                    document.body.style.setProperty(`--md-sys-color-${colorCssName}`, colorHex);
+                    document.body.style.setProperty(`--md-sys-color-${colorCssName}-dark`, colorHex);
+                    document.body.style.setProperty(`--md-sys-color-${colorCssName}-rgb`, colorRgb);
+                    document.body.style.setProperty(`--md-sys-color-${colorCssName}-rgb-dark`, colorRgb);
+
+                    console.log(hexFromArgb(color));
                 });
-                const colorHex = hexFromArgb(color);
-                const colorRgb = hexToRgb(colorHex);
-
-                document.body.style.setProperty(`--md-sys-color-${colorCssName}`, colorHex);
-                document.body.style.setProperty(`--md-sys-color-${colorCssName}-dark`, colorHex);
-                document.body.style.setProperty(`--md-sys-color-${colorCssName}-rgb`, colorRgb);
-                document.body.style.setProperty(`--md-sys-color-${colorCssName}-rgb-dark`, colorRgb);
-
-                console.log(hexFromArgb(color));
-            });
+            } catch (e: any) {
+                console.log("NOT WORKING!", e.toString());
+            }
         }
     }
 
