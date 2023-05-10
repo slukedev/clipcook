@@ -29,6 +29,7 @@ function hexToRgb(hex: string) {
 }
 
 let accentColor: string;
+var themeGenerated = false;
 
 export function Home(props: any) {
     const user = useAuthUser();
@@ -193,6 +194,8 @@ export function Home(props: any) {
     }
 
     async function loadRecipe() {
+        themeGenerated = false;
+
         const idToken = await user.getIdToken();
 
         const headers = new Headers();
@@ -208,6 +211,8 @@ export function Home(props: any) {
         const res = await req.json();
 
         setRecipe(res.data);
+
+        genImage();
     }
 
     useEffect(() => {
@@ -231,8 +236,7 @@ export function Home(props: any) {
     }, []);
 
     async function genImage() {
-        console.log(typeof document != "undefined" && document.getElementById("recipeImage") != null)
-        if (typeof document != "undefined" && document.getElementById("recipeImage") != null) {
+        if (!themeGenerated && typeof document != "undefined" && document.getElementById("recipeImage") != null) {
             console.log("Generating theme... ")
 
             const imageElement = document.getElementById("recipeImage") as HTMLImageElement;
@@ -258,6 +262,8 @@ export function Home(props: any) {
 
                 console.log(hexFromArgb(color));
             });
+
+            themeGenerated = true;
         }
     }
 
