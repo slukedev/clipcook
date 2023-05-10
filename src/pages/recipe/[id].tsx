@@ -267,7 +267,9 @@ export function Home(props: any) {
         }
     }
 
-    genImage();
+    if (!themeGenerated) {
+        genImage();
+    }
 
     return (
         <>
@@ -348,7 +350,7 @@ export function Home(props: any) {
                                 </div>
                                 <div className={styles.image}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img id="recipeImage" src={recipe.image.url} alt={recipe.name} />
+                                    <img id="recipeImage" src={recipe.image.url} alt={recipe.name} onLoad={genImage} />
                                 </div>
                             </div>
                             <div className={styles.container}>
