@@ -231,6 +231,7 @@ export function Home(props: any) {
     }, []);
 
     async function genImage() {
+        console.log(typeof document != "undefined" && document.getElementById("recipeImage") != null)
         if (typeof document != "undefined" && document.getElementById("recipeImage") != null) {
             console.log("Generating theme... ")
 
