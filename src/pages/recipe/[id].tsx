@@ -180,14 +180,22 @@ export function Home(props: any) {
 
             const message = (document.getElementById("questionValue") as HTMLInputElement).value;
 
-            const req = await fetch("https://api.betterapi.net/youdotcom/chat?" + new URLSearchParams({
-                message: message,
+            const req = await fetch("https://api.betterapi.net/youchat?" + new URLSearchParams({
+                inputs: message,
                 key: ""
             }));
 
             const res = await req.json();
 
-            setHelpMenuOutput(res.message);
+            if (res.error && res.error.toLowerCase().includes("rate limit exceeded")) {
+                setHelpMenuOutput("Sorry, you can only ask 4 questions per minute!");
+                return;
+            } else if (res.error) {
+                setHelpMenuOutput("Sorry, something went wrong (Belle might've eaten the wires). Just pressing the button again in a few seconds should fix this issue!");
+                return;
+            } else {
+                setHelpMenuOutput(res.message);
+            }
         } catch (err: any) {
             setHelpMenuOutput("Sorry, something went wrong (Belle might've eaten the wires). Just pressing the button again in a few seconds should fix this issue!");
         }
