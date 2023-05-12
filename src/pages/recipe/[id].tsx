@@ -194,7 +194,7 @@ export function Home(props: any) {
                 setHelpMenuOutput("Sorry, something went wrong (Belle might've eaten the wires). Just pressing the button again in a few seconds should fix this issue!");
                 return;
             } else {
-                setHelpMenuOutput(res.message);
+                setHelpMenuOutput(res.generated_text);
             }
         } catch (err: any) {
             setHelpMenuOutput("Sorry, something went wrong (Belle might've eaten the wires). Just pressing the button again in a few seconds should fix this issue!");
