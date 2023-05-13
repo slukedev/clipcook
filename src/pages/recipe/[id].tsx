@@ -326,7 +326,7 @@ export function Home(props: any) {
 
                                     <div className={styles.externalInfo}>
                                         {
-                                            recipe.prepTime ? (
+                                            recipe.prepTime && parseIsoDuration(recipe.prepTime) ? (
                                                 <div className={styles.chip}>
                                                     <Icon className={styles.icon} name="countertops" fill="0" iconsize="18" />
                                                     <span>Prep Time: {parseMs(parseIsoDuration(recipe.prepTime))}</span>
@@ -334,7 +334,7 @@ export function Home(props: any) {
                                             ) : null
                                         }
                                         {
-                                            recipe.cookTime ? (
+                                            recipe.cookTime && parseIsoDuration(recipe.cookTime) ? (
                                                 <div className={styles.chip}>
                                                     <Icon className={styles.icon} name="cooking" fill="0" iconsize="18" />
                                                     <span>Cook Time: {parseMs(parseIsoDuration(recipe.cookTime))}</span>
@@ -342,7 +342,7 @@ export function Home(props: any) {
                                             ) : null
                                         }
                                         {
-                                            recipe.totalTime ? (
+                                            recipe.totalTime && parseIsoDuration(recipe.totalTime) ? (
                                                 <div className={styles.chip}>
                                                     <Icon className={styles.icon} name="schedule" fill="0" iconsize="18" />
                                                     <span>Total Time: {parseMs(parseIsoDuration(recipe.totalTime))}</span>
