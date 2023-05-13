@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>FoodMate</title>
+        <title>ClipCook - Page Not Found</title>
         <meta name="description" content="Page not found" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />

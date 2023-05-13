@@ -34,7 +34,7 @@ export function Home() {
     return (
         <>
             <Head>
-                <title>FoodMate - Sign In</title>
+                <title>ClipCook - Sign In</title>
                 <meta name="description" content="A recipe clipper, based on the Material You design system!" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <link rel="icon" href="/favicon.ico" />
