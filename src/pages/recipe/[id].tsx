@@ -374,7 +374,7 @@ export function Home(props: any) {
                                                 <Ripple key={index.toString()} feather="10px" style={{ width: "100%", borderRadius: 8 }}>
                                                     <div className={styles.ingredient} onClick={checkInnerCheckbox}>
                                                         <div className={styles.ingredientName}>
-                                                            <span>{unescape(ingredient)}</span>
+                                                            <span>{unescape(ingredient).replace(/(\d+\.\d{3})\d+/g, '$1')}</span>
                                                         </div>
                                                         <div className={styles.ingredientCheckbox}>
                                                             <Checkbox readOnly disabled style={{ pointerEvents: "none" }} inputid={index.toString()} />
