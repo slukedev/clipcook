@@ -19,6 +19,7 @@
     "eslint-config-next": "13.2.4",
     "firebase": "^9.19.1",
     "firebase-admin": "^11.6.0",
+    "fraction.js": "^4.2.0",
     "framer-motion": "^10.9.2",
     "js-quantities": "^1.7.6",
     "next": "13.2.4",

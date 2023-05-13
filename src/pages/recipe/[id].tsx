@@ -17,6 +17,7 @@ import { AuthAction, useAuthUser, withAuthUser, withAuthUserTokenSSR, } from 'ne
 import { AnimatePresence, motion } from "framer-motion";
 import Qty, { getAliases } from 'js-quantities';
 import { hexFromArgb, themeFromImage } from "@material/material-color-utilities";
+import Fraction from 'fraction.js';
 
 function hexToRgb(hex: string) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -374,7 +375,10 @@ export function Home(props: any) {
                                                 <Ripple key={index.toString()} feather="10px" style={{ width: "100%", borderRadius: 8 }}>
                                                     <div className={styles.ingredient} onClick={checkInnerCheckbox}>
                                                         <div className={styles.ingredientName}>
-                                                            <span>{unescape(ingredient).replace(/(\d+\.\d{3})\d+/g, '$1')}</span>
+                                                            <span>{unescape(ingredient).replace(/-?\d+(\.\d+)?/g, n => {
+                                                                let fract = new Fraction(n).toFraction(true)
+                                                                return fract
+                                                            })}</span>
                                                         </div>
                                                         <div className={styles.ingredientCheckbox}>
                                                             <Checkbox readOnly disabled style={{ pointerEvents: "none" }} inputid={index.toString()} />
