@@ -28,6 +28,10 @@ function hexToRgb(hex: string) {
         : null;
 }
 
+function unescape(str: string) {
+    return str.replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+}
+
 let accentColor: string;
 var themeGenerated = false;
 
@@ -370,7 +374,7 @@ export function Home(props: any) {
                                                 <Ripple key={index.toString()} feather="10px" style={{ width: "100%", borderRadius: 8 }}>
                                                     <div className={styles.ingredient} onClick={checkInnerCheckbox}>
                                                         <div className={styles.ingredientName}>
-                                                            <span>{ingredient}</span>
+                                                            <span>{unescape(ingredient)}</span>
                                                         </div>
                                                         <div className={styles.ingredientCheckbox}>
                                                             <Checkbox readOnly disabled style={{ pointerEvents: "none" }} inputid={index.toString()} />
@@ -385,7 +389,7 @@ export function Home(props: any) {
                             <div className={styles.container}>
                                 <h1 className={styles.title}>Directions</h1>
 
-                                <span className={styles.direction}>{recipe.recipeInstructions[step - 1].text}</span>
+                                <span className={styles.direction}>{unescape(recipe.recipeInstructions[step - 1].text)}</span>
 
                                 <div className={styles.progress}>
                                     <div className={styles.progressbar} style={{ width: `${(step / recipe.recipeInstructions.length) * 100}%` }}></div>
@@ -426,7 +430,7 @@ export function Home(props: any) {
                                         <h1 className={styles.title}>Comments</h1>
                                         {
                                             recipe.review.map((comment: any, index: number) => {
-                                                return <Review key={index.toString()} review={comment.reviewBody} rating={comment.reviewRating.ratingValue} />
+                                                return <Review key={index.toString()} review={unescape(comment.reviewBody)} rating={comment.reviewRating.ratingValue} />
                                             })
                                         }
                                     </div>
