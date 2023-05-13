@@ -375,10 +375,7 @@ export function Home(props: any) {
                                                 <Ripple key={index.toString()} feather="10px" style={{ width: "100%", borderRadius: 8 }}>
                                                     <div className={styles.ingredient} onClick={checkInnerCheckbox}>
                                                         <div className={styles.ingredientName}>
-                                                            <span>{unescape(ingredient).replace(/-?\d+(\.\d+)?/g, n => {
-                                                                let fract = new Fraction(n).toFraction(true)
-                                                                return fract
-                                                            })}</span>
+                                                            <span>{unescape(ingredient).replace(/-?\d+(\.\d+)?/g, n => new Fraction(n).toFraction(true))}</span>
                                                         </div>
                                                         <div className={styles.ingredientCheckbox}>
                                                             <Checkbox readOnly disabled style={{ pointerEvents: "none" }} inputid={index.toString()} />
@@ -521,7 +518,7 @@ export function Home(props: any) {
                                                         <ul style={{ width: "auto !important" }}>
                                                             {
                                                                 helpMenuOutput.map((item: any, index: number) => (
-                                                                    <li key={index}>{item.value} {item.unit}</li>
+                                                                    <li key={index}>{new Fraction(item.value).toFraction(true)} {item.unit}</li>
                                                                 ))
                                                             }
                                                         </ul>
