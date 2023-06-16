@@ -53,10 +53,9 @@ export function Home(props: any) {
             const text = e.currentTarget.querySelector("span") as HTMLSpanElement;
 
             if (!checkbox.checked) {
-                text.style.color = "var(--primary)";
-                text.style.textDecoration = "line-through";
+                text.setAttribute('style', 'color: var(--primary); text-decoration: line-through;');
             } else {
-                text.style = "";
+                text.setAttribute('style', '');
             }
 
             checkbox.checked = !checkbox.checked;
