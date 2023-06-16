@@ -50,6 +50,14 @@ export function Home(props: any) {
     function checkInnerCheckbox(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         try {
             const checkbox = e.currentTarget.querySelector("input[type='checkbox']") as HTMLInputElement;
+            const text = e.currentTarget.querySelector("span") as HTMLSpanElement;
+
+            if (!checkbox.checked) {
+                text.style.color = "var(--primary)";
+                text.style.textDecoration = "line-through";
+            } else {
+                text.style = "";
+            }
 
             checkbox.checked = !checkbox.checked;
         } catch (err) { }
