@@ -6,7 +6,7 @@ initAuth()
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        await setAuthCookies(req, res)
+        await setAuthCookies(req, res, {})
     } catch (e) {
         return res.status(500).json({ error: 'Unexpected error.' })
     }
