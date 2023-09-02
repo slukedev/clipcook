@@ -63,7 +63,8 @@
         transition: all 0.2s ease-in-out;
     }
 
-    & input {
+    & input,
+    & textarea {
         border: none;
         outline: none;
         background: transparent;
@@ -88,6 +89,25 @@
 
         &:not(:focus)~label {
             color: var(--on-surface-variant);
+        }
+    }
+
+    &.textarea {
+        height: 150px;
+        align-items: flex-start !important;
+
+        & textarea {
+            margin-top: 25px;
+            padding-top: 0;
+            height: 125px;
+        }
+
+        & label {
+            top: 20%;
+        }
+
+        & .icon {
+            padding-top: 18px;
         }
     }
 }

@@ -5,19 +5,17 @@ import { Icon } from "@/components/icon"
 import { Ripple } from '@/components/ripple';
 import { Checkbox } from '@/components/checkbox';
 import { Button } from '@/components/button';
-import { Review } from '@/components/review';
 import { Spinner } from '@/components/spinner';
 import { useRouter } from 'next/router';
 import { Modal } from '@/components/modal';
 import { Input } from '@/components/input';
 import { Main } from '@/components/main';
-import parseIsoDuration from 'parse-iso-duration';
-import { Rating } from '@/components/rating';
-import { AuthAction, useAuthUser, withAuthUser, withAuthUserTokenSSR, } from 'next-firebase-auth'
+import { AuthAction, useUser, withUser, withUserTokenSSR } from 'next-firebase-auth'
 import { AnimatePresence, motion } from "framer-motion";
 import Qty, { getAliases } from 'js-quantities';
 import { hexFromArgb, themeFromImage } from "@material/material-color-utilities";
 import Fraction from 'fraction.js';
+import Link from 'next/link';
 
 function hexToRgb(hex: string) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -37,12 +35,13 @@ let accentColor: string;
 var themeGenerated = false;
 
 export function Home(props: any) {
-    const user = useAuthUser();
-    const [step, setStep] = useState(1);
+    const user = useUser();
     const [servingsModal, setServingsModal] = useState(false);
     const [helpMenu, setHelpMenu] = useState<string | false>(false);
     const [helpMenuOutput, setHelpMenuOutput] = useState<any>(false);
     const [recipe, setRecipe] = useState<any>(false);
+    const [servings, setServings] = useState(-1);
+    const [servingsScale, setServingsScale] = useState(1);
 
     const router = useRouter();
     const { id } = router.query;
@@ -50,21 +49,22 @@ export function Home(props: any) {
     function checkInnerCheckbox(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         try {
             const checkbox = e.currentTarget.querySelector("input[type='checkbox']") as HTMLInputElement;
+            let text;
+
+            if (e.currentTarget.classList.contains("instruction")) {
+                text = e.currentTarget.querySelector(".instruction") as HTMLSpanElement;
+            } else {
+                text = e.currentTarget.querySelector("span") as HTMLSpanElement;
+            }
+
+            if (!checkbox.checked) {
+                text.setAttribute('style', 'color: var(--primary); text-decoration: line-through;');
+            } else {
+                text.setAttribute('style', '');
+            }
 
             checkbox.checked = !checkbox.checked;
         } catch (err) { }
-    }
-
-    function nextStep() {
-        if (step < recipe.recipeInstructions.length) {
-            setStep(step + 1);
-        }
-    }
-
-    function prevStep() {
-        if (step > 1) {
-            setStep(step - 1);
-        }
     }
 
     function servingsChange(e: React.FormEvent<HTMLFormElement>) {
@@ -73,63 +73,33 @@ export function Home(props: any) {
         const servings = parseInt((document.getElementById("servings") as HTMLInputElement)!.value.toString() || "-1");
         setServingsModal(false);
 
+        setServingsScale(servingsScale)
+
         if (servings > 0 && servings <= 100) {
-            var newScale = servings / Number(recipe.recipeYield[0]);
+            var newScale = servings / Number(recipe.servings);
 
             newScale = Math.round(newScale * 1000) / 1000;
 
-            scaleRecipe(newScale);
+            setServingsScale(newScale);
         }
+
+        setServings(servings);
     }
 
-    function parseMs(ms: number) {
-        const seconds = Math.floor(ms / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
+    function getIngredientScale(ingredient: string) {
+        const amountRegex = /(\d+\/\d+|\d+\.\d+|\d+)/g;
+        const amount = ingredient.match(amountRegex);
 
-        const secondsLeft = seconds % 60;
-        const minutesLeft = minutes % 60;
+        if (amount !== null) {
+            const amountType = ingredient.replace(amountRegex, "").replace(/\s/g, "");
+            var newAmount = Number(amount[0]) * servingsScale;
 
-        let timeString = "";
+            newAmount = Math.round(newAmount * 1000) / 1000;
 
-        if (hours > 0) {
-            timeString += `${hours} hour${hours > 1 ? "s" : ""}, `;
+            return ingredient.replace(amountRegex, newAmount.toString()).replace(amountType, amountType);
         }
 
-        if (minutesLeft > 0) {
-            timeString += `${minutesLeft} minute${minutesLeft > 1 ? "s" : ""}, `;
-        }
-
-        if (secondsLeft > 0) {
-            timeString += `${secondsLeft} second${secondsLeft > 1 ? "s" : ""}, `;
-        }
-
-        return timeString.slice(0, -2);
-    }
-
-    function scaleRecipe(scale: number) {
-        const scaledRecipe = JSON.parse(JSON.stringify(recipe));
-
-        scaledRecipe.recipeYield[0] = [Math.round(Number(scaledRecipe.recipeYield[0]) * scale).toString()];
-        scaledRecipe.recipeYield[1] = scale;
-
-        scaledRecipe.recipeIngredient = scaledRecipe.recipeIngredient.map((ingredient: string) => {
-            const amountRegex = /(\d+\/\d+|\d+\.\d+|\d+)/g;
-            const amount = ingredient.match(amountRegex);
-
-            if (amount !== null) {
-                const amountType = ingredient.replace(amountRegex, "").replace(/\s/g, "");
-                var newAmount = Number(amount[0]) * scale;
-
-                newAmount = Math.round(newAmount * 1000) / 1000;
-
-                return ingredient.replace(amountRegex, newAmount.toString()).replace(amountType, amountType);
-            }
-
-            return ingredient;
-        });
-
-        setRecipe(scaledRecipe);
+        return ingredient;
     }
 
     function openHelpMenu() {
@@ -139,11 +109,6 @@ export function Home(props: any) {
 
     function closeHelpMenu() {
         setHelpMenu(false);
-        setHelpMenuOutput(false);
-    }
-
-    function changePage(name: string) {
-        setHelpMenu(name);
         setHelpMenuOutput(false);
     }
 
@@ -179,33 +144,6 @@ export function Home(props: any) {
         }
     }
 
-    async function askQuestion() {
-        try {
-            setHelpMenuOutput("!!loading!!");
-
-            const message = (document.getElementById("questionValue") as HTMLInputElement).value;
-
-            const req = await fetch("https://api.betterapi.net/youchat?" + new URLSearchParams({
-                inputs: message,
-                key: ""
-            }));
-
-            const res = await req.json();
-
-            if (res.error && res.error.toLowerCase().includes("rate limit exceeded")) {
-                setHelpMenuOutput("Sorry, you can only ask 4 questions per minute!");
-                return;
-            } else if (res.error) {
-                setHelpMenuOutput("Sorry, something went wrong (Belle might've eaten the wires). Just pressing the button again in a few seconds should fix this issue!");
-                return;
-            } else {
-                setHelpMenuOutput(res.generated_text);
-            }
-        } catch (err: any) {
-            setHelpMenuOutput("Sorry, something went wrong (Belle might've eaten the wires). Just pressing the button again in a few seconds should fix this issue!");
-        }
-    }
-
     async function loadRecipe() {
         themeGenerated = false;
 
@@ -213,6 +151,8 @@ export function Home(props: any) {
 
         const headers = new Headers();
         headers.append("authorization", idToken || "");
+
+        console.log("Loading")
 
         const req = await fetch("/api/getrecipe?" + new URLSearchParams({
             recipeId: (id || "").toString()
@@ -224,6 +164,8 @@ export function Home(props: any) {
         const res = await req.json();
 
         setRecipe(res.data);
+
+        setServings(res.data.servings);
 
         genImage();
     }
@@ -287,7 +229,7 @@ export function Home(props: any) {
     return (
         <>
             <Head>
-                <title>ClipCook - {recipe.name || "recipe"}</title>
+                <title>ClipCook - {recipe.title || "recipe"}</title>
                 <meta name="description" content="A recipe clipper, based on the Material You design system!" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <link rel="icon" href="/favicon.ico" />
@@ -311,71 +253,48 @@ export function Home(props: any) {
                         <motion.div key="recipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ ease: "easeInOut", duration: 0.3 }} exit={{ opacity: 0 }}>
                             <div className={styles.header}>
                                 <div>
-                                    <h1>{recipe.name}</h1>
+                                    <h1>{recipe.title}</h1>
                                     <p>{recipe.description}</p>
-                                    {
-                                        recipe.aggregateRating ? (
-                                            <div className={styles.otherinfo}>
-                                                <div className={styles.rating}>
-                                                    <Rating rating={Number(recipe.aggregateRating.ratingValue)} />
-                                                    <span className={styles.recipeRatingCount}>{recipe.aggregateRating.ratingValue} ({Number(recipe.aggregateRating.ratingCount).toLocaleString()})</span>
-                                                </div>
-                                            </div>
-                                        ) : null
-                                    }
-
                                     <div className={styles.externalInfo}>
-                                        {
-                                            recipe.prepTime && parseIsoDuration(recipe.prepTime) ? (
-                                                <div className={styles.chip}>
-                                                    <Icon className={styles.icon} name="countertops" fill="0" iconsize="18" />
-                                                    <span>Prep Time: {parseMs(parseIsoDuration(recipe.prepTime))}</span>
-                                                </div>
-                                            ) : null
-                                        }
-                                        {
-                                            recipe.cookTime && parseIsoDuration(recipe.cookTime) ? (
-                                                <div className={styles.chip}>
-                                                    <Icon className={styles.icon} name="cooking" fill="0" iconsize="18" />
-                                                    <span>Cook Time: {parseMs(parseIsoDuration(recipe.cookTime))}</span>
-                                                </div>
-                                            ) : null
-                                        }
-                                        {
-                                            recipe.totalTime && parseIsoDuration(recipe.totalTime) ? (
-                                                <div className={styles.chip}>
-                                                    <Icon className={styles.icon} name="schedule" fill="0" iconsize="18" />
-                                                    <span>Total Time: {parseMs(parseIsoDuration(recipe.totalTime))}</span>
-                                                </div>
-                                            ) : null
-                                        }
+                                        <div className={styles.chip}>
+                                            <Icon className={styles.icon} name="countertops" fill="0" iconsize="18" />
+                                            <span>Prep Time: {recipe.prepTime}</span>
+                                        </div>
+                                        <div className={styles.chip}>
+                                            <Icon className={styles.icon} name="cooking" fill="0" iconsize="18" />
+                                            <span>Cook Time: {recipe.cookTime}</span>
+                                        </div>
+                                        <div className={styles.chip}>
+                                            <Icon className={styles.icon} name="schedule" fill="0" iconsize="18" />
+                                            <span>Total Time: {recipe.totalTime}</span>
+                                        </div>
                                         <div className={styles.chip}>
                                             <Icon className={styles.icon} name="people" fill="0" iconsize="18" />
-                                            <span>Servings: {recipe.recipeYield[0] + `${recipe.recipeYield[1] ? ` (${recipe.recipeYield[1]}x)` : ""}`}</span>
+                                            <span>Servings: {servings + `${servingsScale != 1 ? ` (${servingsScale}x)` : ""}`}</span>
                                         </div>
                                     </div>
                                     <div className={styles.actions}>
                                         <Button onClick={() => setServingsModal(true)}>Change Servings</Button>
-                                        <a target="_blank" href={recipe.mainEntityOfPage.breadcrumb.itemListElement[recipe.mainEntityOfPage.breadcrumb.itemListElement.length - 1].item["@id"]}>
-                                            <Button>View Original Page</Button>
-                                        </a>
+                                        <Link href={`/edit/${id}`} passHref>
+                                            <Button>Edit Recipe</Button>
+                                        </Link>
                                     </div>
                                 </div>
-                                <div className={styles.image}>
+                                <div style={{ borderRadius: "16px 0 0 16px" }} className={styles.image}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img id="recipeImage" src={recipe.image.url} alt={recipe.name} onLoad={genImage} />
+                                    <img style={{ borderRadius: "16px 0 0 16px" }} id="recipeImage" src={recipe.image} alt={recipe.title} onLoad={genImage} />
                                 </div>
                             </div>
                             <div className={styles.container}>
                                 <h1 className={styles.title}>Ingredients</h1>
                                 <div className={styles.ingredients}>
                                     {
-                                        recipe.recipeIngredient.map((ingredient: any, index: number) => {
+                                        recipe.ingredients.map((ingredient: any, index: number) => {
                                             return (
                                                 <Ripple key={index.toString()} feather="10px" style={{ width: "100%", borderRadius: 8 }}>
                                                     <div className={styles.ingredient} onClick={checkInnerCheckbox}>
                                                         <div className={styles.ingredientName}>
-                                                            <span>{unescape(ingredient).replace(/-?\d+(\.\d+)?/g, n => new Fraction(n).simplify(0.001).toFraction(true))}</span>
+                                                            <span>{unescape(getIngredientScale(ingredient)).replace(/-?\d+(\.\d+)?/g, n => new Fraction(n).simplify(0.001).toFraction(true))}</span>
                                                         </div>
                                                         <div className={styles.ingredientCheckbox}>
                                                             <Checkbox readOnly disabled style={{ pointerEvents: "none" }} inputid={index.toString()} />
@@ -390,57 +309,44 @@ export function Home(props: any) {
                             <div className={styles.container}>
                                 <h1 className={styles.title}>Directions</h1>
 
-                                <span className={styles.direction}>{unescape(recipe.recipeInstructions[step - 1].text)}</span>
-
-                                <div className={styles.progress}>
-                                    <div className={styles.progressbar} style={{ width: `${(step / recipe.recipeInstructions.length) * 100}%` }}></div>
-                                </div>
-
-                                <div className={styles.directionNavigator}>
-                                    <Button onClick={prevStep} disabled={step <= 1}>Previous</Button>
-                                    <h2>Step {step.toString()}/{recipe.recipeInstructions.length.toString()}</h2>
-                                    <Button onClick={nextStep} disabled={step >= recipe.recipeInstructions.length}>{step >= recipe.recipeInstructions.length ? "Finished" : step == recipe.recipeInstructions.length - 1 ? "Finish" : "Next"}</Button>
+                                <div className={styles.ingredients}>
+                                    {
+                                        recipe.instructions.map((ingredient: any, index: number) => {
+                                            return (
+                                                <Ripple key={index.toString()} feather="10px" style={{ width: "100%", borderRadius: 8 }}>
+                                                    <div className={`${styles.ingredient} instruction`} onClick={checkInnerCheckbox}>
+                                                        <div className={styles.directionNumber}>
+                                                            <span className={`${styles.number} number`}>{index + 1}</span>
+                                                            <svg width="120" height="120">
+                                                                <path d="M0.839206 40.5976C-4.14625 17.3914 16.4721 -3.42453 40.5835 0.47246L54.2854 2.68703C58.0691 3.29855 61.931 3.29855 65.7146 2.68703L79.4165 0.47246C103.528 -3.42453 124.146 17.3914 119.161 40.5976L116.514 52.9168C115.54 57.4515 115.54 62.1322 116.514 66.6669L119.251 79.4036C124.211 102.496 103.809 123.261 79.7848 119.573L65.436 117.37C61.8344 116.817 58.1656 116.817 54.564 117.37L40.2152 119.573C16.1906 123.261 -4.21146 102.496 0.749499 79.4036L3.48578 66.6669C4.45997 62.1322 4.45998 57.4515 3.48578 52.9168L0.839206 40.5976Z" />
+                                                            </svg>
+                                                        </div>
+                                                        <div className={styles.ingredientName}>
+                                                            <span className="instruction">{ingredient}</span>
+                                                        </div>
+                                                        <div className={styles.ingredientCheckbox}>
+                                                            <Checkbox readOnly disabled style={{ pointerEvents: "none" }} inputid={index.toString()} />
+                                                        </div>
+                                                    </div>
+                                                </Ripple>
+                                            )
+                                        })
+                                    }
                                 </div>
                             </div>
                             {
-                                recipe.nutrition ? (
+                                recipe.notes.length > 0 ? (
                                     <div className={styles.container}>
-                                        <h1 className={styles.title}>Nutrition</h1>
+                                        <h1 className={styles.title}>Notes</h1>
 
-                                        <div className={styles.nutrition}>
-                                            {
-                                                Object.keys(recipe.nutrition).map((key: any, index: number) => {
-                                                    if (key.charAt(0) == "@") return;
-
-                                                    const nutrition: any = Object.values(recipe.nutrition)[index];
-
-                                                    return (
-                                                        <div key={key} className={styles.nutritionItem}>
-                                                            <h2>{key.charAt(0).toUpperCase() + key.replace(/([A-Z])/g, " $1").slice(1)}</h2>
-                                                            <span>{nutrition}</span>
-                                                        </div>
-                                                    )
-                                                })
-                                            }
-                                        </div>
+                                        <p>{recipe.notes}</p>
                                     </div>
-                                ) : null}
-                            {
-                                !recipe.review || recipe.review.length < 0 ? null : (
-                                    <div className={styles.container}>
-                                        <h1 className={styles.title}>Comments</h1>
-                                        {
-                                            recipe.review.map((comment: any, index: number) => {
-                                                return <Review key={index.toString()} review={unescape(comment.reviewBody)} rating={comment.reviewRating.ratingValue} />
-                                            })
-                                        }
-                                    </div>
-                                )
+                                ) : null
                             }
                         </motion.div>
                     )
                 }
-            </Main>
+            </Main >
             {!recipe || typeof recipe == "string" ? null : (
                 <Modal opened={servingsModal} title="Change Servings" closefunction={() => setServingsModal(false)}>
                     <form onSubmit={servingsChange}>
@@ -451,17 +357,18 @@ export function Home(props: any) {
                             } else if (value > 100) {
                                 (e.target as HTMLInputElement).value = "100";
                             }
-                        }} inputMode="numeric" label="Servings" name="servings" id="servings" icon="people" min={1} max={100} fullwidth defaultValue={recipe.recipeYield[0]} />
+                        }} inputMode="numeric" label="Servings" name="servings" id="servings" icon="people" min={1} max={100} fullwidth defaultValue={servings.toString()} />
                         <div style={{ width: "100%", height: 24 }}></div>
                         <Button>Set Servings</Button>
                     </form>
                 </Modal>
-            )}
+            )
+            }
 
             <div className={styles.fab}>
                 <Ripple feather="5px" speedms={500}>
                     <button onClick={openHelpMenu}>
-                        <Icon name="help" iconsize="24" />
+                        <Icon name="scale" iconsize="24" />
                     </button>
                 </Ripple>
             </div>
@@ -471,63 +378,29 @@ export function Home(props: any) {
                     helpMenu ? (
                         <motion.div key="helpmenu" initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ ease: "easeInOut", duration: 0.1 }} exit={{ opacity: 0 }} className={`${styles.sheet} ${styles.options}`}>
                             <div className={styles.top}>
-                                {
-                                    helpMenu != "home" ? <Button onClick={() => changePage("home")}>Back</Button> : null
-                                }
-                                <span>Help Menu</span>
+                                <span>Conversion Menu</span>
                                 <Button onClick={closeHelpMenu}>Close</Button>
                             </div>
                             <AnimatePresence mode="popLayout">
-                                {
-                                    helpMenu == "home" ? (
-                                        <motion.div key="home" initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ ease: "easeInOut", duration: 0.3 }} exit={{ x: -30, opacity: 0 }}>
-                                            <Button onClick={() => changePage("convert")}>Convert Measurement</Button>
-                                            <Button onClick={() => changePage("ai")}>Ask An AI</Button>
-                                        </motion.div>
-                                    ) : helpMenu == "ai" ? (
-                                        <motion.div key="ai" initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ ease: "easeInOut", duration: 0.3 }} exit={{ x: -30, opacity: 0 }}>
-                                            <div className={styles.initialValue}>
-                                                <Input id="questionValue" autoComplete="off" label="Question" name="questionValue" type="text" placeholder="Ex: What is a substitute for baking soda?" icon="chat" />
-                                                <Button onClick={askQuestion}>Ask!</Button>
-                                            </div>
-                                            <div style={{ textAlign: "center" }}>
+                                <div className={styles.initialValue}>
+                                    <Input id="convertValue" autoComplete="off" label="Value" name="convertValue" type="text" placeholder="Ex: 10 tablespoons" icon="scale" />
+                                    <Button onClick={convertValues}>Convert!</Button>
+                                </div>
+                                <div>
+                                    {
+                                        typeof helpMenuOutput == "boolean" ? null : helpMenuOutput.length == 0 ? (
+                                            <h1>That unit was not found</h1>
+                                        ) : (
+                                            <ul style={{ width: "auto !important" }}>
                                                 {
-                                                    typeof helpMenuOutput != "string" ? null : helpMenuOutput == "!!loading!!" ? (
-                                                        <>
-                                                            <p>Asking...</p>
-                                                            <Spinner style={{ width: 100, height: 100, display: "block", marginLeft: "auto", marginRight: "auto" }} />
-                                                            <p>Hopefully this AI is smarter than Belle!</p>
-                                                        </>
-                                                    ) : (
-                                                        <p style={{ whiteSpace: 'pre-wrap' }}>{helpMenuOutput.toString()}</p>
-                                                    )
+                                                    helpMenuOutput.map((item: any, index: number) => (
+                                                        <li key={index}>{new Fraction(item.value).simplify(0.001).toFraction(true)} {item.unit}</li>
+                                                    ))
                                                 }
-                                            </div>
-                                        </motion.div>
-                                    ) : helpMenu == "convert" ? (
-                                        <motion.div key="convert" initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ ease: "easeInOut", duration: 0.3 }} exit={{ x: -30, opacity: 0 }}>
-                                            <div className={styles.initialValue}>
-                                                <Input id="convertValue" autoComplete="off" label="Value" name="convertValue" type="text" placeholder="Ex: 10 tablespoons" icon="scale" />
-                                                <Button onClick={convertValues}>Convert!</Button>
-                                            </div>
-                                            <div>
-                                                {
-                                                    typeof helpMenuOutput == "boolean" ? null : helpMenuOutput.length == 0 ? (
-                                                        <h1>That unit was not found</h1>
-                                                    ) : (
-                                                        <ul style={{ width: "auto !important" }}>
-                                                            {
-                                                                helpMenuOutput.map((item: any, index: number) => (
-                                                                    <li key={index}>{new Fraction(item.value).simplify(0.001).toFraction(true)} {item.unit}</li>
-                                                                ))
-                                                            }
-                                                        </ul>
-                                                    )
-                                                }
-                                            </div>
-                                        </motion.div>
-                                    ) : null
-                                }
+                                            </ul>
+                                        )
+                                    }
+                                </div>
                             </AnimatePresence>
                         </motion.div>
                     ) : null
@@ -537,5 +410,5 @@ export function Home(props: any) {
     )
 }
 
-export const getServerSideProps = withAuthUserTokenSSR({ whenUnauthed: AuthAction.REDIRECT_TO_LOGIN })()
-export default withAuthUser({ whenUnauthedBeforeInit: AuthAction.REDIRECT_TO_LOGIN, })(Home)
+export const getServerSideProps = withUserTokenSSR({ whenUnauthed: AuthAction.REDIRECT_TO_LOGIN })()
+export default withUser({ whenUnauthedBeforeInit: AuthAction.REDIRECT_TO_LOGIN })(Home)
