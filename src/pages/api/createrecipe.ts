@@ -9,42 +9,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(405).json({ "message": "Error", "data": 'Method not allowed' })
     }
 
-    const url = req.query.url || "";
     const idToken = req.headers.authorization || "";
 
-    if (!url || !idToken || url === "" || idToken === "") {
-        return res.status(400).json({ "message": "Invalid parameters", "data": null });
+    if (!idToken || idToken === "") {
+        return res.status(400).json({ "message": "Error", "data": "Invalid parameters" });
     }
 
     let recipeJson: any;
 
     try {
-        const fetchRequest = await fetch(url.toString());
+        recipeJson = JSON.parse(req.body).recipe;
 
-        const fetchResponse = await fetchRequest.text();
-
-        const $ = cheerio.load(fetchResponse);
-
-        const recipe = $('script[type="application/ld+json"]').html();
-
-        recipeJson = JSON.parse(recipe || "{}");
-
-        if (Array.isArray(recipeJson)) {
-            recipeJson = recipeJson[0];
-        }
-
-        const imageUrl = recipeJson.image.url;
-        const imageUrlData = await fetch(imageUrl);
-        const buffer = await imageUrlData.arrayBuffer();
-        const stringifiedBuffer = Buffer.from(buffer).toString('base64');
-        const contentType = imageUrlData.headers.get('content-type');
-        recipeJson.image.url = `data:${contentType};base64,${stringifiedBuffer}`;
-
-        if (!recipeJson["recipeInstructions"] || !recipeJson["recipeIngredient"] || !recipeJson["name"] || !recipeJson["recipeYield"]) {
-            throw new Error("Invalid recipe");
+        if (!recipeJson || !recipeJson.image || !recipeJson.title || !recipeJson.description || !recipeJson.servings || !recipeJson.prepTime || !recipeJson.cookTime || !recipeJson.totalTime || !recipeJson.ingredients || !recipeJson.instructions) {
+            return res.status(400).json({ "message": "Error", "data": "Invalid recipe" });
         }
     } catch (e: any) {
-        res.status(400).json({ "message": `Error: That recipe cannot be parsed! Sorry!`, "data": null });
+        return res.status(400).json({ "message": "Error", "data": "Invalid recipe" });
     }
 
     try {
@@ -62,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const db = getFirestore();
 
-        const docRef = await db.collection('recipes').add(recipeJson);
+        const docRef = await db.collection('allRecipes').add(recipeJson);
 
         res.status(200).json({ "message": "Success", "data": docRef.id })
     } catch (e: any) {

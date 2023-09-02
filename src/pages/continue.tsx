@@ -4,7 +4,7 @@ import { Button } from '@/components/button';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
 import { useRouter } from 'next/router';
-import { withAuthUser, withAuthUserTokenSSR, AuthAction } from 'next-firebase-auth'
+import { AuthAction, withUser, withUserTokenSSR } from 'next-firebase-auth'
 
 
 export function Home() {
@@ -57,10 +57,10 @@ export function Home() {
     )
 }
 
-export const getServerSideProps = withAuthUserTokenSSR({
+export const getServerSideProps = withUserTokenSSR({
     whenAuthed: AuthAction.REDIRECT_TO_APP,
 })()
 
-export default withAuthUser({
+export default withUser({
     whenAuthed: AuthAction.REDIRECT_TO_APP,
 })(Home)

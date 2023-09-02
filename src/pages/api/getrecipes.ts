@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const db = getFirestore();
 
-        const recipeRef = db.collection('recipes').where("uid", "==", uid);
+        const recipeRef = db.collection('allRecipes').where("uid", "==", uid);
         const recipeSnapshot = await recipeRef.get();
         let data: any = [];
 
@@ -38,8 +38,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             data.push({
                 id: doc.id,
-                title: recipeData.name,
-                image: recipeData.image.url
+                title: recipeData.title,
+                image: recipeData.image
             });
         });
 

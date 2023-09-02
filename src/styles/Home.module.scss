@@ -3,6 +3,32 @@
 .main {
     padding-top: 64px;
 
+    & .loading {
+        display: flex !important;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-content: center;
+        align-items: center;
+        justify-content: center;
+
+        &,
+        &>* {
+            text-align: center;
+            display: block;
+            margin: 0 auto;
+        }
+
+        & h1 {
+            @include headline-large;
+            margin-bottom: 16px;
+        }
+
+        & p {
+            @include body-large;
+            margin-bottom: 16px;
+        }
+    }
+
     &.index {
         h1 {
             @include headline-large;
@@ -325,7 +351,7 @@
                 background: var(--surface);
 
                 & .ingredient {
-                    height: 56px;
+                    min-height: 56px;
                     padding: 8px 16px;
                     padding-right: 24px;
                     display: flex;
@@ -336,10 +362,13 @@
                     justify-content: space-between;
                     cursor: pointer;
 
-                    & span {
+                    & span,
+                    & .ingredientName {
                         color: var(--on-surface);
                         @include body-large;
                         padding-right: 16px;
+                        text-align: left;
+                        width: 100%;
                     }
                 }
             }
@@ -473,6 +502,84 @@
         }
     }
 
+    &.create {
+        padding: 16px;
+        padding-top: 64px;
+
+        & .imageUploadContainer {
+            width: 100%;
+            height: 300px;
+            background: #373340;
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 2px dashed var(--outline);
+            margin-bottom: 16px;
+            cursor: pointer;
+
+            &>* {
+                width: 100%;
+                height: 100%;
+
+                & .imageUploadButton {
+                    display: flex;
+                    flex-direction: column;
+                    flex-wrap: nowrap;
+                    align-content: center;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    background: transparent;
+                    border: none;
+                    transition: background 0.2s linear;
+
+                    &:hover {
+                        background: lighten(#373340, 5%);
+                    }
+
+                    &:active {
+                        background: lighten(#373340, 10%);
+                    }
+
+                    & span {
+                        color: var(--on-surface);
+                        @include display-small;
+                    }
+                }
+            }
+        }
+
+        & .createInputs {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-content: center;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 16px;
+
+            & .inputGroup {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-content: center;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 16px;
+                width: 100%;
+            }
+        }
+
+        & .createDiv {
+            margin-top: 16px;
+            width: 100%;
+
+            & * {
+                width: 100%;
+            }
+        }
+    }
 }
 
 .chip {
@@ -626,6 +733,38 @@
         &>*,
         & button {
             width: 100% !important;
+        }
+    }
+}
+
+.directionNumber {
+    display: flex;
+    align-content: center;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    position: relative;
+    margin-right: 16px;
+
+    & .number {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-38%, -50%);
+        text-align: center !important;
+        color: var(--on-primary) !important;
+        font-weight: 700 !important;
+    }
+
+    & svg {
+        fill: var(--primary);
+        width: 48px;
+        height: 48px;
+
+        & path {
+
+            transform: scale(0.4);
         }
     }
 }
