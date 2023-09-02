@@ -80,16 +80,16 @@ export function Home() {
 
         const recipe = res.data;
 
-        (document.getElementById("title") as HTMLInputElement).value = recipe.title;
-        (document.getElementById("description") as HTMLInputElement).value = recipe.description;
-        (document.getElementById("servings") as HTMLInputElement).value = recipe.servings;
-        (document.getElementById("prepTime") as HTMLInputElement).value = recipe.prepTime;
-        (document.getElementById("cookTime") as HTMLInputElement).value = recipe.cookTime;
-        (document.getElementById("totalTime") as HTMLInputElement).value = recipe.totalTime;
-        setImage(recipe.image);
+        if (recipe.title) (document.getElementById("title") as HTMLInputElement).value = recipe.title;
+        if (recipe.description) (document.getElementById("description") as HTMLInputElement).value = recipe.description;
+        if (recipe.servings) (document.getElementById("servings") as HTMLInputElement).value = recipe.servings;
+        if (recipe.prepTime) (document.getElementById("prepTime") as HTMLInputElement).value = recipe.prepTime;
+        if (recipe.cookTime) (document.getElementById("cookTime") as HTMLInputElement).value = recipe.cookTime;
+        if (recipe.totalTime) (document.getElementById("totalTime") as HTMLInputElement).value = recipe.totalTime;
+        if (recipe.image) setImage(recipe.image);
 
-        setIngredients(recipe.ingredients);
-        setInstructions(recipe.instructions);
+        if (recipe.ingredients) setIngredients(recipe.ingredients);
+        if (recipe.instructions) setInstructions(recipe.instructions);
 
         (document.getElementById("notes") as HTMLInputElement).value = "Clipped from " + url + "\n";
 
