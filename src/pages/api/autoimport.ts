@@ -3,12 +3,6 @@ import * as cheerio from 'cheerio';
 import parseIsoDuration from 'parse-iso-duration';
 import Fraction from 'fraction.js';
 
-export const config = {
-    api: {
-      responseLimit: false,
-    },
-}
-
 function parseMs(ms: number) {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);

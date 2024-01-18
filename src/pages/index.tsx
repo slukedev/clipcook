@@ -10,11 +10,26 @@ import { AuthAction, useUser, withUser, withUserTokenSSR } from 'next-firebase-a
 import { Spinner } from '@/components/spinner';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, where, getDocs, query } from "firebase/firestore";
 
 export function Home() {
     const user = useUser()
     const [recipes, setRecipes] = useState<any>({});
     const [filteredRecipes, setFilteredRecipes] = useState<any>(-1);
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAlg5bcO368inwAQwIBNlespVC3mPfs8Qw",
+        authDomain: "clipcook-59c6b.firebaseapp.com",
+        projectId: "clipcook-59c6b",
+        storageBucket: "clipcook-59c6b.appspot.com",
+        messagingSenderId: "958728612297",
+        appId: "1:958728612297:web:04335a54632029b2726018"
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore();
 
     function search(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target.value.length > 0) {
@@ -46,29 +61,51 @@ export function Home() {
     }
 
     async function loadRecipes() {
-        const idToken = await user.getIdToken();
+        // const idToken = await user.getIdToken();
 
-        const headers = new Headers();
-        headers.append("authorization", idToken || "");
+        // const headers = new Headers();
+        // headers.append("authorization", idToken || "");
 
-        const req = await fetch("/api/getrecipes", {
-            method: "GET",
-            headers: headers
+        // const req = await fetch("/api/getrecipes", {
+        //     method: "GET",
+        //     headers: headers
+        // });
+
+        // const res = await req.json();
+
+        // if (res.message != "Success") {
+        //     alert(res.data);
+        //     return;
+        // }
+
+        // for (let i = 0; i < res.data.length; i++) {
+        //     res.data[i].boldIndexes = [];
+        // }
+
+        // setRecipes(res.data);
+        // setFilteredRecipes(res.data);
+
+        const recipesRef = query(collection(db, 'allRecipes'), where("uid", "==", user.id));
+        const recipeSnapshot = await getDocs(recipesRef);
+        let data: any = [];
+
+        recipeSnapshot.forEach((doc) => {
+            const recipeData = doc.data();
+
+            data.push({
+                id: doc.id,
+                title: recipeData.title,
+                image: recipeData.image
+            });
         });
 
-        const res = await req.json();
 
-        if (res.message != "Success") {
-            alert(res.data);
-            return;
+        for (let i = 0; i < data.length; i++) {
+            data[i].boldIndexes = [];
         }
 
-        for (let i = 0; i < res.data.length; i++) {
-            res.data[i].boldIndexes = [];
-        }
-
-        setRecipes(res.data);
-        setFilteredRecipes(res.data);
+        setRecipes(data);
+        setFilteredRecipes(data);
     }
 
     useEffect(() => {
