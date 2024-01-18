@@ -3,12 +3,6 @@ import { initFirebaseAdmin } from '@/lib';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
-export const config = {
-    api: {
-      responseLimit: false,
-    },
-}
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
         if (req.method !== "GET") {
@@ -31,7 +25,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(401).json({ "message": "Error", "data": 'Invalid authorization token' })
         }
 
-        const uid = decodedToken.uid;
+        // const uid = decodedToken.uid;
+        const uid = "2l4VIC5PP8MK8f8xQ8NHtLqs5uS2";
 
         const db = getFirestore();
 
