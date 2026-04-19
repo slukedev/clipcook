@@ -77,8 +77,7 @@
         @include body-large;
 
         &:focus,
-        &:not(:placeholder-shown),
-        &:valid {
+        &:not(:placeholder-shown) {
             &~label {
                 color: var(--primary);
                 @include body-small;
