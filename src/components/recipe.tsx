@@ -22,7 +22,11 @@ export function Recipe({ id, image, title, boldindexes }: RecipeProps) {
                         <h2 className={styles.recipeTitle}>
                             {title.split('').map((char, index) =>
                                 indexes.includes(index) ? (
-                                    <b style={{ color: 'var(--md-sys-color-primary)' }} key={index}>
+                                    <b
+                                        style={{ color: 'var(--md-sys-color-primary)' }}
+                                        // biome-ignore lint/suspicious/noArrayIndexKey: character positions in a fixed title are the stable identity
+                                        key={index}
+                                    >
                                         {char}
                                     </b>
                                 ) : (

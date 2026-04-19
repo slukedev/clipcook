@@ -3,8 +3,9 @@ import 'server-only'
 import { load } from 'cheerio'
 import Fraction from 'fraction.js'
 import parseIsoDuration from 'parse-iso-duration'
-import { lookup as dnsLookup } from 'node:dns/promises'
+import dns from 'node:dns'
 import net from 'node:net'
+import { Agent, fetch as undiciFetch } from 'undici'
 
 const MAX_HTML_BYTES = 2 * 1024 * 1024 // 2 MB
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024 // 4 MB
@@ -40,18 +41,37 @@ function isPrivateAddress(address: string): boolean {
     return true
 }
 
-async function assertPublicHost(hostname: string): Promise<void> {
-    if (!hostname || hostname === 'localhost') throw new Error('Blocked: private host')
-    if (net.isIP(hostname)) {
-        if (isPrivateAddress(hostname)) throw new Error('Blocked: private IP')
-        return
-    }
-    const records = await dnsLookup(hostname, { all: true, verbatim: false })
-    if (records.length === 0) throw new Error('DNS: no records')
-    for (const r of records) {
-        if (isPrivateAddress(r.address)) throw new Error('Blocked: private IP via DNS')
-    }
+function stripBrackets(host: string): string {
+    return host.startsWith('[') && host.endsWith(']') ? host.slice(1, -1) : host
 }
+
+function assertLiteralPublic(hostname: string): void {
+    const bare = stripBrackets(hostname)
+    if (!bare || bare === 'localhost') throw new Error('Blocked: private host')
+    if (net.isIP(bare) && isPrivateAddress(bare)) throw new Error('Blocked: private IP')
+}
+
+// Undici dispatcher that validates the resolved IP at connect-time. This closes the
+// TOCTOU gap between a pre-fetch DNS check and the socket the request actually uses
+// (DNS rebinding). Any lookup that returns a private/reserved address is rejected
+// before the TCP connection is established.
+const safeDispatcher = new Agent({
+    connect: {
+        lookup(hostname, options, callback) {
+            // Force single-result lookup so we can validate the address undici is
+            // actually about to dial. If we asked for `all: true` undici would pick
+            // one; by narrowing here we know the address we check is the address used.
+            const opts = { ...options, all: false as const, verbatim: false }
+            dns.lookup(hostname, opts, (err, address, family) => {
+                if (err) return callback(err, '', 0)
+                if (!address || isPrivateAddress(address)) {
+                    return callback(new Error('Blocked: private IP via DNS'), '', 0)
+                }
+                callback(null, address, family)
+            })
+        },
+    },
+})
 
 async function safeFetch(url: string, maxBytes: number, accept?: string): Promise<{
     body: ArrayBuffer
@@ -65,19 +85,20 @@ async function safeFetch(url: string, maxBytes: number, accept?: string): Promis
         if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
             throw new Error('Only http(s) is allowed')
         }
-        await assertPublicHost(parsed.hostname)
+        assertLiteralPublic(parsed.hostname)
 
         const remaining = FETCH_TIMEOUT_MS - (Date.now() - startedAt)
         if (remaining <= 0) throw new Error('Upstream timed out')
 
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), remaining)
-        let res: Response
+        let res: Awaited<ReturnType<typeof undiciFetch>>
         try {
-            res = await fetch(parsed.toString(), {
+            res = await undiciFetch(parsed.toString(), {
                 method: 'GET',
                 redirect: 'manual',
                 signal: controller.signal,
+                dispatcher: safeDispatcher,
                 headers: {
                     'User-Agent': BROWSER_USER_AGENT,
                     'Accept-Language': 'en-US,en;q=0.9',

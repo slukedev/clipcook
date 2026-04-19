@@ -14,7 +14,7 @@ export function Checkbox({ inputid, ...rest }: CheckboxProps) {
         <div className={styles.checkboxContainer}>
             <input type="checkbox" id={inputid} {...rest} />
             <label htmlFor={inputid}>
-                <svg viewBox="0 0 24 24">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="none" stroke="white" d="M1.73,12.91 8.1,19.28 22.79,4.59"></path>
                 </svg>
             </label>

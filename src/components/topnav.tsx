@@ -44,7 +44,7 @@ export function Topnav({ photoUrl, useSvgLogo }: TopnavProps) {
                 <Link href="/" className={styles.title} passHref>
                     <div>
                         {useSvgLogo ? (
-                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <rect width="32" height="32" rx="16" fill="var(--primary)" />
                                 <path
                                     d="M15.9757 6.0625C17.6239 6.0625 19.0625 8.0486 19.0625 10.6221C19.0625 12.8041 18.015 14.1747 16.6601 14.5524L17.4423 25.7557C17.4423 25.7557 16.8417 25.9375 15.9897 25.9375C15.1377 25.9375 14.6907 25.7417 14.6907 25.7417C15.2075 20.161 15.2913 15.0979 15.3053 14.5524C13.9505 14.2167 12.875 12.846 12.875 10.6221C12.875 8.0486 14.3276 6.0625 15.9757 6.0625Z"
@@ -66,7 +66,7 @@ export function Topnav({ photoUrl, useSvgLogo }: TopnavProps) {
                         aria-expanded={menuOpen}
                         onClick={() => setMenuOpen((v) => !v)}
                     >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {/* biome-ignore lint/performance/noImgElement: Google profile URLs require next.config domain config; plain <img> is intentional */}
                         <img
                             id="profilePicture"
                             style={{ borderRadius: '100%' }}

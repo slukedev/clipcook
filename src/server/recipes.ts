@@ -23,14 +23,18 @@ function col() {
 }
 
 export const listRecipesForUser = cache(async (uid: string): Promise<RecipeSummary[]> => {
-    const snapshot = await col().where('uid', '==', uid).get()
+    // Only request fields needed for the list view. Pulling the full `image` would
+    // blow up the response size — recipes store a small `thumbnail` for this reason.
+    const snapshot = await col().where('uid', '==', uid).select('title', 'thumbnail', 'image').get()
     const results: RecipeSummary[] = []
     snapshot.forEach((doc) => {
         const data = doc.data()
+        const thumb = typeof data.thumbnail === 'string' && data.thumbnail.length > 0 ? data.thumbnail : ''
+        const image = typeof data.image === 'string' ? data.image : ''
         results.push({
             id: doc.id,
             title: typeof data.title === 'string' ? data.title : '',
-            image: typeof data.image === 'string' ? data.image : '',
+            image: thumb || image,
         })
     })
     return results
@@ -46,6 +50,7 @@ export const getRecipeForUser = cache(
             id: doc.id,
             uid: data.uid,
             image: String(data.image ?? ''),
+            thumbnail: String(data.thumbnail ?? ''),
             title: String(data.title ?? ''),
             description: String(data.description ?? ''),
             servings: data.servings ?? '',
