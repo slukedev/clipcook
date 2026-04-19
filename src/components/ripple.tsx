@@ -1,7 +1,9 @@
-import React from 'react'
+'use client'
+
+import type { HTMLAttributes, MouseEvent as ReactMouseEvent } from 'react'
 import styles from '@/styles/Components.module.scss'
 
-interface ComponentProps {
+interface RippleProps extends HTMLAttributes<HTMLDivElement> {
     feather?: string
     speedms?: number
     color?: string
@@ -9,78 +11,74 @@ interface ComponentProps {
     dontfade?: boolean
 }
 
-export class Ripple extends React.Component<ComponentProps & React.HTMLProps<HTMLDivElement>, {}> {
-    render() {
-        const feather = this.props.feather;
-        const speed = this.props.speedms;
-        const color = this.props.color;
-        const unbounded = this.props.unbounded;
-        const dontFade = this.props.dontfade;
+export function Ripple({
+    feather,
+    speedms,
+    color,
+    unbounded,
+    dontfade,
+    className,
+    children,
+    onMouseDown,
+    ...rest
+}: RippleProps) {
+    function createRipple(event: ReactMouseEvent<HTMLDivElement>) {
+        onMouseDown?.(event)
+        const target = event.currentTarget
+        const rect = target.getBoundingClientRect()
+        const ripple = document.createElement('span')
+        ripple.className = styles.ripple ?? ''
 
-        function createRipple(event: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-            const target = event.currentTarget;
-            const rect = target.getBoundingClientRect();
-            const ripple = document.createElement("span");
+        const diameter = Math.max(target.clientWidth, target.clientHeight)
+        const radius = diameter / 2
 
-            ripple.className = styles.ripple;
+        ripple.style.width = `${diameter}px`
+        ripple.style.height = `${diameter}px`
 
-            const diameter = Math.max(target.clientWidth, target.clientHeight);
-            const radius = diameter / 2;
+        const x = event.clientX - rect.left
+        const y = event.clientY - rect.top
 
-            ripple.style.width = ripple.style.height = `${diameter}px`;
-
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-
-            if (unbounded) {
-                ripple.style.top = `0`;
-                ripple.style.left = `0`;
-                ripple.style.transform = `translate(-50%, -50%)`;
-            } else {
-                ripple.style.top = `${y - radius}px`;
-                ripple.style.left = `${x - radius}px`;
-            }
-
-            ripple.classList.add(styles.rippleActive);
-
-            if (feather) {
-                ripple.style.filter = "blur(" + feather + ")";
-            }
-
-            if (speed) {
-                ripple.style.animationDuration = speed + "ms";
-            }
-
-            if (color) {
-                ripple.style.backgroundColor = color;
-            }
-
-
-            if (dontFade) {
-                ripple.style.opacity = "1 !important";
-            }
-
-            target.appendChild(ripple);
-
-            if (dontFade) {
-                setTimeout(() => {
-                    document.addEventListener("click", (e) => {
-                        if (e.target !== target) {
-                            ripple.remove();
-                        }
-                    });
-                }, speed || 600);
-            } else {
-                setTimeout(() => {
-                    ripple.remove();
-                }, speed || 600);
-            }
+        if (unbounded) {
+            ripple.style.top = '0'
+            ripple.style.left = '0'
+            ripple.style.transform = 'translate(-50%, -50%)'
+        } else {
+            ripple.style.top = `${y - radius}px`
+            ripple.style.left = `${x - radius}px`
         }
 
-        return (
-            <div onMouseDown={createRipple} {...this.props} className={`${styles.ripplecontainer} ${this.props.className}`}>
-                {this.props.children}
-            </div>
-        )
+        ripple.classList.add(styles.rippleActive ?? '')
+
+        if (feather) ripple.style.filter = `blur(${feather})`
+        if (speedms) ripple.style.animationDuration = `${speedms}ms`
+        if (color) ripple.style.backgroundColor = color
+        if (dontfade) ripple.style.opacity = '1'
+
+        target.appendChild(ripple)
+
+        const removeTimeout = window.setTimeout(() => {
+            ripple.remove()
+        }, speedms ?? 600)
+
+        if (dontfade) {
+            const onDocClick = (e: MouseEvent) => {
+                if (e.target !== target) {
+                    ripple.remove()
+                    document.removeEventListener('click', onDocClick)
+                    window.clearTimeout(removeTimeout)
+                }
+            }
+            document.addEventListener('click', onDocClick)
+        }
     }
+
+    return (
+        <div
+            {...rest}
+            onMouseDown={createRipple}
+            className={`${styles.ripplecontainer} ${className ?? ''}`}
+        >
+            {children}
+        </div>
+    )
 }

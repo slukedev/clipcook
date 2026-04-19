@@ -1,46 +1,57 @@
-import { Component } from "react";
-import styles from '@/styles/Components.module.scss'
-import { motion, AnimatePresence } from "framer-motion";
+'use client'
 
-interface ComponentProps {
+import { useEffect } from 'react'
+import styles from '@/styles/Components.module.scss'
+import { AnimatePresence, motion } from 'motion/react'
+
+interface ModalProps {
     opened: boolean
     title: string
     closefunction: () => void
+    children?: React.ReactNode
 }
 
-export class Modal extends Component<ComponentProps & React.HTMLProps<HTMLDivElement>, {}> {
-    render() {
-        if (typeof window !== "undefined") {
-            if (this.props.opened) {
-                document.body.style.overflow = "hidden";
-                document.addEventListener("keydown", (e) => {
-                    if (this.props.opened && this.props.closefunction) {
-                        if (e.key === "Escape") {
-                            this.props.closefunction();
-                        }
-                    }
-                });
-            } else {
-                document.body.style.overflow = "auto";
-            }
+export function Modal({ opened, title, closefunction, children }: ModalProps) {
+    useEffect(() => {
+        if (!opened) return
+        const previous = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        function onKey(e: KeyboardEvent) {
+            if (e.key === 'Escape') closefunction()
         }
+        document.addEventListener('keydown', onKey)
+        return () => {
+            document.body.style.overflow = previous
+            document.removeEventListener('keydown', onKey)
+        }
+    }, [opened, closefunction])
 
-        return (
-            <AnimatePresence>
-                {
-                    this.props.opened ? (
-                        <>
-                            <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }} transition={{ ease: "easeInOut", duration: 0.3 }} key={`modal${Math.random()}`} className={styles.modal} >
-                                <h1 className={styles.title}>{this.props.title}</h1>
-                                <div className={styles.content}>
-                                    {this.props.children}
-                                </div>
-                            </motion.div>
-                            <motion.div key={`backdrop${Math.random()}`} initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} exit={{ opacity: 0 }} onClick={this.props.closefunction} className={styles.backdrop} transition={{ ease: "linear", duration: 0.3 }}></motion.div>
-                        </>
-                    ) : null
-                }
-            </AnimatePresence>
-        )
-    }
+    return (
+        <AnimatePresence>
+            {opened ? (
+                <>
+                    <motion.div
+                        initial={{ scale: 0.92, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.92, opacity: 0 }}
+                        transition={{ ease: 'easeInOut', duration: 0.3 }}
+                        key="modal"
+                        className={styles.modal}
+                    >
+                        <h1 className={styles.title}>{title}</h1>
+                        <div className={styles.content}>{children}</div>
+                    </motion.div>
+                    <motion.div
+                        key="backdrop"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.3 }}
+                        exit={{ opacity: 0 }}
+                        onClick={closefunction}
+                        className={styles.backdrop}
+                        transition={{ ease: 'linear', duration: 0.3 }}
+                    />
+                </>
+            ) : null}
+        </AnimatePresence>
+    )
 }

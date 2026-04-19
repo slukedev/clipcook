@@ -1,23 +1,27 @@
-import React from 'react'
-import styles from '@/styles/Components.module.scss'
-import { Icon } from "@/components/icon"
+'use client'
 
-interface ComponentProps {
+import type { TextareaHTMLAttributes } from 'react'
+import styles from '@/styles/Components.module.scss'
+import { Icon } from '@/components/icon'
+
+interface TextareaExtras {
     label: string
     name: string
-    defaultValue?: string
     icon?: string
     fullwidth?: boolean
 }
 
-export class Textarea extends React.Component<ComponentProps & React.HTMLProps<HTMLTextAreaElement>, {}> {
-    render() {
-        return (
-            <div className={`${styles.input} ${styles.textarea} ${this.props.icon ? styles.icon : ""} ${this.props.className}`} style={this.props.fullwidth ? { width: "100%" } : {}}>
-                {this.props.icon ? <Icon name={this.props.icon} iconsize="24" className={styles.icon} /> : null}
-                <textarea {...this.props} defaultValue={this.props.defaultValue} placeholder=" " required />
-                <label htmlFor={this.props.name}>{this.props.label}</label>
-            </div>
-        )
-    }
+type TextareaProps = TextareaExtras & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'name'>
+
+export function Textarea({ label, name, icon, fullwidth, className, ...rest }: TextareaProps) {
+    return (
+        <div
+            className={`${styles.input} ${styles.textarea} ${icon ? styles.icon : ''} ${className ?? ''}`}
+            style={fullwidth ? { width: '100%' } : undefined}
+        >
+            {icon ? <Icon name={icon} iconsize="24" className={styles.icon} /> : null}
+            <textarea {...rest} name={name} placeholder=" " />
+            <label htmlFor={rest.id ?? name}>{label}</label>
+        </div>
+    )
 }

@@ -1,19 +1,16 @@
-import React from 'react'
+'use client'
+
 import styles from '@/styles/Components.module.scss'
 import { Ripple } from './ripple'
 
-interface ComponentProps {
-    disabled?: boolean
-}
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>
 
-export class Button extends React.Component<ComponentProps & React.HTMLAttributes<HTMLButtonElement>, {}> {
-    render() {
-        return (
-            <Ripple feather="5px" style={{ borderRadius: 20 }}>
-                <button className={styles.button} {...this.props}>
-                    {this.props.children}
-                </button>
-            </Ripple>
-        )
-    }
+export function Button(props: ButtonProps) {
+    return (
+        <Ripple feather="5px" style={{ borderRadius: 20 }}>
+            <button type="button" className={styles.button} {...props}>
+                {props.children}
+            </button>
+        </Ripple>
+    )
 }

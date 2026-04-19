@@ -1,14 +1,14 @@
-import React from 'react'
+'use client'
+
+import type { HTMLAttributes } from 'react'
 import styles from '@/styles/Components.module.scss'
 
-export class Spinner extends React.Component<React.HTMLProps<HTMLDivElement>, {}> {
-    render() {
-        return (
-            <div className={styles.spinner} {...this.props}>
-                <svg viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="20" />
-                </svg>
-            </div>
-        )
-    }
+export function Spinner(props: HTMLAttributes<HTMLDivElement>) {
+    return (
+        <div className={styles.spinner} {...props}>
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="20" />
+            </svg>
+        </div>
+    )
 }
