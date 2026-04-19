@@ -81,9 +81,11 @@ export async function importRecipeAction(url: string): Promise<ActionResult<Impo
         const data = await importRecipeFromUrl(parsed.data)
         return { ok: true, data }
     } catch (err) {
-        const fallback = err instanceof Error && err.message.startsWith('Blocked')
-            ? 'That URL is blocked.'
-            : 'Unable to import from that URL.'
-        return { ok: false, error: toMessage(err, fallback) }
+        if (err instanceof Error) {
+            if (err.name === 'AbortError') return { ok: false, error: 'The site took too long to respond.' }
+            if (err.message.startsWith('Blocked')) return { ok: false, error: 'That URL is blocked.' }
+            return { ok: false, error: err.message }
+        }
+        return { ok: false, error: 'Unable to import from that URL.' }
     }
 }

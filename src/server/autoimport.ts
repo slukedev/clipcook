@@ -9,7 +9,10 @@ import net from 'node:net'
 const MAX_HTML_BYTES = 2 * 1024 * 1024 // 2 MB
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024 // 4 MB
 const FETCH_TIMEOUT_MS = 10_000
+const MAX_REDIRECTS = 5
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif'])
+const BROWSER_USER_AGENT =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 function isPrivateAddress(address: string): boolean {
     if (net.isIPv4(address)) {
@@ -53,29 +56,52 @@ async function assertPublicHost(hostname: string): Promise<void> {
 async function safeFetch(url: string, maxBytes: number, accept?: string): Promise<{
     body: ArrayBuffer
     contentType: string | null
+    finalUrl: string
 }> {
-    const parsed = new URL(url)
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-        throw new Error('Only http(s) is allowed')
-    }
-    await assertPublicHost(parsed.hostname)
-
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
-    try {
-        const res = await fetch(parsed.toString(), {
-            method: 'GET',
-            redirect: 'manual',
-            signal: controller.signal,
-            headers: {
-                'User-Agent': 'ClipCookBot/1.0 (+https://clipcook.app)',
-                ...(accept ? { Accept: accept } : {}),
-            },
-        })
-        if (res.status >= 300 && res.status < 400) {
-            throw new Error('Redirects are not followed')
+    const startedAt = Date.now()
+    let current = url
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+        const parsed = new URL(current)
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            throw new Error('Only http(s) is allowed')
         }
+        await assertPublicHost(parsed.hostname)
+
+        const remaining = FETCH_TIMEOUT_MS - (Date.now() - startedAt)
+        if (remaining <= 0) throw new Error('Upstream timed out')
+
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), remaining)
+        let res: Response
+        try {
+            res = await fetch(parsed.toString(), {
+                method: 'GET',
+                redirect: 'manual',
+                signal: controller.signal,
+                headers: {
+                    'User-Agent': BROWSER_USER_AGENT,
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    ...(accept ? { Accept: accept } : {}),
+                },
+            })
+        } finally {
+            clearTimeout(timer)
+        }
+
+        if (res.status >= 300 && res.status < 400) {
+            const location = res.headers.get('location')
+            if (!location) throw new Error(`Upstream redirected without a Location header`)
+            current = new URL(location, parsed).toString()
+            continue
+        }
+
+        if (res.status === 403 || res.status === 401) {
+            throw new Error('Site blocked the request (anti-scraping)')
+        }
+        if (res.status === 404) throw new Error('Page not found (404)')
+        if (res.status === 429) throw new Error('Site rate-limited the request (429)')
         if (!res.ok) throw new Error(`Upstream responded ${res.status}`)
+
         const lenHeader = res.headers.get('content-length')
         if (lenHeader && Number(lenHeader) > maxBytes) throw new Error('Upstream payload too large')
 
@@ -104,10 +130,10 @@ async function safeFetch(url: string, maxBytes: number, accept?: string): Promis
         return {
             body: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
             contentType: res.headers.get('content-type'),
+            finalUrl: parsed.toString(),
         }
-    } finally {
-        clearTimeout(timer)
     }
+    throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`)
 }
 
 function formatDuration(ms: number): string {
@@ -214,13 +240,26 @@ function parseIsoToHuman(iso: string | undefined): string | undefined {
 function extractInstructions(raw: RawRecipe['recipeInstructions']): string[] {
     if (!raw) return []
     const out: string[] = []
-    for (const step of raw) {
-        if (typeof step === 'string') out.push(step)
-        else if (step && typeof step === 'object') {
-            if (typeof step.text === 'string') out.push(step.text)
-            else if (typeof step.name === 'string') out.push(step.name)
+    const visit = (node: unknown) => {
+        if (typeof node === 'string') {
+            const trimmed = node.trim()
+            if (trimmed) out.push(trimmed)
+            return
         }
+        if (!node || typeof node !== 'object') return
+        if (Array.isArray(node)) {
+            for (const item of node) visit(item)
+            return
+        }
+        const obj = node as { text?: unknown; name?: unknown; itemListElement?: unknown }
+        if (Array.isArray(obj.itemListElement)) {
+            visit(obj.itemListElement)
+            return
+        }
+        if (typeof obj.text === 'string' && obj.text.trim()) out.push(obj.text.trim())
+        else if (typeof obj.name === 'string' && obj.name.trim()) out.push(obj.name.trim())
     }
+    visit(raw)
     return out
 }
 
