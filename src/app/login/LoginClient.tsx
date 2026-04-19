@@ -48,6 +48,7 @@ export function LoginClient({ nextPath }: { nextPath?: string }) {
                     xmlns="http://www.w3.org/2000/svg"
                     height="20"
                     viewBox="0 0 186.69 190.5"
+                    aria-hidden="true"
                 >
                     <g transform="translate(1184.583 765.171)">
                         <path clipPath="none" mask="none" d="M-1089.333-687.239v36.888h51.262c-2.251 11.863-9.006 21.908-19.137 28.662l30.913 23.986c18.011-16.625 28.402-41.044 28.402-70.052 0-6.754-.606-13.249-1.732-19.483z" fill="#4285f4" />

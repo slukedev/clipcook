@@ -16,14 +16,48 @@ import { Modal } from '@/components/modal'
 import { Ripple } from '@/components/ripple'
 import type { Recipe } from '@/server/recipes'
 
-function unescape(str: string): string {
-    return str.replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
+const NAMED_ENTITIES: Record<string, string> = {
+    amp: '&',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    apos: "'",
+    nbsp: '\u00a0',
+    ndash: '\u2013',
+    mdash: '\u2014',
+    hellip: '\u2026',
+    lsquo: '\u2018',
+    rsquo: '\u2019',
+    ldquo: '\u201c',
+    rdquo: '\u201d',
+    deg: '\u00b0',
+    frac12: '\u00bd',
+    frac14: '\u00bc',
+    frac34: '\u00be',
+}
+
+function unescapeHtml(str: string): string {
+    return str
+        .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
+        .replace(/&([a-z][a-z0-9]*);/gi, (match, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? match)
+}
+
+function parseAmount(raw: string): number {
+    if (raw.includes('/')) {
+        const [a, b] = raw.split('/')
+        const num = Number(a)
+        const den = Number(b)
+        return Number.isFinite(num) && Number.isFinite(den) && den !== 0 ? num / den : NaN
+    }
+    return Number(raw)
 }
 
 function hexToRgb(hex: string): string | null {
     const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     if (!match) return null
-    return `${parseInt(match[1]!, 16)}, ${parseInt(match[2]!, 16)}, ${parseInt(match[3]!, 16)}`
+    const [, r = '0', g = '0', b = '0'] = match
+    return `${parseInt(r, 16)}, ${parseInt(g, 16)}, ${parseInt(b, 16)}`
 }
 
 interface ConversionResult {
@@ -57,20 +91,25 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
 
     const scaleIngredient = useCallback(
         (ingredient: string): string => {
-            const amountRegex = /(\d+\/\d+|\d+\.\d+|\d+)/g
-            const match = ingredient.match(amountRegex)
-            if (!match) return ingredient
-            const first = match[0]
-            if (!first) return ingredient
-            const scaled = Math.round(Number(first) * servingsScale * 1000) / 1000
-            return ingredient.replace(amountRegex, String(scaled))
+            // Scale only the first numeric amount in the ingredient. Replacing every
+            // number would rewrite things like "350° oven" or "stir for 5 minutes"
+            // alongside the actual quantity.
+            const amountRegex = /\d+\/\d+|\d+\.\d+|\d+/
+            let replaced = false
+            return ingredient.replace(amountRegex, (match) => {
+                if (replaced) return match
+                replaced = true
+                const n = parseAmount(match)
+                if (!Number.isFinite(n)) return match
+                return String(Math.round(n * servingsScale * 1000) / 1000)
+            })
         },
         [servingsScale],
     )
 
     const formatIngredient = useCallback(
         (ingredient: string): string => {
-            return unescape(scaleIngredient(ingredient)).replace(/-?\d+(?:\.\d+)?/g, (n) => {
+            return unescapeHtml(scaleIngredient(ingredient)).replace(/-?\d+(?:\.\d+)?/g, (n) => {
                 try {
                     return new Fraction(n).simplify(0.001).toFraction(true)
                 } catch {
@@ -102,6 +141,7 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
 
     useEffect(() => {
         let cancelled = false
+        const appliedProps: string[] = []
         async function applyTheme() {
             if (typeof document === 'undefined') return
             const img = document.getElementById('recipeImage') as HTMLImageElement | null
@@ -116,16 +156,22 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
             try {
                 const theme = await themeFromImage(img)
                 const darkScheme = theme.schemes.dark
-                const entries = Object.entries(darkScheme as unknown as Record<string, number>)
+                // Scheme stores colors behind prototype getters, so Object.entries(darkScheme)
+                // returns nothing. toJSON() gives the plain {primary, onPrimary, ...} record.
+                const entries = Object.entries(darkScheme.toJSON())
                 for (const [prop, argb] of entries) {
                     const cssName = prop.replace(/[^a-z]/g, (l) => `-${l.toLowerCase()}`)
                     const hex = hexFromArgb(argb)
                     const rgb = hexToRgb(hex)
-                    document.body.style.setProperty(`--md-sys-color-${cssName}`, hex)
-                    document.body.style.setProperty(`--md-sys-color-${cssName}-dark`, hex)
+                    const setProp = (name: string, value: string) => {
+                        document.body.style.setProperty(name, value)
+                        appliedProps.push(name)
+                    }
+                    setProp(`--md-sys-color-${cssName}`, hex)
+                    setProp(`--md-sys-color-${cssName}-dark`, hex)
                     if (rgb) {
-                        document.body.style.setProperty(`--md-sys-color-${cssName}-rgb`, rgb)
-                        document.body.style.setProperty(`--md-sys-color-${cssName}-rgb-dark`, rgb)
+                        setProp(`--md-sys-color-${cssName}-rgb`, rgb)
+                        setProp(`--md-sys-color-${cssName}-rgb-dark`, rgb)
                     }
                 }
                 setAccent(hexFromArgb(darkScheme.primary))
@@ -136,8 +182,11 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
         void applyTheme()
         return () => {
             cancelled = true
+            for (const prop of appliedProps) {
+                document.body.style.removeProperty(prop)
+            }
         }
-    }, [recipe.image])
+    }, [])
 
     useEffect(() => {
         if (typeof navigator === 'undefined') return
@@ -156,11 +205,15 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
     useEffect(() => {
         if (!accent) return
         const meta = document.querySelector('meta[name="theme-color"]')
-        if (meta) meta.setAttribute('content', accent)
+        if (!meta) return
+        const previous = meta.getAttribute('content')
+        meta.setAttribute('content', accent)
+        return () => {
+            if (previous !== null) meta.setAttribute('content', previous)
+        }
     }, [accent])
 
-    const toggleChecklistItem = (e: ReactMouseEvent<HTMLDivElement>) => {
-        const target = e.currentTarget
+    const toggleChecklistElement = (target: HTMLElement) => {
         const checkbox = target.querySelector("input[type='checkbox']") as HTMLInputElement | null
         if (!checkbox) return
         const text = target.classList.contains('instruction')
@@ -172,6 +225,17 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
                 'style',
                 checkbox.checked ? 'color: var(--primary); text-decoration: line-through;' : '',
             )
+        }
+    }
+
+    const toggleChecklistItem = (e: ReactMouseEvent<HTMLDivElement>) => {
+        toggleChecklistElement(e.currentTarget)
+    }
+
+    const onChecklistKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            toggleChecklistElement(e.currentTarget)
         }
     }
 
@@ -223,7 +287,7 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
                             </div>
                         </div>
                         <div style={{ borderRadius: '16px 0 0 16px' }} className={styles.image}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            {/* biome-ignore lint/performance/noImgElement: themeFromImage reads the DOM image; next/image would break pixel access */}
                             <img
                                 style={{ borderRadius: '16px 0 0 16px' }}
                                 id="recipeImage"
@@ -236,12 +300,17 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
                         <h1 className={styles.title}>Ingredients</h1>
                         <div className={styles.ingredients}>
                             {ingredientItems.map((ingredient, index) => (
-                                <Ripple
-                                    key={index}
-                                    feather="10px"
-                                    style={{ width: '100%', borderRadius: 8 }}
-                                >
-                                    <div className={styles.ingredient} onClick={toggleChecklistItem}>
+                                // biome-ignore lint/suspicious/noArrayIndexKey: recipe view is static; list never reorders
+                                <Ripple key={index} feather="10px" style={{ width: '100%', borderRadius: 8 }}>
+                                    {/* biome-ignore lint/a11y/useSemanticElements: styling relies on div; <button> resets break the flex layout */}
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
+                                        className={styles.ingredient}
+                                        onClick={toggleChecklistItem}
+                                        onKeyDown={onChecklistKeyDown}
+                                        aria-label={`Toggle ingredient ${ingredient}`}
+                                    >
                                         <div className={styles.ingredientName}>
                                             <span>{ingredient}</span>
                                         </div>
@@ -262,11 +331,20 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
                         <h1 className={styles.title}>Directions</h1>
                         <div className={styles.ingredients}>
                             {recipe.instructions.map((instruction, index) => (
+                                // biome-ignore lint/suspicious/noArrayIndexKey: recipe view is static; list never reorders
                                 <Ripple key={index} feather="10px" style={{ width: '100%', borderRadius: 8 }}>
-                                    <div className={`${styles.ingredient} instruction`} onClick={toggleChecklistItem}>
+                                    {/* biome-ignore lint/a11y/useSemanticElements: styling relies on div; <button> resets break the flex layout */}
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
+                                        className={`${styles.ingredient} instruction`}
+                                        onClick={toggleChecklistItem}
+                                        onKeyDown={onChecklistKeyDown}
+                                        aria-label={`Toggle step ${index + 1}`}
+                                    >
                                         <div className={styles.directionNumber}>
                                             <span className={`${styles.number} number`}>{index + 1}</span>
-                                            <svg width="120" height="120">
+                                            <svg width="120" height="120" aria-hidden="true">
                                                 <path d="M0.839206 40.5976C-4.14625 17.3914 16.4721 -3.42453 40.5835 0.47246L54.2854 2.68703C58.0691 3.29855 61.931 3.29855 65.7146 2.68703L79.4165 0.47246C103.528 -3.42453 124.146 17.3914 119.161 40.5976L116.514 52.9168C115.54 57.4515 115.54 62.1322 116.514 66.6669L119.251 79.4036C124.211 102.496 103.809 123.261 79.7848 119.573L65.436 117.37C61.8344 116.817 58.1656 116.817 54.564 117.37L40.2152 119.573C16.1906 123.261 -4.21146 102.496 0.749499 79.4036L3.48578 66.6669C4.45997 62.1322 4.45998 57.4515 3.48578 52.9168L0.839206 40.5976Z" />
                                             </svg>
                                         </div>
@@ -362,8 +440,8 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
                                 <h1>That unit was not found</h1>
                             ) : (
                                 <ul style={{ width: 'auto' }}>
-                                    {conversions.map((item, index) => (
-                                        <li key={index}>
+                                    {conversions.map((item) => (
+                                        <li key={`${item.unit}-${item.value}`}>
                                             {new Fraction(item.value).simplify(0.001).toFraction(true)} {item.unit}
                                         </li>
                                     ))}

@@ -71,6 +71,18 @@ export async function deleteRecipeAction(recipeId: string): Promise<ActionResult
     redirect('/')
 }
 
+const IMPORT_ERROR_MESSAGES: Record<string, string> = {
+    'Upstream timed out': 'The site took too long to respond.',
+    'Only http(s) is allowed': 'Only http(s) URLs are supported.',
+    'No recipe metadata found on page': 'No recipe metadata found on that page.',
+    'Target URL is not an HTML page': 'That URL does not look like a webpage.',
+    'Upstream payload too large': 'That page is too large to clip.',
+    'Empty response': 'The site sent back an empty response.',
+    'Site blocked the request (anti-scraping)': 'The site blocked the request (anti-scraping).',
+    'Page not found (404)': 'The page could not be found (404).',
+    'Site rate-limited the request (429)': 'The site rate-limited the request (429).',
+}
+
 export async function importRecipeAction(url: string): Promise<ActionResult<ImportedRecipe>> {
     try {
         await requireSession()
@@ -84,7 +96,13 @@ export async function importRecipeAction(url: string): Promise<ActionResult<Impo
         if (err instanceof Error) {
             if (err.name === 'AbortError') return { ok: false, error: 'The site took too long to respond.' }
             if (err.message.startsWith('Blocked')) return { ok: false, error: 'That URL is blocked.' }
-            return { ok: false, error: err.message }
+            if (err.message.startsWith('Too many redirects')) return { ok: false, error: 'That URL redirected too many times.' }
+            if (err.message.startsWith('Upstream responded')) {
+                const match = /\b(\d{3})\b/.exec(err.message)
+                return { ok: false, error: `The site responded with ${match?.[1] ?? 'an error'}.` }
+            }
+            const mapped = IMPORT_ERROR_MESSAGES[err.message]
+            if (mapped) return { ok: false, error: mapped }
         }
         return { ok: false, error: 'Unable to import from that URL.' }
     }

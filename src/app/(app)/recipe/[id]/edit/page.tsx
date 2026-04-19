@@ -16,6 +16,7 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
 
     const initial: RecipeFormValues = {
         image: recipe.image,
+        thumbnail: recipe.thumbnail ?? '',
         title: recipe.title,
         description: recipe.description,
         servings: String(recipe.servings ?? ''),

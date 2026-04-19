@@ -63,9 +63,11 @@ src/
     autoimport.ts           # SSRF-safe recipe importer
     schemas.ts              # Zod input schemas
   styles/                   # SCSS modules + Material You tokens
-  middleware.ts             # cookie presence → redirect UX (not auth)
+  proxy.ts                  # cookie presence → redirect UX (not auth)
 ```
 
 ## Security notes
 
-The middleware only checks for the presence of a session cookie. It runs on the Edge runtime where `firebase-admin` is unavailable, so the actual cryptographic verification happens in `getSession()` (Node runtime) inside Server Components and Server Actions. Treat the middleware as UX only, not as a security boundary.
+`proxy.ts` (the Next.js 16 replacement for `middleware.ts`) only checks for the presence of a session cookie. It runs on the Edge runtime where `firebase-admin` is unavailable, so the actual cryptographic verification happens in `getSession()` (Node runtime) inside Server Components and Server Actions. Treat `proxy.ts` as UX only, not as a security boundary.
+
+The autoimport fetcher uses an undici dispatcher whose `connect.lookup` hook validates every resolved IP, so DNS rebinding cannot reach private ranges between the pre-fetch check and the actual TCP connect.

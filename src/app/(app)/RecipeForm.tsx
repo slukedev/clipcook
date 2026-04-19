@@ -26,6 +26,7 @@ function ordinal(n: number): string {
 
 export interface RecipeFormValues {
     image: string
+    thumbnail: string
     title: string
     description: string
     servings: string
@@ -45,6 +46,7 @@ interface RecipeFormProps {
 
 const BLANK: RecipeFormValues = {
     image: '',
+    thumbnail: '',
     title: '',
     description: '',
     servings: '',
@@ -56,7 +58,70 @@ const BLANK: RecipeFormValues = {
     instructions: [''],
 }
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024 // hard limit on the raw file a user can pick
+const MAX_IMAGE_BASE64 = 900 * 1024 // must match server schema
+const MAX_THUMB_BASE64 = 48 * 1024
+
+async function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+    const url = URL.createObjectURL(file)
+    try {
+        return await loadImageFromSrc(url)
+    } finally {
+        URL.revokeObjectURL(url)
+    }
+}
+
+async function loadImageFromSrc(src: string): Promise<HTMLImageElement> {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => resolve(img)
+        img.onerror = () => reject(new Error('Could not decode image'))
+        img.src = src
+    })
+}
+
+function drawToDataUrl(img: HTMLImageElement, maxEdge: number, quality: number): string {
+    const ratio = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight))
+    const w = Math.max(1, Math.round(img.naturalWidth * ratio))
+    const h = Math.max(1, Math.round(img.naturalHeight * ratio))
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas unavailable')
+    ctx.drawImage(img, 0, 0, w, h)
+    return canvas.toDataURL('image/jpeg', quality)
+}
+
+function encodeImage(img: HTMLImageElement): { image: string; thumbnail: string } {
+    let image = ''
+    for (const [edge, quality] of [[1600, 0.85], [1280, 0.8], [1024, 0.75], [800, 0.7]] as const) {
+        const candidate = drawToDataUrl(img, edge, quality)
+        if (candidate.length <= MAX_IMAGE_BASE64) {
+            image = candidate
+            break
+        }
+    }
+    if (!image) throw new Error('Could not shrink image below the size limit')
+    let thumbnail = ''
+    for (const [edge, quality] of [[256, 0.75], [200, 0.7], [160, 0.65]] as const) {
+        const candidate = drawToDataUrl(img, edge, quality)
+        if (candidate.length <= MAX_THUMB_BASE64) {
+            thumbnail = candidate
+            break
+        }
+    }
+    return { image, thumbnail }
+}
+
+async function processFile(file: File): Promise<{ image: string; thumbnail: string }> {
+    return encodeImage(await loadImageFromFile(file))
+}
+
+async function processDataUrl(dataUrl: string): Promise<{ image: string; thumbnail: string }> {
+    return encodeImage(await loadImageFromSrc(dataUrl))
+}
 
 export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
     const router = useRouter()
@@ -74,7 +139,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
         setValues((prev) => ({ ...prev, [key]: value }))
     }
 
-    function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    async function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         e.target.value = ''
         if (!file) return
@@ -82,17 +147,16 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
             setError('Please choose an image file.')
             return
         }
-        if (file.size > MAX_IMAGE_BYTES) {
-            setError('Image is too large (max 5 MB).')
+        if (file.size > MAX_UPLOAD_BYTES) {
+            setError('Image is too large — please pick something under 25 MB.')
             return
         }
-        const reader = new FileReader()
-        reader.onload = () => {
-            const result = typeof reader.result === 'string' ? reader.result : ''
-            if (result) setField('image', result)
+        try {
+            const { image, thumbnail } = await processFile(file)
+            setValues((prev) => ({ ...prev, image, thumbnail }))
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not read that image.')
         }
-        reader.onerror = () => setError('Could not read that image.')
-        reader.readAsDataURL(file)
     }
 
     async function onImport(e: FormEvent<HTMLFormElement>) {
@@ -101,15 +165,28 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
         setImporting(true)
         setError(null)
         const result = await importRecipeAction(importUrl)
-        setImporting(false)
         if (!result.ok) {
+            setImporting(false)
             setError(result.error)
             return
         }
         const imported = result.data
+        let image = ''
+        let thumbnail = ''
+        if (imported.image) {
+            try {
+                const processed = await processDataUrl(imported.image)
+                image = processed.image
+                thumbnail = processed.thumbnail
+            } catch {
+                // fall through without an image rather than failing the whole import
+            }
+        }
+        setImporting(false)
         setValues((prev) => ({
             ...prev,
-            image: imported.image ?? prev.image,
+            image: image || prev.image,
+            thumbnail: thumbnail || prev.thumbnail,
             title: imported.title ?? prev.title,
             description: imported.description ?? prev.description,
             servings: imported.servings ?? prev.servings,
@@ -220,7 +297,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
                             onClick={() => fileRef.current?.click()}
                         >
                             {values.image ? (
-                                /* eslint-disable-next-line @next/next/no-img-element */
+                                // biome-ignore lint/performance/noImgElement: preview uses arbitrary data/remote URL; next/image would require per-URL domain config
                                 <img style={{ width: '101%' }} src={values.image} alt="Recipe" />
                             ) : (
                                 <span>Upload Image</span>
@@ -342,6 +419,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
                 <div className={styles.createInputs}>
                     {values.ingredients.map((ingredient, index) => (
                         <Input
+                            // biome-ignore lint/suspicious/noArrayIndexKey: rows are only appended; index is the stable identity
                             key={index}
                             id={`ingredient-${index}`}
                             name={`ingredient-${index}`}
@@ -372,6 +450,7 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
                 <div className={styles.createInputs}>
                     {values.instructions.map((instruction, index) => (
                         <Input
+                            // biome-ignore lint/suspicious/noArrayIndexKey: rows are only appended; index is the stable identity
                             key={index}
                             id={`instruction-${index}`}
                             name={`instruction-${index}`}

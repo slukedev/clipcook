@@ -71,6 +71,7 @@ export function Ripple({
     }
 
     return (
+        // biome-ignore lint/a11y/noStaticElementInteractions: decorative wrapper; real interaction lives on the child element
         <div
             {...rest}
             onMouseDown={createRipple}
