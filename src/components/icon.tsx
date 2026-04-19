@@ -1,20 +1,39 @@
-import React from 'react'
+'use client'
 
-interface ComponentProps {
+import type { HTMLAttributes } from 'react'
+
+interface IconProps extends HTMLAttributes<HTMLSpanElement> {
     name: string
-    fill?: "0" | "1"
-    weight?: "100" | "200" | "300" | "400" | "500" | "600" | "700"
+    fill?: '0' | '1'
+    weight?: '100' | '200' | '300' | '400' | '500' | '600' | '700'
     grade?: string
     iconsize?: string
     color?: string
 }
 
-export class Icon extends React.Component<ComponentProps & React.HTMLProps<HTMLSpanElement>, {}> {
-    render() {
-        return (
-            <span style={{ fontVariationSettings: `'FILL' ${this.props.fill || 0}, 'wght' ${this.props.weight || 400},'GRAD' ${this.props.grade || 0}, 'opsz' ${this.props.iconsize || 48}`, fontSize: `${this.props.iconsize || 48}px`, color: this.props.color }} {...this.props} className={`material-symbols-outlined ${this.props.className}`}>
-                {this.props.name}
-            </span>
-        )
-    }
+export function Icon({
+    name,
+    fill = '0',
+    weight = '400',
+    grade = '0',
+    iconsize = '48',
+    color,
+    className,
+    style,
+    ...rest
+}: IconProps) {
+    return (
+        <span
+            {...rest}
+            style={{
+                ...style,
+                fontVariationSettings: `'FILL' ${fill}, 'wght' ${weight},'GRAD' ${grade}, 'opsz' ${iconsize}`,
+                fontSize: `${iconsize}px`,
+                color,
+            }}
+            className={`material-symbols-outlined ${className ?? ''}`}
+        >
+            {name}
+        </span>
+    )
 }

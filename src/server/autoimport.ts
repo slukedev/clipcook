@@ -1,0 +1,317 @@
+import 'server-only'
+
+import { load } from 'cheerio'
+import Fraction from 'fraction.js'
+import parseIsoDuration from 'parse-iso-duration'
+import { lookup as dnsLookup } from 'node:dns/promises'
+import net from 'node:net'
+
+const MAX_HTML_BYTES = 2 * 1024 * 1024 // 2 MB
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024 // 4 MB
+const FETCH_TIMEOUT_MS = 10_000
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif'])
+
+function isPrivateAddress(address: string): boolean {
+    if (net.isIPv4(address)) {
+        const [a, b] = address.split('.').map(Number) as [number, number]
+        if (a === 10) return true
+        if (a === 127) return true
+        if (a === 0) return true
+        if (a === 169 && b === 254) return true
+        if (a === 172 && b >= 16 && b <= 31) return true
+        if (a === 192 && b === 168) return true
+        if (a >= 224) return true // multicast/reserved
+        return false
+    }
+    if (net.isIPv6(address)) {
+        const lower = address.toLowerCase()
+        if (lower === '::1' || lower === '::') return true
+        if (lower.startsWith('fc') || lower.startsWith('fd')) return true
+        if (lower.startsWith('fe80')) return true
+        if (lower.startsWith('::ffff:')) {
+            const v4 = lower.slice(7)
+            if (net.isIPv4(v4)) return isPrivateAddress(v4)
+        }
+        return false
+    }
+    return true
+}
+
+async function assertPublicHost(hostname: string): Promise<void> {
+    if (!hostname || hostname === 'localhost') throw new Error('Blocked: private host')
+    if (net.isIP(hostname)) {
+        if (isPrivateAddress(hostname)) throw new Error('Blocked: private IP')
+        return
+    }
+    const records = await dnsLookup(hostname, { all: true, verbatim: false })
+    if (records.length === 0) throw new Error('DNS: no records')
+    for (const r of records) {
+        if (isPrivateAddress(r.address)) throw new Error('Blocked: private IP via DNS')
+    }
+}
+
+async function safeFetch(url: string, maxBytes: number, accept?: string): Promise<{
+    body: ArrayBuffer
+    contentType: string | null
+}> {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new Error('Only http(s) is allowed')
+    }
+    await assertPublicHost(parsed.hostname)
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+    try {
+        const res = await fetch(parsed.toString(), {
+            method: 'GET',
+            redirect: 'manual',
+            signal: controller.signal,
+            headers: {
+                'User-Agent': 'ClipCookBot/1.0 (+https://clipcook.app)',
+                ...(accept ? { Accept: accept } : {}),
+            },
+        })
+        if (res.status >= 300 && res.status < 400) {
+            throw new Error('Redirects are not followed')
+        }
+        if (!res.ok) throw new Error(`Upstream responded ${res.status}`)
+        const lenHeader = res.headers.get('content-length')
+        if (lenHeader && Number(lenHeader) > maxBytes) throw new Error('Upstream payload too large')
+
+        const reader = res.body?.getReader()
+        if (!reader) throw new Error('Empty response')
+        const chunks: Uint8Array[] = []
+        let total = 0
+        while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            if (value) {
+                total += value.byteLength
+                if (total > maxBytes) {
+                    await reader.cancel()
+                    throw new Error('Upstream payload too large')
+                }
+                chunks.push(value)
+            }
+        }
+        const buf = new Uint8Array(total)
+        let offset = 0
+        for (const c of chunks) {
+            buf.set(c, offset)
+            offset += c.byteLength
+        }
+        return {
+            body: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
+            contentType: res.headers.get('content-type'),
+        }
+    } finally {
+        clearTimeout(timer)
+    }
+}
+
+function formatDuration(ms: number): string {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+    const parts: string[] = []
+    if (hours) parts.push(`${hours} hour${hours === 1 ? '' : 's'}`)
+    if (minutes) parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`)
+    if (seconds) parts.push(`${seconds} second${seconds === 1 ? '' : 's'}`)
+    return parts.join(', ') || '0 seconds'
+}
+
+function simplifyFractionsInText(text: string): string {
+    return text.replace(/-?\d+(?:\.\d+)?/g, (match) => {
+        try {
+            return new Fraction(match).simplify(0.001).toFraction(true)
+        } catch {
+            return match
+        }
+    })
+}
+
+function firstOfType<T>(node: unknown, predicate: (n: unknown) => n is T): T | null {
+    if (Array.isArray(node)) {
+        for (const item of node) {
+            const found = firstOfType(item, predicate)
+            if (found) return found
+        }
+        return null
+    }
+    if (node && typeof node === 'object') {
+        const graph = (node as { '@graph'?: unknown[] })['@graph']
+        if (Array.isArray(graph)) {
+            for (const item of graph) {
+                const found = firstOfType(item, predicate)
+                if (found) return found
+            }
+        }
+    }
+    return predicate(node) ? node : null
+}
+
+interface RawRecipe {
+    '@type'?: string | string[]
+    name?: string
+    headline?: string
+    description?: string
+    image?: string | string[] | { url?: string }
+    recipeYield?: string | string[] | number
+    prepTime?: string
+    cookTime?: string
+    totalTime?: string
+    recipeIngredient?: string[]
+    recipeInstructions?: Array<string | { text?: string; name?: string }>
+}
+
+function isRecipeNode(n: unknown): n is RawRecipe {
+    if (!n || typeof n !== 'object') return false
+    const t = (n as { '@type'?: unknown })['@type']
+    if (!t) return false
+    if (typeof t === 'string') return t === 'Recipe'
+    if (Array.isArray(t)) return t.includes('Recipe')
+    return false
+}
+
+function stringOrFirst(value: unknown): string | undefined {
+    if (typeof value === 'string') return value
+    if (Array.isArray(value)) {
+        for (const v of value) {
+            if (typeof v === 'string') return v
+        }
+    }
+    return undefined
+}
+
+function extractImageUrl(image: RawRecipe['image']): string | undefined {
+    if (!image) return undefined
+    if (typeof image === 'string') return image
+    if (Array.isArray(image)) {
+        for (const item of image) {
+            if (typeof item === 'string') return item
+            if (item && typeof item === 'object' && 'url' in item) {
+                const u = (item as { url?: string }).url
+                if (u) return u
+            }
+        }
+        return undefined
+    }
+    if (typeof image === 'object' && 'url' in image) return image.url
+    return undefined
+}
+
+function parseIsoToHuman(iso: string | undefined): string | undefined {
+    if (!iso) return undefined
+    try {
+        return formatDuration(parseIsoDuration(iso))
+    } catch {
+        return undefined
+    }
+}
+
+function extractInstructions(raw: RawRecipe['recipeInstructions']): string[] {
+    if (!raw) return []
+    const out: string[] = []
+    for (const step of raw) {
+        if (typeof step === 'string') out.push(step)
+        else if (step && typeof step === 'object') {
+            if (typeof step.text === 'string') out.push(step.text)
+            else if (typeof step.name === 'string') out.push(step.name)
+        }
+    }
+    return out
+}
+
+function extractServings(raw: RawRecipe['recipeYield']): string | undefined {
+    if (typeof raw === 'number') return String(raw)
+    if (typeof raw === 'string') return raw
+    if (Array.isArray(raw)) {
+        for (const v of raw) {
+            if (typeof v === 'string') return v
+            if (typeof v === 'number') return String(v)
+        }
+    }
+    return undefined
+}
+
+export interface ImportedRecipe {
+    image?: string
+    title?: string
+    description?: string
+    servings?: string
+    prepTime?: string
+    cookTime?: string
+    totalTime?: string
+    ingredients?: string[]
+    instructions?: string[]
+}
+
+export async function importRecipeFromUrl(url: string): Promise<ImportedRecipe> {
+    const { body, contentType } = await safeFetch(url, MAX_HTML_BYTES, 'text/html,application/xhtml+xml')
+    if (contentType && !contentType.toLowerCase().includes('html')) {
+        throw new Error('Target URL is not an HTML page')
+    }
+    const html = new TextDecoder('utf-8', { fatal: false }).decode(body)
+    const $ = load(html)
+
+    let parsed: unknown = null
+    $('script[type="application/ld+json"]').each((_, el) => {
+        if (parsed) return
+        const raw = $(el).contents().text()
+        if (!raw) return
+        try {
+            parsed = JSON.parse(raw)
+        } catch {
+            // skip invalid JSON-LD block
+        }
+    })
+    if (!parsed) throw new Error('No recipe metadata found on page')
+
+    const recipe = firstOfType(parsed, isRecipeNode)
+    if (!recipe) throw new Error('No recipe metadata found on page')
+
+    const out: ImportedRecipe = {}
+
+    const title = stringOrFirst(recipe.name) ?? stringOrFirst(recipe.headline)
+    if (title) out.title = title
+
+    const description = stringOrFirst(recipe.description)
+    if (description) out.description = description
+
+    const servings = extractServings(recipe.recipeYield)
+    if (servings) out.servings = servings
+
+    const prep = parseIsoToHuman(recipe.prepTime)
+    if (prep) out.prepTime = prep
+    const cook = parseIsoToHuman(recipe.cookTime)
+    if (cook) out.cookTime = cook
+    const total = parseIsoToHuman(recipe.totalTime)
+    if (total) out.totalTime = total
+
+    if (Array.isArray(recipe.recipeIngredient)) {
+        out.ingredients = recipe.recipeIngredient
+            .filter((s): s is string => typeof s === 'string')
+            .map(simplifyFractionsInText)
+    }
+
+    const instructions = extractInstructions(recipe.recipeInstructions)
+    if (instructions.length > 0) out.instructions = instructions
+
+    const imageUrl = extractImageUrl(recipe.image)
+    if (imageUrl) {
+        try {
+            const img = await safeFetch(imageUrl, MAX_IMAGE_BYTES, 'image/*')
+            const type = (img.contentType || '').split(';')[0]?.trim().toLowerCase() ?? ''
+            if (ALLOWED_IMAGE_TYPES.has(type)) {
+                const b64 = Buffer.from(img.body).toString('base64')
+                out.image = `data:${type};base64,${b64}`
+            }
+        } catch {
+            // image optional
+        }
+    }
+
+    return out
+}
