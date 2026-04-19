@@ -1,4 +1,4 @@
-@import "./theme/typography.module.scss";
+@use "./theme/typography.module.scss" as *;
 
 .input {
     position: relative;

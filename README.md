@@ -26,11 +26,19 @@ npm run dev
 
 | Command              | Purpose                              |
 |----------------------|--------------------------------------|
-| `npm run dev`        | Start the dev server                 |
-| `npm run build`      | Production build                     |
+| `npm run dev`        | Start the dev server (Turbopack; PWA disabled in dev) |
+| `npm run build`      | Production build (webpack; Serwist bundles the SW) |
 | `npm run start`      | Run the production build             |
 | `npm run typecheck`  | `tsc --noEmit`                       |
 | `npm run lint`       | ESLint (flat config, Next + strict TS) |
+
+The build script uses `--webpack` because Serwist 9 does not yet support Turbopack production builds. Dev stays on Turbopack with the service worker disabled.
+
+## PWA
+
+- `public/manifest.json` is served from the root and linked from the root layout.
+- Serwist 9 generates `public/sw.js` at production build time from `src/app/sw.ts`.
+- `src/components/service-worker-register.tsx` registers the worker on production builds only.
 
 ## Project layout
 

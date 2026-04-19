@@ -27,7 +27,7 @@ export function Ripple({
         const target = event.currentTarget
         const rect = target.getBoundingClientRect()
         const ripple = document.createElement('span')
-        ripple.className = styles.ripple ?? ''
+        if (styles.ripple) ripple.classList.add(styles.ripple)
 
         const diameter = Math.max(target.clientWidth, target.clientHeight)
         const radius = diameter / 2
@@ -46,8 +46,6 @@ export function Ripple({
             ripple.style.top = `${y - radius}px`
             ripple.style.left = `${x - radius}px`
         }
-
-        ripple.classList.add(styles.rippleActive ?? '')
 
         if (feather) ripple.style.filter = `blur(${feather})`
         if (speedms) ripple.style.animationDuration = `${speedms}ms`
@@ -76,7 +74,7 @@ export function Ripple({
         <div
             {...rest}
             onMouseDown={createRipple}
-            className={`${styles.ripplecontainer} ${className ?? ''}`}
+            className={`${styles.ripplecontainer ?? ''} ${className ?? ''}`.trim()}
         >
             {children}
         </div>
