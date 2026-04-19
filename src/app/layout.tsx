@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Roboto } from 'next/font/google'
+import { ServiceWorkerRegister } from '@/components/service-worker-register'
 import '@/styles/globals.scss'
 
 const roboto = Roboto({
@@ -38,7 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
                 />
             </head>
-            <body>{children}</body>
+            <body>
+                {children}
+                <ServiceWorkerRegister />
+            </body>
         </html>
     )
 }

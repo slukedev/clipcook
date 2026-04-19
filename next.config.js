@@ -1,3 +1,11 @@
+const withSerwist = require('@serwist/next').default({
+    swSrc: 'src/app/sw.ts',
+    swDest: 'public/sw.js',
+    disable: process.env.NODE_ENV === 'development',
+    cacheOnNavigation: true,
+    reloadOnOnline: true,
+})
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
@@ -19,8 +27,15 @@ const nextConfig = {
                     { key: 'X-DNS-Prefetch-Control', value: 'on' },
                 ],
             },
+            {
+                source: '/sw.js',
+                headers: [
+                    { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+                ],
+            },
         ]
     },
 }
 
-module.exports = nextConfig
+module.exports = withSerwist(nextConfig)
