@@ -213,13 +213,23 @@ interface RawRecipe {
     recipeInstructions?: Array<string | { text?: string; name?: string }>
 }
 
+// Schema.org `@type` may be a bare token (`Recipe`), a full URL
+// (`https://schema.org/Recipe`), or an array mixing several types. Normalise to the
+// trailing token and compare case-insensitively so all of those forms match.
+function typeMatches(type: unknown, target: string): boolean {
+    const want = target.toLowerCase()
+    const test = (t: unknown): boolean => {
+        if (typeof t !== 'string') return false
+        const token = t.split(/[/#]/).pop()?.toLowerCase()
+        return token === want
+    }
+    if (Array.isArray(type)) return type.some(test)
+    return test(type)
+}
+
 function isRecipeNode(n: unknown): n is RawRecipe {
     if (!n || typeof n !== 'object') return false
-    const t = (n as { '@type'?: unknown })['@type']
-    if (!t) return false
-    if (typeof t === 'string') return t === 'Recipe'
-    if (Array.isArray(t)) return t.includes('Recipe')
-    return false
+    return typeMatches((n as { '@type'?: unknown })['@type'], 'Recipe')
 }
 
 function stringOrFirst(value: unknown): string | undefined {
@@ -261,10 +271,13 @@ function parseIsoToHuman(iso: string | undefined): string | undefined {
 function extractInstructions(raw: RawRecipe['recipeInstructions']): string[] {
     if (!raw) return []
     const out: string[] = []
+    const push = (value: string) => {
+        const clean = stripHtml(value)
+        if (clean) out.push(clean)
+    }
     const visit = (node: unknown) => {
         if (typeof node === 'string') {
-            const trimmed = node.trim()
-            if (trimmed) out.push(trimmed)
+            push(node)
             return
         }
         if (!node || typeof node !== 'object') return
@@ -277,23 +290,45 @@ function extractInstructions(raw: RawRecipe['recipeInstructions']): string[] {
             visit(obj.itemListElement)
             return
         }
-        if (typeof obj.text === 'string' && obj.text.trim()) out.push(obj.text.trim())
-        else if (typeof obj.name === 'string' && obj.name.trim()) out.push(obj.name.trim())
+        if (typeof obj.text === 'string' && obj.text.trim()) push(obj.text)
+        else if (typeof obj.name === 'string' && obj.name.trim()) push(obj.name)
     }
     visit(raw)
     return out
 }
 
 function extractServings(raw: RawRecipe['recipeYield']): string | undefined {
-    if (typeof raw === 'number') return String(raw)
-    if (typeof raw === 'string') return raw
+    const toText = (v: unknown): string | undefined => {
+        if (typeof v === 'number') return String(v)
+        if (typeof v === 'string') return v
+        return undefined
+    }
+    let text: string | undefined
     if (Array.isArray(raw)) {
         for (const v of raw) {
-            if (typeof v === 'string') return v
-            if (typeof v === 'number') return String(v)
+            text = toText(v)
+            if (text) break
         }
+    } else {
+        text = toText(raw)
     }
-    return undefined
+    if (!text) return undefined
+    text = text.trim()
+    if (!text) return undefined
+    // recipeYield is frequently free text ("Serves 4", "4 servings", "4 to 6"). The
+    // editor's servings field and the scaling UI both expect a plain number, so prefer
+    // the first integer when there is one and fall back to the raw text otherwise.
+    const match = /\d+/.exec(text)
+    return match ? match[0] : text.slice(0, 20)
+}
+
+// JSON-LD recipe fields sometimes embed HTML (links, <p>, &nbsp;). Strip tags so the
+// stored value is clean text; entity decoding is handled later in the recipe view.
+function stripHtml(value: string): string {
+    return value
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
 }
 
 export interface ImportedRecipe {
@@ -316,28 +351,33 @@ export async function importRecipeFromUrl(url: string): Promise<ImportedRecipe> 
     const html = new TextDecoder('utf-8', { fatal: false }).decode(body)
     const $ = load(html)
 
-    let parsed: unknown = null
-    $('script[type="application/ld+json"]').each((_, el) => {
-        if (parsed) return
-        const raw = $(el).contents().text()
+    // Pages routinely emit several JSON-LD blocks (e.g. an Organization or WebSite
+    // graph first, the Recipe later) — and a single block may itself be an array or an
+    // `@graph`. Collect every block and let `firstOfType` walk all of them so we don't
+    // miss a recipe that isn't in the first script tag.
+    const roots: unknown[] = []
+    $('script[type*="ld+json" i]').each((_, el) => {
+        const raw = $(el).contents().text().trim()
         if (!raw) return
         try {
-            parsed = JSON.parse(raw)
+            roots.push(JSON.parse(raw))
         } catch {
             // skip invalid JSON-LD block
         }
     })
-    if (!parsed) throw new Error('No recipe metadata found on page')
+    if (roots.length === 0) throw new Error('No recipe metadata found on page')
 
-    const recipe = firstOfType(parsed, isRecipeNode)
+    const recipe = firstOfType(roots, isRecipeNode)
     if (!recipe) throw new Error('No recipe metadata found on page')
 
     const out: ImportedRecipe = {}
 
-    const title = stringOrFirst(recipe.name) ?? stringOrFirst(recipe.headline)
+    const titleRaw = stringOrFirst(recipe.name) ?? stringOrFirst(recipe.headline)
+    const title = titleRaw ? stripHtml(titleRaw) : undefined
     if (title) out.title = title
 
-    const description = stringOrFirst(recipe.description)
+    const descriptionRaw = stringOrFirst(recipe.description)
+    const description = descriptionRaw ? stripHtml(descriptionRaw) : undefined
     if (description) out.description = description
 
     const servings = extractServings(recipe.recipeYield)
@@ -353,7 +393,8 @@ export async function importRecipeFromUrl(url: string): Promise<ImportedRecipe> 
     if (Array.isArray(recipe.recipeIngredient)) {
         out.ingredients = recipe.recipeIngredient
             .filter((s): s is string => typeof s === 'string')
-            .map(simplifyFractionsInText)
+            .map((s) => simplifyFractionsInText(stripHtml(s)))
+            .filter((s) => s.length > 0)
     }
 
     const instructions = extractInstructions(recipe.recipeInstructions)
