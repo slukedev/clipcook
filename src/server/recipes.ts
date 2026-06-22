@@ -23,18 +23,19 @@ function col() {
 }
 
 export const listRecipesForUser = cache(async (uid: string): Promise<RecipeSummary[]> => {
-    // Only request fields needed for the list view. Pulling the full `image` would
-    // blow up the response size — recipes store a small `thumbnail` for this reason.
-    const snapshot = await col().where('uid', '==', uid).select('title', 'thumbnail', 'image').get()
+    // Only request the fields the list view needs. Pulling the full `image` (a base64
+    // data URL up to ~900 KB) for every recipe would balloon the response and defeat
+    // the small `thumbnail` that exists precisely for this view, so it is never read
+    // here. Legacy recipes saved before thumbnails existed simply render without one
+    // until they are re-saved.
+    const snapshot = await col().where('uid', '==', uid).select('title', 'thumbnail').get()
     const results: RecipeSummary[] = []
     snapshot.forEach((doc) => {
         const data = doc.data()
-        const thumb = typeof data.thumbnail === 'string' && data.thumbnail.length > 0 ? data.thumbnail : ''
-        const image = typeof data.image === 'string' ? data.image : ''
         results.push({
             id: doc.id,
             title: typeof data.title === 'string' ? data.title : '',
-            image: thumb || image,
+            image: typeof data.thumbnail === 'string' ? data.thumbnail : '',
         })
     })
     return results
