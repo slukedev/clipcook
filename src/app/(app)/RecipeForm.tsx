@@ -336,12 +336,12 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
                             id="servings"
                             label="Servings"
                             placeholder="Ex: 10"
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             name="servings"
                             icon="people"
                             autoComplete="off"
-                            min={1}
-                            max={1000}
+                            maxLength={20}
                             value={values.servings}
                             onChange={(e) => setField('servings', e.currentTarget.value)}
                             required
