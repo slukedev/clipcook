@@ -8,7 +8,7 @@ Recipe clipper built with Next.js 16 App Router, React 19, Firebase Admin, and F
 - **Auth**: Google sign-in via the Firebase Web SDK on `/login` only. The resulting ID token is exchanged for a server-signed session cookie (`HttpOnly`, `SameSite=Lax`, `Secure` in production). All subsequent requests authenticate via that cookie.
 - **Validation**: Every Server Action validates its input with Zod before touching the database.
 - **Ownership**: Recipe reads and writes verify `data.uid === session.uid` inside a Firestore transaction — no IDOR.
-- **Autoimport**: URL clipper blocks private IPs (DNS + literal), rejects redirects, caps the HTML payload at 2 MB and the image at 4 MB, and enforces a 10 s timeout. No `eval()`.
+- **Autoimport**: URL clipper blocks private IPs (DNS + literal), validates redirects, caps the HTML payload at 2 MB and the image at 4 MB, and enforces a 10 s timeout. No `eval()`. It scans every JSON-LD block on the page (not just the first) and matches both bare and full-URL `schema.org/Recipe` types.
 
 ## Setup
 
@@ -30,7 +30,8 @@ npm run dev
 | `npm run build`      | Production build (webpack; Serwist bundles the SW) |
 | `npm run start`      | Run the production build             |
 | `npm run typecheck`  | `tsc --noEmit`                       |
-| `npm run lint`       | ESLint (flat config, Next + strict TS) |
+| `npm run lint`       | Biome lint (`biome.json`)            |
+| `npm run format`     | Biome format (writes in place)       |
 
 The build script uses `--webpack` because Serwist 9 does not yet support Turbopack production builds. Dev stays on Turbopack with the service worker disabled.
 
