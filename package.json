@@ -46,9 +46,6 @@
         "serwist": "^9.5.11",
         "typescript": "~6.0.3"
     },
-    "overrides": {
-        "jose": "^5.10.0"
-    },
     "allowScripts": {
         "sharp@0.34.5": true,
         "sharp@0.35.3": true,
