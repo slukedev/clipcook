@@ -73,8 +73,8 @@ export function LoginClient({ nextPath }: { nextPath?: string }) {
                         Cook it.
                     </h1>
                     <p className={styles.tagline}>
-                        Every recipe you love, saved from anywhere on the web — scaled, converted, and ready when the
-                        pan is hot.
+                        Every recipe you love, saved from anywhere on the web, scaled, converted, and ready when the pan
+                        is hot.
                     </p>
                     <div className={styles.featureChips}>
                         <Chip icon="link">Clip from any site</Chip>
