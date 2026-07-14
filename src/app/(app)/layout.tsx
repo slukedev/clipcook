@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
+import { SnackbarProvider } from '@/components/ui'
 import { getSession } from '@/server/auth'
-import { Topnav } from '@/components/topnav'
+import { AppBar } from './app-bar'
 import { SessionProvider } from './session-context'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -9,8 +10,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
     return (
         <SessionProvider user={session}>
-            <Topnav photoUrl={session.picture ?? undefined} />
-            {children}
+            <SnackbarProvider>
+                <AppBar />
+                {children}
+            </SnackbarProvider>
         </SessionProvider>
     )
 }

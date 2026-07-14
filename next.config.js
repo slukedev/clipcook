@@ -1,19 +1,20 @@
-const withSerwist = require('@serwist/next').default({
-    swSrc: 'src/app/sw.ts',
-    swDest: 'public/sw.js',
-    disable: process.env.NODE_ENV === 'development',
-    cacheOnNavigation: true,
-    reloadOnOnline: true,
-})
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
     poweredByHeader: false,
+    reactCompiler: true,
     experimental: {
         serverActions: {
-            bodySizeLimit: '6mb',
+            // Original photos upload as FormData Files; the client pre-resizes
+            // to ~2560px so real payloads stay a fraction of this.
+            bodySizeLimit: '12mb',
         },
+    },
+    images: {
+        remotePatterns: [
+            { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
+            { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+        ],
     },
     async headers() {
         return [
@@ -25,6 +26,8 @@ const nextConfig = {
                     { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
                     { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
                     { key: 'X-DNS-Prefetch-Control', value: 'on' },
+                    // NOT `same-origin`: that would break signInWithPopup.
+                    { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
                     {
                         key: 'Strict-Transport-Security',
                         value: 'max-age=63072000; includeSubDomains; preload',
@@ -42,4 +45,4 @@ const nextConfig = {
     },
 }
 
-module.exports = withSerwist(nextConfig)
+module.exports = nextConfig

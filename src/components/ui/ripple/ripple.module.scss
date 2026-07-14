@@ -1,0 +1,18 @@
+.ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    // Contain the ink inside rounded corners on Safari.
+    transform: translateZ(0);
+}
+
+.ink {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle closest-side, currentcolor 65%, transparent 100%);
+    opacity: 0.12;
+    transform: translate(-50%, -50%) scale(0.1);
+    will-change: transform, opacity;
+}

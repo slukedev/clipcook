@@ -2,36 +2,27 @@ import { z } from 'zod'
 
 const MAX_STRING = 2000
 const MAX_LONG_STRING = 10_000
-// Firestore caps documents at ~1 MiB. Reserve headroom for every other field (title,
-// description, notes, arrays) so the doc stays well under the limit when encoded.
-const MAX_IMAGE_BYTES = 900 * 1024 // base64 chars, ≈ 675 KB raw image
-const MAX_THUMB_BYTES = 48 * 1024 // base64 chars, ≈ 36 KB raw thumbnail
-
-const dataUrlImage = z
-    .string()
-    .min(1, 'Image is required')
-    .max(MAX_IMAGE_BYTES, 'Image is too large — please pick a smaller photo.')
-    .refine(
-        (v) => /^data:image\/(png|jpe?g|webp|gif|avif);base64,/i.test(v),
-        'Image must be a base64 PNG, JPEG, WebP, GIF, or AVIF',
-    )
-
-const dataUrlThumb = z
-    .string()
-    .max(MAX_THUMB_BYTES)
-    .refine(
-        (v) => v === '' || /^data:image\/(png|jpe?g|webp);base64,/i.test(v),
-        'Thumbnail must be a base64 PNG, JPEG, or WebP',
-    )
-    .default('')
+// Legacy docs store the photo inline as base64 (Firestore caps docs at ~1 MiB).
+// New writes keep photos in Storage; these caps still bound legacy payloads and
+// the autoimport → save passthrough.
+const MAX_DATA_URL = 8 * 1024 * 1024
+/** Client pre-resizes to ~2560px; this bounds a raw upload that skipped it. */
+export const MAX_PHOTO_BYTES = 10 * 1024 * 1024
 
 const shortText = z.string().trim().min(1).max(MAX_STRING)
 const longText = z.string().trim().max(MAX_LONG_STRING)
 const tinyText = z.string().trim().min(1).max(200)
 
-export const recipeInputSchema = z.object({
-    image: dataUrlImage,
-    thumbnail: dataUrlThumb,
+const dataUrlPhoto = z
+    .string()
+    .max(MAX_DATA_URL, 'Image is too large — please pick a smaller photo.')
+    .refine(
+        (v) => /^data:image\/(png|jpe?g|webp|gif|avif);base64,/i.test(v),
+        'Image must be a base64 PNG, JPEG, WebP, GIF, or AVIF',
+    )
+
+/** The text fields of a recipe (photo travels separately). */
+export const recipeFieldsSchema = z.object({
     title: tinyText,
     description: shortText,
     servings: z.union([z.string().trim().min(1).max(20), z.number().int().positive()]),
@@ -43,7 +34,59 @@ export const recipeInputSchema = z.object({
     instructions: z.array(shortText).min(1).max(100),
 })
 
-export type RecipeInput = z.infer<typeof recipeInputSchema>
+export type RecipeFields = z.infer<typeof recipeFieldsSchema>
+
+/**
+ * Parses the FormData a create/update action receives. The photo arrives as
+ * either a `photo` File (picker upload) or a `photoDataUrl` string
+ * (autoimported image passed through the form). Both are optional on update.
+ */
+export function parseRecipeFormData(
+    formData: FormData,
+): { ok: true; fields: RecipeFields; photo: File | null; photoDataUrl: string | null } | { ok: false; error: string } {
+    let ingredients: unknown
+    let instructions: unknown
+    try {
+        ingredients = JSON.parse(String(formData.get('ingredients') ?? '[]'))
+        instructions = JSON.parse(String(formData.get('instructions') ?? '[]'))
+    } catch {
+        return { ok: false, error: 'Invalid recipe data.' }
+    }
+
+    const servingsRaw = String(formData.get('servings') ?? '')
+    const parsed = recipeFieldsSchema.safeParse({
+        title: formData.get('title'),
+        description: formData.get('description'),
+        servings: servingsRaw,
+        prepTime: formData.get('prepTime'),
+        cookTime: formData.get('cookTime'),
+        totalTime: formData.get('totalTime'),
+        notes: formData.get('notes') ?? '',
+        ingredients,
+        instructions,
+    })
+    if (!parsed.success) {
+        return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid recipe.' }
+    }
+
+    const photoEntry = formData.get('photo')
+    const photo = photoEntry instanceof File && photoEntry.size > 0 ? photoEntry : null
+    if (photo && photo.size > MAX_PHOTO_BYTES) {
+        return { ok: false, error: 'Image is too large — please pick a smaller photo.' }
+    }
+
+    const dataUrlRaw = formData.get('photoDataUrl')
+    let photoDataUrl: string | null = null
+    if (typeof dataUrlRaw === 'string' && dataUrlRaw.length > 0) {
+        const checked = dataUrlPhoto.safeParse(dataUrlRaw)
+        if (!checked.success) {
+            return { ok: false, error: checked.error.issues[0]?.message ?? 'Invalid image.' }
+        }
+        photoDataUrl = checked.data
+    }
+
+    return { ok: true, fields: parsed.data, photo, photoDataUrl }
+}
 
 export const importUrlSchema = z
     .string()

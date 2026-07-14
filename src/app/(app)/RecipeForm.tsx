@@ -1,32 +1,33 @@
 'use client'
 
-import { useRef, useState, useTransition, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import styles from '@/styles/Home.module.scss'
-import { Button } from '@/components/button'
-import { Input } from '@/components/input'
-import { Main } from '@/components/main'
-import { Modal } from '@/components/modal'
-import { Ripple } from '@/components/ripple'
-import { Spinner } from '@/components/spinner'
-import { Textarea } from '@/components/textarea'
+import { useEffect, useId, useRef, useState, useTransition, type FormEvent } from 'react'
 import {
-    createRecipeAction,
-    deleteRecipeAction,
-    importRecipeAction,
-    updateRecipeAction,
-} from './actions'
-
-function ordinal(n: number): string {
-    const v = n % 100
-    const suffixes = ['th', 'st', 'nd', 'rd']
-    const suffix = suffixes[(v - 20) % 10] ?? suffixes[v] ?? suffixes[0]
-    return `${n}${suffix}`
-}
+    AlertDialog,
+    AlertDialogActions,
+    AlertDialogBody,
+    AlertDialogClose,
+    AlertDialogContent,
+    AlertDialogHeadline,
+    AlertDialogTrigger,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogClose,
+    DialogContent,
+    DialogHeadline,
+    DialogTrigger,
+    Icon,
+    IconButton,
+    LinearProgress,
+    TextField,
+} from '@/components/ui'
+import { createRecipeAction, deleteRecipeAction, importRecipeAction, updateRecipeAction } from './actions'
+import styles from './recipe-form.module.scss'
 
 export interface RecipeFormValues {
     image: string
-    thumbnail: string
     title: string
     description: string
     servings: string
@@ -46,7 +47,6 @@ interface RecipeFormProps {
 
 const BLANK: RecipeFormValues = {
     image: '',
-    thumbnail: '',
     title: '',
     description: '',
     servings: '',
@@ -58,182 +58,232 @@ const BLANK: RecipeFormValues = {
     instructions: [''],
 }
 
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024 // hard limit on the raw file a user can pick
-const MAX_IMAGE_BASE64 = 900 * 1024 // must match server schema
-const MAX_THUMB_BASE64 = 48 * 1024
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+/** Above this edge the photo is downscaled client-side to bound the upload. */
+const PRE_RESIZE_EDGE = 2560
+// Client-side caps mirror the server schema (schemas.ts) so people hit a
+// gentle input limit instead of a rejected save.
+const MAX_TINY = 200
+const MAX_SHORT = 2000
+const MAX_LONG = 10_000
+const MAX_LIST_ITEMS = 100
+const OFFLINE_MESSAGE = 'Couldn’t reach ClipCook — check your connection and try again.'
 
-async function loadImageFromFile(file: File): Promise<HTMLImageElement> {
-    const url = URL.createObjectURL(file)
+async function preResize(file: File): Promise<File> {
+    if (file.size < 2 * 1024 * 1024) return file
     try {
-        return await loadImageFromSrc(url)
-    } finally {
-        URL.revokeObjectURL(url)
-    }
-}
-
-async function loadImageFromSrc(src: string): Promise<HTMLImageElement> {
-    return new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new Image()
-        img.crossOrigin = 'anonymous'
-        img.onload = () => resolve(img)
-        img.onerror = () => reject(new Error('Could not decode image'))
-        img.src = src
-    })
-}
-
-function drawToDataUrl(img: HTMLImageElement, maxEdge: number, quality: number): string {
-    const ratio = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight))
-    const w = Math.max(1, Math.round(img.naturalWidth * ratio))
-    const h = Math.max(1, Math.round(img.naturalHeight * ratio))
-    const canvas = document.createElement('canvas')
-    canvas.width = w
-    canvas.height = h
-    const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('Canvas unavailable')
-    ctx.drawImage(img, 0, 0, w, h)
-    return canvas.toDataURL('image/jpeg', quality)
-}
-
-function encodeImage(img: HTMLImageElement): { image: string; thumbnail: string } {
-    let image = ''
-    for (const [edge, quality] of [[1600, 0.85], [1280, 0.8], [1024, 0.75], [800, 0.7]] as const) {
-        const candidate = drawToDataUrl(img, edge, quality)
-        if (candidate.length <= MAX_IMAGE_BASE64) {
-            image = candidate
-            break
+        const bitmap = await createImageBitmap(file)
+        const { width, height } = bitmap
+        if (Math.max(width, height) <= PRE_RESIZE_EDGE) {
+            bitmap.close()
+            return file
         }
+        const ratio = PRE_RESIZE_EDGE / Math.max(width, height)
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(width * ratio)
+        canvas.height = Math.round(height * ratio)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return file
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+        bitmap.close()
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.88))
+        if (!blob) return file
+        return new File([blob], 'photo.jpg', { type: 'image/jpeg' })
+    } catch {
+        // The server pipeline validates and resizes anyway.
+        return file
     }
-    if (!image) throw new Error('Could not shrink image below the size limit')
-    let thumbnail = ''
-    for (const [edge, quality] of [[256, 0.75], [200, 0.7], [160, 0.65]] as const) {
-        const candidate = drawToDataUrl(img, edge, quality)
-        if (candidate.length <= MAX_THUMB_BASE64) {
-            thumbnail = candidate
-            break
-        }
-    }
-    return { image, thumbnail }
 }
 
-async function processFile(file: File): Promise<{ image: string; thumbnail: string }> {
-    return encodeImage(await loadImageFromFile(file))
-}
+function ListEditor({
+    label,
+    addLabel,
+    items,
+    numbered,
+    multiline,
+    onChange,
+}: {
+    label: string
+    addLabel: string
+    items: string[]
+    numbered?: boolean
+    multiline?: boolean
+    onChange: (items: string[]) => void
+}) {
+    const setItem = (index: number, value: string) => {
+        const next = [...items]
+        next[index] = value
+        onChange(next)
+    }
+    const removeItem = (index: number) => {
+        onChange(items.length > 1 ? items.filter((_, i) => i !== index) : [''])
+    }
+    const move = (index: number, direction: -1 | 1) => {
+        const target = index + direction
+        if (target < 0 || target >= items.length) return
+        const next = [...items]
+        const a = next[index] as string
+        next[index] = next[target] as string
+        next[target] = a
+        onChange(next)
+    }
 
-async function processDataUrl(dataUrl: string): Promise<{ image: string; thumbnail: string }> {
-    return encodeImage(await loadImageFromSrc(dataUrl))
+    return (
+        <div className={styles.listEditor}>
+            {items.map((item, index) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional by design
+                <div key={index} className={styles.listRow}>
+                    {numbered && <span className={styles.listOrdinal}>{index + 1}</span>}
+                    <TextField
+                        label={`${label} ${index + 1}`}
+                        value={item}
+                        multiline={multiline}
+                        rows={2}
+                        onChange={(event) => setItem(index, event.target.value)}
+                        fullWidth
+                        className={styles.listField}
+                    />
+                    <div className={styles.listRowActions}>
+                        <IconButton
+                            icon="arrow_upward"
+                            label="Move up"
+                            disabled={index === 0}
+                            onClick={() => move(index, -1)}
+                        />
+                        <IconButton
+                            icon="arrow_downward"
+                            label="Move down"
+                            disabled={index === items.length - 1}
+                            onClick={() => move(index, 1)}
+                        />
+                        <IconButton icon="close" label="Remove" onClick={() => removeItem(index)} />
+                    </div>
+                </div>
+            ))}
+            <Button variant="text" icon="add" onClick={() => onChange([...items, ''])} className={styles.addButton}>
+                {addLabel}
+            </Button>
+        </div>
+    )
 }
 
 export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
     const router = useRouter()
     const [values, setValues] = useState<RecipeFormValues>(initial ?? BLANK)
-    const [saving, setSaving] = useState<false | 'creating' | 'updating' | 'deleting'>(false)
+    const [photoFile, setPhotoFile] = useState<File | null>(null)
+    const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
+    const [photoPreview, setPhotoPreview] = useState<string>(initial?.image ?? '')
+    const [importUrl, setImportUrl] = useState('')
     const [importOpen, setImportOpen] = useState(false)
     const [importing, setImporting] = useState(false)
-    const [importUrl, setImportUrl] = useState('')
-    const [deleteOpen, setDeleteOpen] = useState(false)
+    const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
     const fileRef = useRef<HTMLInputElement | null>(null)
+    const photoInputId = useId()
+
+    // Revoke object URLs when the preview changes away from them.
+    useEffect(() => {
+        return () => {
+            if (photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview)
+        }
+    }, [photoPreview])
 
     function setField<K extends keyof RecipeFormValues>(key: K, value: RecipeFormValues[K]) {
         setValues((prev) => ({ ...prev, [key]: value }))
     }
 
-    async function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        e.target.value = ''
+    async function onFilePicked(event: React.ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0]
+        event.target.value = ''
         if (!file) return
         if (!file.type.startsWith('image/')) {
             setError('Please choose an image file.')
             return
         }
         if (file.size > MAX_UPLOAD_BYTES) {
-            setError('Image is too large — please pick something under 25 MB.')
+            setError('Image is too large, please pick something under 25 MB.')
             return
         }
-        try {
-            const { image, thumbnail } = await processFile(file)
-            setValues((prev) => ({ ...prev, image, thumbnail }))
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Could not read that image.')
-        }
+        setError(null)
+        const resized = await preResize(file)
+        setPhotoFile(resized)
+        setPhotoDataUrl(null)
+        setPhotoPreview(URL.createObjectURL(resized))
     }
 
-    async function onImport(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault()
-        if (!importUrl) return
+    async function onImport(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        if (!importUrl || importing) return
         setImporting(true)
         setError(null)
         const result = await importRecipeAction(importUrl)
+        setImporting(false)
         if (!result.ok) {
-            setImporting(false)
             setError(result.error)
             return
         }
         const imported = result.data
-        let image = ''
-        let thumbnail = ''
         if (imported.image) {
-            try {
-                const processed = await processDataUrl(imported.image)
-                image = processed.image
-                thumbnail = processed.thumbnail
-            } catch {
-                // fall through without an image rather than failing the whole import
-            }
+            setPhotoDataUrl(imported.image)
+            setPhotoFile(null)
+            setPhotoPreview(imported.image)
         }
-        setImporting(false)
         setValues((prev) => ({
             ...prev,
-            image: image || prev.image,
-            thumbnail: thumbnail || prev.thumbnail,
             title: imported.title ?? prev.title,
             description: imported.description ?? prev.description,
-            servings: imported.servings ?? prev.servings,
+            servings: imported.servings !== undefined ? String(imported.servings) : prev.servings,
             prepTime: imported.prepTime ?? prev.prepTime,
             cookTime: imported.cookTime ?? prev.cookTime,
             totalTime: imported.totalTime ?? prev.totalTime,
             ingredients:
-                imported.ingredients && imported.ingredients.length > 0
-                    ? imported.ingredients
-                    : prev.ingredients,
+                imported.ingredients && imported.ingredients.length > 0 ? imported.ingredients : prev.ingredients,
             instructions:
-                imported.instructions && imported.instructions.length > 0
-                    ? imported.instructions
-                    : prev.instructions,
+                imported.instructions && imported.instructions.length > 0 ? imported.instructions : prev.instructions,
             notes: prev.notes || `Clipped from ${importUrl}\n`,
         }))
         setImportOpen(false)
         setImportUrl('')
     }
 
-    async function onSubmit(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault()
+    async function onSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        if (saving) return
         setError(null)
 
-        const finalIngredients = values.ingredients.map((s) => s.trim()).filter((s) => s.length > 0)
-        const finalInstructions = values.instructions.map((s) => s.trim()).filter((s) => s.length > 0)
+        const ingredients = values.ingredients.map((s) => s.trim()).filter(Boolean)
+        const instructions = values.instructions.map((s) => s.trim()).filter(Boolean)
 
-        if (!values.image) {
-            setError('Please upload an image.')
+        if (!photoPreview) {
+            setError('Add a photo for your recipe.')
             return
         }
-        if (finalIngredients.length === 0) {
-            setError('Please add at least one ingredient.')
+        if (ingredients.length === 0) {
+            setError('Add at least one ingredient.')
             return
         }
-        if (finalInstructions.length === 0) {
-            setError('Please add at least one step.')
+        if (instructions.length === 0) {
+            setError('Add at least one step.')
             return
         }
 
-        const payload = { ...values, ingredients: finalIngredients, instructions: finalInstructions }
+        const formData = new FormData()
+        formData.set('title', values.title)
+        formData.set('description', values.description)
+        formData.set('servings', values.servings)
+        formData.set('prepTime', values.prepTime)
+        formData.set('cookTime', values.cookTime)
+        formData.set('totalTime', values.totalTime)
+        formData.set('notes', values.notes)
+        formData.set('ingredients', JSON.stringify(ingredients))
+        formData.set('instructions', JSON.stringify(instructions))
+        if (photoFile) formData.set('photo', photoFile)
+        else if (photoDataUrl) formData.set('photoDataUrl', photoDataUrl)
 
-        setSaving(mode === 'create' ? 'creating' : 'updating')
+        setSaving(true)
         const result =
-            mode === 'create'
-                ? await createRecipeAction(payload)
-                : await updateRecipeAction(recipeId ?? '', payload)
+            mode === 'create' ? await createRecipeAction(formData) : await updateRecipeAction(recipeId ?? '', formData)
         if (!result.ok) {
             setSaving(false)
             setError(result.error)
@@ -246,9 +296,8 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
     }
 
     function onDelete() {
-        if (!recipeId) return
-        setDeleteOpen(false)
-        setSaving('deleting')
+        if (!recipeId || saving) return
+        setSaving(true)
         startTransition(async () => {
             const result = await deleteRecipeAction(recipeId)
             if (result && result.ok === false) {
@@ -258,273 +307,230 @@ export function RecipeForm({ mode, recipeId, initial }: RecipeFormProps) {
         })
     }
 
-    const busy = saving !== false || isPending
-
-    if (saving === 'creating' || saving === 'updating' || saving === 'deleting') {
-        return (
-            <Main pageName="create">
-                <div className={styles.loading} style={{ marginTop: 25 }}>
-                    <h1>{saving === 'creating' ? 'Creating' : saving === 'updating' ? 'Saving' : 'Deleting'}</h1>
-                    <Spinner />
-                    <p>Belle is going to love this! (except if it is sardines in spaghetti)</p>
-                </div>
-            </Main>
-        )
-    }
+    const busy = saving || isPending
 
     return (
-        <Main pageName="create">
-            <form onSubmit={onSubmit}>
-                <h1>{mode === 'create' ? 'Create a recipe' : 'Edit a recipe'}</h1>
-
-                {mode === 'create' ? (
-                    <Button type="button" onClick={() => setImportOpen(true)}>
-                        Autoimport from URL
-                    </Button>
-                ) : (
-                    <Button type="button" onClick={() => setDeleteOpen(true)}>
-                        Delete Recipe
-                    </Button>
+        <main className={styles.main}>
+            <header className={styles.header}>
+                <h1 className={styles.headline}>{mode === 'create' ? 'New recipe' : 'Edit recipe'}</h1>
+                {mode === 'create' && (
+                    <Dialog open={importOpen} onOpenChange={setImportOpen}>
+                        <DialogTrigger
+                            render={
+                                <Button variant="tonal" icon="wand_stars">
+                                    Clip from URL
+                                </Button>
+                            }
+                        />
+                        <DialogContent>
+                            <DialogHeadline>Clip a recipe</DialogHeadline>
+                            <DialogBody>
+                                Paste a link to any recipe page, the title, photo, ingredients, and steps fill in
+                                automatically.
+                            </DialogBody>
+                            <form onSubmit={onImport}>
+                                <TextField
+                                    label="Recipe URL"
+                                    placeholder="https://…"
+                                    leadingIcon="link"
+                                    value={importUrl}
+                                    onChange={(event) => setImportUrl(event.target.value)}
+                                    fullWidth
+                                    type="url"
+                                    autoComplete="off"
+                                    className={styles.importField}
+                                />
+                                {importing && (
+                                    <LinearProgress label="Clipping recipe" className={styles.importProgress} />
+                                )}
+                                <DialogActions>
+                                    <DialogClose render={<Button variant="text">Cancel</Button>} />
+                                    <Button type="submit" disabled={importing || !importUrl}>
+                                        {importing ? 'Clipping…' : 'Clip it'}
+                                    </Button>
+                                </DialogActions>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
                 )}
+            </header>
 
-                <h2>Recipe Information</h2>
-
-                <div className={styles.imageUploadContainer}>
-                    <Ripple feather="25px" speedms={500}>
-                        <button
-                            type="button"
-                            className={styles.imageUploadButton}
-                            onClick={() => fileRef.current?.click()}
-                        >
-                            {values.image ? (
-                                // biome-ignore lint/performance/noImgElement: preview uses arbitrary data/remote URL; next/image would require per-URL domain config
-                                <img style={{ width: '101%' }} src={values.image} alt="Recipe" />
-                            ) : (
-                                <span>Upload Image</span>
-                            )}
-                        </button>
-                    </Ripple>
-                </div>
-
+            <form onSubmit={onSubmit} className={styles.form}>
                 <input
                     ref={fileRef}
-                    onChange={onFilePicked}
-                    style={{ display: 'none' }}
-                    hidden
+                    id={photoInputId}
                     type="file"
                     accept="image/*"
-                    name="image"
-                    id="image"
+                    onChange={onFilePicked}
+                    className={styles.fileInput}
                 />
+                <button
+                    type="button"
+                    className={styles.photoPicker}
+                    onClick={() => fileRef.current?.click()}
+                    aria-label={photoPreview ? 'Change photo' : 'Add a photo'}
+                >
+                    {photoPreview ? (
+                        <>
+                            {/* biome-ignore lint/performance/noImgElement: preview is a blob/data URL */}
+                            <img src={photoPreview} alt="Recipe" className={styles.photoPreview} />
+                            <span className={styles.photoBadge}>
+                                <Icon name="photo_camera" size={20} />
+                                Change photo
+                            </span>
+                        </>
+                    ) : (
+                        <span className={styles.photoEmpty}>
+                            <Icon name="add_a_photo" size={36} />
+                            <span>Add a photo</span>
+                        </span>
+                    )}
+                </button>
 
-                <div className={styles.createInputs}>
-                    <div className={styles.inputGroup}>
-                        <Input
-                            id="title"
-                            fullwidth
-                            label="Recipe Title"
-                            placeholder="Ex: Meats"
-                            type="text"
-                            name="title"
-                            icon="title"
-                            autoComplete="off"
-                            value={values.title}
-                            onChange={(e) => setField('title', e.currentTarget.value)}
-                            required
-                        />
-                        <Input
-                            id="servings"
-                            label="Servings"
-                            placeholder="Ex: 10"
-                            type="text"
-                            inputMode="numeric"
-                            name="servings"
-                            icon="people"
-                            autoComplete="off"
-                            maxLength={20}
-                            value={values.servings}
-                            onChange={(e) => setField('servings', e.currentTarget.value)}
-                            required
-                        />
-                    </div>
-                    <div className={styles.inputGroup}>
-                        <Textarea
-                            id="description"
-                            fullwidth
-                            label="Recipe Description"
-                            placeholder="Ex: A good thing"
-                            name="description"
-                            icon="description"
-                            autoComplete="off"
-                            value={values.description}
-                            onChange={(e) => setField('description', e.currentTarget.value)}
-                            required
-                        />
-                    </div>
-                    <div className={styles.inputGroup}>
-                        <Input
-                            fullwidth
-                            id="prepTime"
-                            label="Prep Time"
-                            placeholder="Ex: 10 minutes"
-                            type="text"
-                            name="prepTime"
-                            icon="timer"
-                            autoComplete="off"
-                            value={values.prepTime}
-                            onChange={(e) => setField('prepTime', e.currentTarget.value)}
-                            required
-                        />
-                        <Input
-                            fullwidth
-                            id="cookTime"
-                            label="Cook Time"
-                            placeholder="Ex: 10 minutes"
-                            type="text"
-                            name="cookTime"
-                            icon="timer"
-                            autoComplete="off"
-                            value={values.cookTime}
-                            onChange={(e) => setField('cookTime', e.currentTarget.value)}
-                            required
-                        />
-                        <Input
-                            fullwidth
-                            id="totalTime"
-                            label="Total Time"
-                            placeholder="Ex: 10 minutes"
-                            type="text"
-                            name="totalTime"
-                            icon="timer"
-                            autoComplete="off"
-                            value={values.totalTime}
-                            onChange={(e) => setField('totalTime', e.currentTarget.value)}
-                            required
-                        />
-                    </div>
-                    <Textarea
-                        id="notes"
-                        fullwidth
-                        label="Recipe Notes"
-                        placeholder="Optional"
-                        name="notes"
-                        icon="notes"
-                        autoComplete="off"
-                        value={values.notes}
-                        onChange={(e) => setField('notes', e.currentTarget.value)}
+                <div className={styles.fields}>
+                    <TextField
+                        label="Title"
+                        value={values.title}
+                        onChange={(event) => setField('title', event.target.value)}
+                        required
+                        fullWidth
                     />
-                </div>
-
-                <h2>Ingredients {mode === 'create' ? '(Please use decimals instead of fractions)' : ''}</h2>
-                <div className={styles.createInputs}>
-                    {values.ingredients.map((ingredient, index) => (
-                        <Input
-                            // biome-ignore lint/suspicious/noArrayIndexKey: rows are only appended; index is the stable identity
-                            key={index}
-                            id={`ingredient-${index}`}
-                            name={`ingredient-${index}`}
-                            label="Ingredient"
-                            placeholder="Ex: 1 cup of flour"
-                            type="text"
-                            icon="icecream"
-                            autoComplete="off"
-                            value={ingredient}
-                            onChange={(e) =>
-                                setValues((prev) => {
-                                    const next = [...prev.ingredients]
-                                    next[index] = e.currentTarget.value
-                                    return { ...prev, ingredients: next }
-                                })
-                            }
+                    <TextField
+                        label="Description"
+                        value={values.description}
+                        onChange={(event) => setField('description', event.target.value)}
+                        multiline
+                        rows={2}
+                        required
+                        fullWidth
+                    />
+                    <div className={styles.metaGrid}>
+                        <TextField
+                            label="Servings"
+                            value={values.servings}
+                            onChange={(event) => setField('servings', event.target.value)}
+                            leadingIcon="group"
+                            required
+                            fullWidth
                         />
-                    ))}
-                    <Button
-                        type="button"
-                        onClick={() => setValues((prev) => ({ ...prev, ingredients: [...prev.ingredients, ''] }))}
-                    >
-                        Add Ingredient
-                    </Button>
-                </div>
-
-                <h2>Instructions</h2>
-                <div className={styles.createInputs}>
-                    {values.instructions.map((instruction, index) => (
-                        <Input
-                            // biome-ignore lint/suspicious/noArrayIndexKey: rows are only appended; index is the stable identity
-                            key={index}
-                            id={`instruction-${index}`}
-                            name={`instruction-${index}`}
-                            fullwidth
-                            label={`${ordinal(index + 1)} step`}
-                            placeholder="Ex: Mix the flour"
-                            type="text"
-                            icon="task"
-                            autoComplete="off"
-                            value={instruction}
-                            onChange={(e) =>
-                                setValues((prev) => {
-                                    const next = [...prev.instructions]
-                                    next[index] = e.currentTarget.value
-                                    return { ...prev, instructions: next }
-                                })
-                            }
+                        <TextField
+                            label="Prep time"
+                            value={values.prepTime}
+                            onChange={(event) => setField('prepTime', event.target.value)}
+                            leadingIcon="restaurant"
+                            required
+                            fullWidth
                         />
-                    ))}
-                    <Button
-                        type="button"
-                        onClick={() => setValues((prev) => ({ ...prev, instructions: [...prev.instructions, ''] }))}
-                    >
-                        Add Step
-                    </Button>
+                        <TextField
+                            label="Cook time"
+                            value={values.cookTime}
+                            onChange={(event) => setField('cookTime', event.target.value)}
+                            leadingIcon="oven_gen"
+                            required
+                            fullWidth
+                        />
+                        <TextField
+                            label="Total time"
+                            value={values.totalTime}
+                            onChange={(event) => setField('totalTime', event.target.value)}
+                            leadingIcon="schedule"
+                            required
+                            fullWidth
+                        />
+                    </div>
                 </div>
 
-                {error ? <p style={{ color: 'var(--error)' }}>{error}</p> : null}
+                <section className={`${styles.section} ${styles.ingredientsArea}`}>
+                    <h2 className={styles.sectionTitle}>Ingredients</h2>
+                    <ListEditor
+                        label="Ingredient"
+                        addLabel="Add ingredient"
+                        items={values.ingredients}
+                        onChange={(items) => setField('ingredients', items)}
+                    />
+                </section>
 
-                <div className={styles.createDiv}>
-                    <Button disabled={busy} type="submit">
-                        {mode === 'create' ? 'Create Recipe!' : 'Save Changes!'}
+                <section className={`${styles.section} ${styles.directionsArea}`}>
+                    <h2 className={styles.sectionTitle}>Directions</h2>
+                    <ListEditor
+                        label="Step"
+                        addLabel="Add step"
+                        items={values.instructions}
+                        numbered
+                        multiline
+                        onChange={(items) => setField('instructions', items)}
+                    />
+                </section>
+
+                <section className={`${styles.section} ${styles.notesArea}`}>
+                    <h2 className={styles.sectionTitle}>Notes</h2>
+                    <TextField
+                        label="Notes"
+                        supportingText="Anything future-you should know, like substitutions, tweaks, where it came from."
+                        value={values.notes}
+                        onChange={(event) => setField('notes', event.target.value)}
+                        multiline
+                        rows={3}
+                        fullWidth
+                    />
+                </section>
+
+                {error && (
+                    <p className={styles.error} role="alert">
+                        <Icon name="error" size={18} />
+                        {error}
+                    </p>
+                )}
+
+                {busy && (
+                    <LinearProgress
+                        label={mode === 'create' ? 'Saving recipe' : 'Saving changes'}
+                        className={styles.saveProgress}
+                    />
+                )}
+
+                <div className={styles.footer}>
+                    {mode === 'edit' && (
+                        <AlertDialog>
+                            <AlertDialogTrigger
+                                render={
+                                    <Button
+                                        variant="text"
+                                        icon="delete"
+                                        className={styles.deleteButton}
+                                        disabled={busy}
+                                    >
+                                        Delete
+                                    </Button>
+                                }
+                            />
+                            <AlertDialogContent>
+                                <AlertDialogHeadline>Delete this recipe?</AlertDialogHeadline>
+                                <AlertDialogBody>
+                                    “{values.title || 'This recipe'}” will be permanently removed from your cookbook.
+                                </AlertDialogBody>
+                                <AlertDialogActions>
+                                    <AlertDialogClose render={<Button variant="text">Cancel</Button>} />
+                                    <AlertDialogClose
+                                        render={
+                                            <Button variant="text" onClick={onDelete}>
+                                                Delete
+                                            </Button>
+                                        }
+                                    />
+                                </AlertDialogActions>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                    <div className={styles.footerSpacer} />
+                    <Button variant="text" onClick={() => router.back()} disabled={busy}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" icon="check" disabled={busy}>
+                        {busy ? 'Saving…' : mode === 'create' ? 'Save recipe' : 'Save changes'}
                     </Button>
                 </div>
             </form>
-
-            <Modal
-                opened={importOpen}
-                title="Clip URL"
-                closefunction={() => (importing ? undefined : setImportOpen(false))}
-            >
-                <form onSubmit={onImport}>
-                    {importing ? (
-                        <div style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto', width: 'fit-content' }}>
-                            <Spinner />
-                        </div>
-                    ) : (
-                        <>
-                            <Input
-                                type="url"
-                                label="URL"
-                                name="url"
-                                id="clipurl"
-                                icon="attachment"
-                                fullwidth
-                                autoComplete="off"
-                                value={importUrl}
-                                onChange={(e) => setImportUrl(e.currentTarget.value)}
-                                required
-                            />
-                            <div style={{ width: '100%', height: 24 }} />
-                            <Button type="submit">Clip</Button>
-                        </>
-                    )}
-                </form>
-            </Modal>
-
-            <Modal opened={deleteOpen} title="Delete Recipe" closefunction={() => setDeleteOpen(false)}>
-                <p>Are you sure you want to delete this recipe?</p>
-                <p style={{ color: 'var(--error)' }}>THIS ACTION IS PERMANENT AND CANNOT BE UNDONE</p>
-                <Button type="button" onClick={onDelete}>
-                    Delete Recipe
-                </Button>
-            </Modal>
-        </Main>
+        </main>
     )
 }

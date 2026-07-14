@@ -1,0 +1,92 @@
+.root {
+    display: block;
+    width: 100%;
+}
+
+.track {
+    position: relative;
+    display: block;
+    height: 0.25rem;
+    overflow: hidden;
+
+    // M3 Expressive track: visible remainder with a stop dot at the end.
+    background:
+        radial-gradient(circle 2px at calc(100% - 2px) 50%, var(--md-sys-color-primary) 98%, transparent) no-repeat,
+        linear-gradient(var(--md-sys-color-secondary-container), var(--md-sys-color-secondary-container)) no-repeat;
+    border-radius: var(--md-sys-shape-corner-full);
+}
+
+.indicator {
+    display: block;
+    height: 100%;
+    background-color: var(--md-sys-color-primary);
+    border-radius: var(--md-sys-shape-corner-full);
+    // Gap between the indicator and the remaining track.
+    box-shadow: 4px 0 0 0 var(--md-sys-color-surface);
+    transition: width var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+}
+
+.indeterminate .indicator {
+    width: 40%;
+    animation: slide 1.4s var(--md-sys-motion-easing-emphasized) infinite;
+}
+
+@keyframes slide {
+    0% {
+        translate: -110% 0;
+    }
+
+    60% {
+        translate: 120% 0;
+    }
+
+    100% {
+        translate: 260% 0;
+    }
+}
+
+.spinner {
+    display: inline-flex;
+    color: var(--md-sys-color-primary);
+}
+
+.spinnerSvg {
+    animation: rotate 1.1s linear infinite;
+}
+
+.spinnerArc {
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-dasharray: 126;
+    animation: sweep 1.6s var(--md-sys-motion-easing-emphasized) infinite;
+}
+
+@keyframes rotate {
+    to {
+        rotate: 360deg;
+    }
+}
+
+@keyframes sweep {
+    0% {
+        stroke-dashoffset: 115;
+    }
+
+    50% {
+        stroke-dashoffset: 40;
+    }
+
+    100% {
+        stroke-dashoffset: 115;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .indeterminate .indicator {
+        animation-duration: 3s;
+    }
+
+    .spinnerSvg {
+        animation-duration: 2.5s;
+    }
+}

@@ -1,0 +1,29 @@
+// Entrance choreography. Elements are visible in SSR HTML and animate in via
+// pure CSS (no JS dependency); reduced-motion zeroes both duration and the
+// stagger unit, collapsing everything to an instant appearance.
+//
+// Stagger: set `--enter-index: N` on the element (or generate with nth-child).
+
+@mixin rise($duration: var(--md-sys-motion-duration-long2)) {
+    animation: cc-rise $duration var(--md-sys-motion-easing-emphasized-decelerate) both;
+    animation-delay: calc(var(--enter-index, 0) * var(--md-sys-motion-stagger));
+}
+
+@mixin pop($duration: var(--md-sys-motion-duration-medium4)) {
+    animation: cc-pop $duration var(--md-sys-motion-easing-emphasized-decelerate) both;
+    animation-delay: calc(var(--enter-index, 0) * var(--md-sys-motion-stagger));
+}
+
+// Media reveal: settle from a slight zoom.
+@mixin reveal($duration: var(--md-sys-motion-duration-long4)) {
+    animation: cc-reveal $duration var(--md-sys-motion-easing-emphasized) both;
+}
+
+// Generate --enter-index for the first $count children.
+@mixin stagger-children($count: 10) {
+    @for $i from 1 through $count {
+        > :nth-child(#{$i}) {
+            --enter-index: #{$i - 1};
+        }
+    }
+}

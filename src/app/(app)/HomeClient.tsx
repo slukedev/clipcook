@@ -1,108 +1,155 @@
 'use client'
 
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { motion } from 'motion/react'
-import styles from '@/styles/Home.module.scss'
-import { Icon } from '@/components/icon'
-import { Input } from '@/components/input'
-import { Main } from '@/components/main'
-import { Recipe } from '@/components/recipe'
-import { Ripple } from '@/components/ripple'
+import { Button, Card, EmptyState, Fab, Icon, SearchBar } from '@/components/ui'
+import { seedToHex } from '@/lib/theme/seed'
 import { useSessionUser } from './session-context'
+import styles from './home.module.scss'
 
 interface RecipeItem {
     id: string
     title: string
-    image: string
+    thumbnail: string
+    seedColor: number | null
+}
+
+interface Match extends RecipeItem {
+    /** [start, end) of a substring match in title, for highlighting. */
+    range: [number, number] | null
+}
+
+/** Substring matches first (highlighted), then subsequence matches. */
+function searchRecipes(recipes: RecipeItem[], query: string): Match[] {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return recipes.map((r) => ({ ...r, range: null }))
+
+    const substring: Match[] = []
+    const subsequence: Match[] = []
+    for (const recipe of recipes) {
+        const title = recipe.title.toLowerCase()
+        const index = title.indexOf(needle)
+        if (index !== -1) {
+            substring.push({ ...recipe, range: [index, index + needle.length] })
+            continue
+        }
+        let cursor = 0
+        let ok = true
+        for (const ch of needle) {
+            if (ch === ' ') continue
+            cursor = title.indexOf(ch, cursor)
+            if (cursor === -1) {
+                ok = false
+                break
+            }
+            cursor += 1
+        }
+        if (ok) subsequence.push({ ...recipe, range: null })
+    }
+    return [...substring, ...subsequence]
+}
+
+function Highlighted({ title, range }: { title: string; range: [number, number] | null }) {
+    if (!range) return title
+    return (
+        <>
+            {title.slice(0, range[0])}
+            <mark className={styles.mark}>{title.slice(range[0], range[1])}</mark>
+            {title.slice(range[1])}
+        </>
+    )
+}
+
+function firstNameOf(name: string | null | undefined): string | null {
+    const first = name?.trim().split(/\s+/)[0]
+    return first || null
 }
 
 export function HomeClient({ recipes }: { recipes: RecipeItem[] }) {
     const user = useSessionUser()
     const [search, setSearch] = useState('')
-
-    const filtered = useMemo(() => {
-        if (search.length === 0) return recipes.map((r) => ({ ...r, boldIndexes: [] as number[] }))
-        const needle = search.toLowerCase()
-        const results: (RecipeItem & { boldIndexes: number[] })[] = []
-        for (const recipe of recipes) {
-            const title = recipe.title.toLowerCase()
-            const boldIndexes: number[] = []
-            let ok = true
-            for (const ch of needle) {
-                const idx = title.indexOf(ch)
-                if (idx === -1) {
-                    ok = false
-                    break
-                }
-                boldIndexes.push(idx)
-            }
-            if (ok) results.push({ ...recipe, boldIndexes })
-        }
-        return results
-    }, [recipes, search])
+    const results = useMemo(() => searchRecipes(recipes, search), [recipes, search])
+    const firstName = firstNameOf(user.name)
 
     return (
         <>
-            <Main pageName="index">
-                <h1>Welcome, {user.name ?? 'there'}!</h1>
-                <Input
-                    onChange={(e) => setSearch(e.currentTarget.value)}
-                    label="Search"
-                    name="search"
-                    type="text"
-                    icon="search"
-                    value={search}
-                />
-                <div className={styles.recipes}>
-                    {filtered.length === 0 ? (
-                        <motion.div
-                            key="error"
-                            initial={{ scale: 0.92, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ ease: 'easeInOut', duration: 0.3 }}
-                            exit={{ opacity: 0 }}
-                            className={styles.couldntFind}
-                        >
-                            <Icon name="sound_detection_dog_barking" iconsize="128" />
-                            <h1>Sorry, we couldn&apos;t find anything that matches</h1>
-                            <p>
-                                We put our best searcher out and she came back with crumbs on her face, but no food to
-                                be found
-                            </p>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            style={{ overflowX: 'hidden' }}
-                            key="recipes"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ ease: 'easeInOut', duration: 0.3 }}
-                            exit={{ opacity: 0 }}
-                        >
-                            {filtered.map((recipe) => (
-                                <Recipe
-                                    key={recipe.id}
-                                    id={recipe.id}
-                                    title={recipe.title}
-                                    image={recipe.image}
-                                    boldindexes={recipe.boldIndexes}
-                                />
-                            ))}
-                        </motion.div>
+            <main className={styles.main}>
+                <header className={styles.header}>
+                    <div className={styles.headlineGroup}>
+                        <h1 className={styles.headline}>{firstName ? `${firstName}’s recipes` : 'Your recipes'}</h1>
+                        <p className={styles.count}>
+                            {recipes.length === 0
+                                ? 'Nothing saved yet'
+                                : `${recipes.length} ${recipes.length === 1 ? 'recipe' : 'recipes'} saved`}
+                        </p>
+                    </div>
+                    {recipes.length > 0 && (
+                        <SearchBar
+                            value={search}
+                            onChange={setSearch}
+                            placeholder="Search your recipes"
+                            className={styles.search}
+                        />
                     )}
-                </div>
-            </Main>
+                </header>
 
-            <Link href="/create" passHref>
-                <div className={styles.fab}>
-                    <Ripple feather="5px" speedms={500}>
-                        <button type="button">
-                            <Icon name="add" iconsize="24" />
-                        </button>
-                    </Ripple>
-                </div>
-            </Link>
+                {recipes.length === 0 ? (
+                    <EmptyState
+                        icon="skillet"
+                        headline="Your cookbook is empty"
+                        body="Clip a recipe from any site with a single link, or write one from scratch. Belle promises not to eat it."
+                    >
+                        <Button icon="add" href="/create">
+                            New recipe
+                        </Button>
+                    </EmptyState>
+                ) : results.length === 0 ? (
+                    <EmptyState
+                        icon="search_off"
+                        headline="Nothing matches"
+                        body="We sent our best searcher out. She came back with crumbs on her face, but no food to be found."
+                    >
+                        <Button variant="tonal" onClick={() => setSearch('')}>
+                            Clear search
+                        </Button>
+                    </EmptyState>
+                ) : (
+                    <ul className={styles.grid}>
+                        {results.map((recipe) => (
+                            <li key={recipe.id}>
+                                <Card
+                                    variant="filled"
+                                    href={`/recipe/${recipe.id}`}
+                                    className={styles.card}
+                                    aria-label={recipe.title}
+                                >
+                                    <div
+                                        className={styles.thumb}
+                                        style={
+                                            recipe.seedColor !== null
+                                                ? { backgroundColor: seedToHex(recipe.seedColor) }
+                                                : undefined
+                                        }
+                                    >
+                                        {recipe.thumbnail ? (
+                                            // Thumbnails are tiny (data URLs or token URLs); plain img
+                                            // keeps legacy and Storage recipes on one code path.
+                                            // biome-ignore lint/performance/noImgElement: legacy thumbs are data URLs next/image cannot optimize
+                                            <img src={recipe.thumbnail} alt="" loading="lazy" decoding="async" />
+                                        ) : (
+                                            <Icon name="restaurant" size={36} className={styles.thumbIcon} />
+                                        )}
+                                    </div>
+                                    <h2 className={styles.cardTitle}>
+                                        <Highlighted title={recipe.title} range={recipe.range} />
+                                    </h2>
+                                </Card>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </main>
+
+            <Fab icon="add" label="New recipe" className={styles.fab} href="/create" />
         </>
     )
 }

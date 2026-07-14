@@ -1,0 +1,252 @@
+@use '../../../styles/mixins/typography' as type;
+
+// Background the outlined label notch masks. Override on tonal surfaces:
+//   .myDialog { --text-field-backdrop: var(--md-sys-color-surface-container-high); }
+.field {
+    --text-field-backdrop: var(--md-sys-color-surface);
+
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 12rem;
+}
+
+.fullWidth {
+    display: flex;
+    width: 100%;
+}
+
+.container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.5rem;
+    padding-inline: 1rem;
+    cursor: text;
+}
+
+.content {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-self: stretch;
+}
+
+.input {
+    @include type.role(body-large);
+
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--md-sys-color-on-surface);
+    caret-color: var(--md-sys-color-primary);
+    outline: none;
+
+    &::placeholder {
+        color: var(--md-sys-color-on-surface-variant);
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-linear);
+    }
+
+    &:focus::placeholder {
+        opacity: 1;
+    }
+}
+
+textarea.input {
+    resize: vertical;
+    min-height: 5.5rem;
+}
+
+.label {
+    @include type.role(body-large);
+
+    position: absolute;
+    top: 50%;
+    left: 0;
+    translate: 0 -50%;
+    color: var(--md-sys-color-on-surface-variant);
+    pointer-events: none;
+    transform-origin: left top;
+    transition:
+        top var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+        translate var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+        scale var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+        color var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-linear);
+
+    .container:focus-within & {
+        color: var(--md-sys-color-primary);
+    }
+}
+
+.supportingLine {
+    @include type.role(body-small);
+    color: var(--md-sys-color-on-surface-variant);
+    padding-inline: 1rem;
+}
+
+.leadingIcon,
+.trailingIcon {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.trailingButton {
+    margin-inline-end: -0.5rem;
+}
+
+/* ── Filled ─────────────────────────────────────────────── */
+
+.filled {
+    .container {
+        background-color: var(--md-sys-color-surface-container-highest);
+        border-radius: var(--md-sys-shape-corner-extra-small) var(--md-sys-shape-corner-extra-small) 0 0;
+    }
+
+    .content {
+        padding-block: 1.75rem 0.5rem;
+    }
+
+    // Active indicator.
+    .outline {
+        position: absolute;
+        inset: auto 0 0;
+        height: 1px;
+        background-color: var(--md-sys-color-on-surface-variant);
+
+        &::after {
+            content: '';
+            position: absolute;
+            inset: -1px 0 0;
+            background-color: var(--md-sys-color-primary);
+            scale: 0 1;
+            transition: scale var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized-decelerate);
+        }
+    }
+
+    .container:focus-within .outline::after {
+        scale: 1 1;
+    }
+
+    // Float when focused or filled.
+    .container:focus-within .label,
+    .input[data-filled] ~ .label {
+        top: 1rem;
+        translate: 0 -50%;
+        scale: 0.75;
+    }
+
+    // Multiline: rest on the first text line, float to the field top.
+    &.multiline .label {
+        top: 2.5rem;
+    }
+
+    &.multiline .container:focus-within .label,
+    &.multiline .input[data-filled] ~ .label {
+        top: 1rem;
+    }
+}
+
+/* ── Outlined ───────────────────────────────────────────── */
+
+.outlined {
+    .container {
+        border-radius: var(--md-sys-shape-corner-extra-small);
+    }
+
+    .content {
+        padding-block: 1rem;
+    }
+
+    .outline {
+        position: absolute;
+        inset: 0;
+        border: 1px solid var(--md-sys-color-outline);
+        border-radius: inherit;
+        pointer-events: none;
+        transition: border-color var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-linear);
+    }
+
+    .container:focus-within .outline {
+        border-width: 2px;
+        border-color: var(--md-sys-color-primary);
+    }
+
+    // Float into a notch cut from the outline.
+    .container:focus-within .label,
+    .input[data-filled] ~ .label {
+        top: 0;
+        translate: -0.25rem -50%;
+        scale: 0.75;
+        padding-inline: 0.25rem;
+        background-color: var(--text-field-backdrop);
+    }
+
+    &.multiline .label {
+        top: 1.75rem;
+    }
+
+    &.multiline .container:focus-within .label,
+    &.multiline .input[data-filled] ~ .label {
+        top: 0;
+        translate: -0.25rem -50%;
+    }
+}
+
+/* ── Error ──────────────────────────────────────────────── */
+
+.invalid {
+    .label,
+    .container:focus-within .label {
+        color: var(--md-sys-color-error);
+    }
+
+    .supportingLine {
+        color: var(--md-sys-color-error);
+    }
+
+    .trailingIcon {
+        color: var(--md-sys-color-error);
+    }
+
+    &.filled .outline {
+        background-color: var(--md-sys-color-error);
+
+        &::after {
+            background-color: var(--md-sys-color-error);
+        }
+    }
+
+    &.outlined .outline,
+    &.outlined .container:focus-within .outline {
+        border-color: var(--md-sys-color-error);
+    }
+}
+
+/* ── Disabled ───────────────────────────────────────────── */
+
+.field[data-disabled] {
+    .container {
+        cursor: default;
+    }
+
+    .input,
+    .label {
+        color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
+    }
+
+    &.filled .container {
+        background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 4%, transparent);
+    }
+
+    &.filled .outline {
+        background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
+    }
+
+    &.outlined .outline {
+        border-color: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    }
+}

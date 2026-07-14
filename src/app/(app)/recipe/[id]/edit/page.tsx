@@ -4,8 +4,6 @@ import { getRecipeForUser } from '@/server/recipes'
 import { recipeIdSchema } from '@/server/schemas'
 import { RecipeForm, type RecipeFormValues } from '@/app/(app)/RecipeForm'
 
-export const dynamic = 'force-dynamic'
-
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const parsed = recipeIdSchema.safeParse(id)
@@ -16,7 +14,6 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
 
     const initial: RecipeFormValues = {
         image: recipe.image,
-        thumbnail: recipe.thumbnail ?? '',
         title: recipe.title,
         description: recipe.description,
         servings: String(recipe.servings ?? ''),

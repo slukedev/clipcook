@@ -3,6 +3,8 @@ import 'server-only'
 import { cert, getApps, initializeApp, type App } from 'firebase-admin/app'
 import { getAuth, type Auth } from 'firebase-admin/auth'
 import { getFirestore, type Firestore } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
+import type { Bucket } from '@google-cloud/storage'
 
 function requireEnv(key: string): string {
     const value = process.env[key]
@@ -35,4 +37,10 @@ export function adminAuth(): Auth {
 
 export function adminDb(): Firestore {
     return getFirestore(getAdminApp())
+}
+
+export function adminBucket(): Bucket {
+    // The public env var doubles as the server-side bucket name so the
+    // .env surface stays unchanged.
+    return getStorage(getAdminApp()).bucket(requireEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'))
 }

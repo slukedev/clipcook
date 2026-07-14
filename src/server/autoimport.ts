@@ -73,7 +73,11 @@ const safeDispatcher = new Agent({
     },
 })
 
-async function safeFetch(url: string, maxBytes: number, accept?: string): Promise<{
+async function safeFetch(
+    url: string,
+    maxBytes: number,
+    accept?: string,
+): Promise<{
     body: ArrayBuffer
     contentType: string | null
     finalUrl: string
