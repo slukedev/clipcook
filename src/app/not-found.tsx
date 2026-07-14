@@ -1,10 +1,15 @@
-import { Main } from '@/components/main'
+import { Button, EmptyState } from '@/components/ui'
 
 export default function NotFound() {
     return (
-        <Main pageName="pageNotFound">
-            <h1>404</h1>
-            <p>Page not found</p>
-        </Main>
+        <main style={{ display: 'grid', placeItems: 'center', minHeight: '100dvh' }}>
+            <EmptyState
+                icon="pets"
+                headline="This page wandered off"
+                body="Like Belle at dinnertime, it's probably somewhere near the kitchen. (404)"
+            >
+                <Button href="/">Back to your recipes</Button>
+            </EmptyState>
+        </main>
     )
 }

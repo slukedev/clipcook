@@ -1,0 +1,57 @@
+@use '../../../styles/mixins/state-layer';
+@use '../../../styles/mixins/focus-ring';
+
+.card {
+    position: relative;
+    display: block;
+    border-radius: var(--md-sys-shape-corner-medium);
+    overflow: hidden;
+    text-align: inherit;
+    transition:
+        box-shadow var(--md-sys-motion-duration-short3) var(--md-sys-motion-easing-standard),
+        border-radius var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized);
+}
+
+.elevated {
+    background-color: var(--md-sys-color-surface-container-low);
+    box-shadow: var(--md-sys-elevation-shadow-1);
+}
+
+.filled {
+    background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.outlined {
+    background-color: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.interactive {
+    @include state-layer.host;
+    @include focus-ring.ring;
+
+    padding: 0;
+    border-radius: var(--md-sys-shape-corner-medium);
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    -webkit-tap-highlight-color: transparent;
+
+    // Keep the state layer above media children.
+    &::before {
+        z-index: 1;
+    }
+
+    &.elevated {
+        @media (hover: hover) {
+            &:hover {
+                box-shadow: var(--md-sys-elevation-shadow-2);
+            }
+        }
+    }
+
+    // Expressive press morph: cards round further while pressed.
+    &:active {
+        border-radius: var(--md-sys-shape-corner-large-increased);
+    }
+}

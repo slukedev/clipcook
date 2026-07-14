@@ -1,29 +1,28 @@
 'use client'
 
 import { useEffect } from 'react'
-import styles from '@/styles/Home.module.scss'
-import { Button } from '@/components/button'
-import { Main } from '@/components/main'
+import { Button, EmptyState } from '@/components/ui'
 
-export default function AppError({
-    error,
-    reset,
-}: {
-    error: Error & { digest?: string }
-    reset: () => void
-}) {
+export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
     useEffect(() => {
         console.error(error)
     }, [error])
 
     return (
-        <Main pageName="recipe">
-            <div className={styles.loading}>
-                <h1>Something went wrong</h1>
-                <p>Belle has, once again, gotten into the recipe drawer.</p>
-                {error.digest ? <p style={{ opacity: 0.6 }}>Ref: {error.digest}</p> : null}
-                <Button onClick={reset}>Try again</Button>
-            </div>
-        </Main>
+        <main>
+            <EmptyState
+                icon="error"
+                headline="Something went wrong"
+                body={
+                    error.digest
+                        ? `Belle has, once again, gotten into the recipe drawer. (Ref: ${error.digest})`
+                        : 'Belle has, once again, gotten into the recipe drawer.'
+                }
+            >
+                <Button icon="refresh" onClick={reset}>
+                    Try again
+                </Button>
+            </EmptyState>
+        </main>
     )
 }

@@ -1,0 +1,76 @@
+@use '../../../styles/mixins/typography' as type;
+@use '../../../styles/mixins/state-layer';
+@use '../../../styles/mixins/focus-ring';
+
+.fab {
+    @include state-layer.host;
+    @include focus-ring.ring;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--md-sys-shape-corner-large);
+    box-shadow: var(--md-sys-elevation-shadow-3);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+
+    transition:
+        border-radius var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized),
+        scale var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized),
+        box-shadow var(--md-sys-motion-duration-short3) var(--md-sys-motion-easing-standard);
+
+    @media (hover: hover) {
+        &:hover {
+            box-shadow: var(--md-sys-elevation-shadow-4);
+            scale: 1.04;
+        }
+    }
+
+    // Expressive morph: square-ish → rounder while pressed.
+    &:active {
+        border-radius: var(--md-sys-shape-corner-extra-large);
+    }
+}
+
+.extended {
+    @include type.role(label-large);
+    width: auto;
+    padding-inline: 1rem 1.25rem;
+}
+
+.large {
+    width: 6rem;
+    height: 6rem;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+
+    &:active {
+        border-radius: var(--md-sys-shape-corner-extra-extra-large);
+    }
+
+    &.extended {
+        width: auto;
+        padding-inline: 1.75rem 2rem;
+    }
+}
+
+.primary {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.secondary {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.tertiary {
+    background-color: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+}

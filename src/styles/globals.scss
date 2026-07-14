@@ -1,27 +1,89 @@
-@use "./theme/tokens.css";
-@use "./theme/colors.module.css";
-@use "./theme/typography.module.scss";
-@use "./theme/theme.css";
+@use './theme/color.css';
+@use './theme/typescale.css';
+@use './theme/shape.css';
+@use './theme/motion.css';
+@use './theme/elevation.css';
+@use './theme/state.css';
+@use './mixins/typography' as type;
 
-html,
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    // No-preference fallback if the pre-hydration theme script is ever blocked.
+    color-scheme: light dark;
+    height: 100%;
+}
+
 body {
     margin: 0;
-    padding: 0;
-    font-family: var(--font-roboto), 'Roboto', sans-serif !important;
-    color: var(--on-background);
-    background-color: var(--background);
+    min-height: 100%;
+    @include type.role(body-large);
+    color: var(--md-sys-color-on-surface);
+    background-color: var(--md-sys-color-surface);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
-*:not(.material-symbols-outlined) {
-    font-family: var(--font-roboto), 'Roboto', sans-serif !important;
-}
-
-input,
-button {
-    color: black;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure {
+    margin: 0;
 }
 
 a {
     color: inherit;
     text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+    color: inherit;
+}
+
+img,
+svg,
+video {
+    display: block;
+    max-width: 100%;
+}
+
+::selection {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+// Shared entrance keyframes (referenced from CSS modules via mixins/_enter.scss;
+// names stay global because no module defines them locally). Durations come
+// from motion tokens, which collapse to 0 under prefers-reduced-motion.
+@keyframes cc-rise {
+    from {
+        opacity: 0;
+        translate: 0 1rem;
+    }
+}
+
+@keyframes cc-pop {
+    from {
+        opacity: 0;
+        scale: 0.6;
+    }
+}
+
+@keyframes cc-reveal {
+    from {
+        opacity: 0;
+        scale: 1.05;
+    }
 }

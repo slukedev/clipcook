@@ -1,0 +1,48 @@
+// M3 state layer: a ::before overlay tinted with the content color that
+// appears on hover/focus/press. The host must create a stacking context
+// and hide overflow so the layer clips to the container shape.
+//
+// Usage:
+//   .button {
+//       @include state-layer.host;
+//       @include state-layer.color(var(--md-sys-color-on-primary));
+//   }
+
+@mixin host {
+    position: relative;
+    isolation: isolate;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        background-color: currentcolor;
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-linear);
+        pointer-events: none;
+    }
+
+    @media (hover: hover) {
+        &:hover:not(:disabled, [data-disabled])::before {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+    }
+
+    &:focus-visible::before {
+        opacity: var(--md-sys-state-focus-state-layer-opacity);
+    }
+
+    &:active:not(:disabled, [data-disabled])::before,
+    &[data-pressed]::before {
+        opacity: var(--md-sys-state-pressed-state-layer-opacity);
+    }
+}
+
+// Tint the state layer with a color other than currentcolor.
+@mixin color($color) {
+    &::before {
+        background-color: $color;
+    }
+}

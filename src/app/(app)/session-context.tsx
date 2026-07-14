@@ -5,13 +5,7 @@ import type { SessionUser } from '@/server/auth'
 
 const SessionContext = createContext<SessionUser | null>(null)
 
-export function SessionProvider({
-    user,
-    children,
-}: {
-    user: SessionUser
-    children: React.ReactNode
-}) {
+export function SessionProvider({ user, children }: { user: SessionUser; children: React.ReactNode }) {
     return <SessionContext.Provider value={user}>{children}</SessionContext.Provider>
 }
 

@@ -1,0 +1,18 @@
+// M3 type roles. Usage: @include type.role(body-large);
+// Emphasized variants bump weight per M3 Expressive: @include type.role(title-medium, $emphasized: true);
+
+@mixin role($role, $emphasized: false) {
+    font-family: var(--md-sys-typescale-#{$role}-font-family-name);
+    font-style: var(--md-sys-typescale-#{$role}-font-family-style);
+    font-size: var(--md-sys-typescale-#{$role}-font-size);
+    letter-spacing: var(--md-sys-typescale-#{$role}-tracking);
+    line-height: var(--md-sys-typescale-#{$role}-height);
+    text-transform: var(--md-sys-typescale-#{$role}-text-transform);
+    text-decoration: var(--md-sys-typescale-#{$role}-text-decoration);
+
+    @if $emphasized {
+        font-weight: calc(var(--md-sys-typescale-#{$role}-font-weight) + 100);
+    } @else {
+        font-weight: var(--md-sys-typescale-#{$role}-font-weight);
+    }
+}

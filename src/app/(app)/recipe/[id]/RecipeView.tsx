@@ -1,124 +1,118 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
-import Link from 'next/link'
-import { AnimatePresence, motion } from 'motion/react'
-import { hexFromArgb, themeFromImage } from '@material/material-color-utilities'
-import Fraction from 'fraction.js'
 import Qty, { getAliases } from 'js-quantities'
-import styles from '@/styles/Home.module.scss'
-import { Button } from '@/components/button'
-import { Checkbox } from '@/components/checkbox'
-import { Icon } from '@/components/icon'
-import { Input } from '@/components/input'
-import { Main } from '@/components/main'
-import { Modal } from '@/components/modal'
-import { Ripple } from '@/components/ripple'
+import { useEffect, useMemo, useState } from 'react'
+import { RecipeImage } from '@/components/recipe-image'
+import {
+    BottomSheet,
+    BottomSheetContent,
+    BottomSheetTitle,
+    BottomSheetTrigger,
+    Button,
+    Chip,
+    Fab,
+    Icon,
+    IconButton,
+    Ripple,
+    TextField,
+} from '@/components/ui'
+import { displayIngredient, formatFraction, unescapeHtml } from '@/lib/recipe-format'
 import type { Recipe } from '@/server/recipes'
-
-const NAMED_ENTITIES: Record<string, string> = {
-    amp: '&',
-    lt: '<',
-    gt: '>',
-    quot: '"',
-    apos: "'",
-    nbsp: '\u00a0',
-    ndash: '\u2013',
-    mdash: '\u2014',
-    hellip: '\u2026',
-    lsquo: '\u2018',
-    rsquo: '\u2019',
-    ldquo: '\u201c',
-    rdquo: '\u201d',
-    deg: '\u00b0',
-    frac12: '\u00bd',
-    frac14: '\u00bc',
-    frac34: '\u00be',
-}
-
-function unescapeHtml(str: string): string {
-    return str
-        .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
-        .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
-        .replace(/&([a-z][a-z0-9]*);/gi, (match, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? match)
-}
-
-function parseAmount(raw: string): number {
-    if (raw.includes('/')) {
-        const [a, b] = raw.split('/')
-        const num = Number(a)
-        const den = Number(b)
-        return Number.isFinite(num) && Number.isFinite(den) && den !== 0 ? num / den : NaN
-    }
-    return Number(raw)
-}
-
-function hexToRgb(hex: string): string | null {
-    const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-    if (!match) return null
-    const [, r = '0', g = '0', b = '0'] = match
-    return `${parseInt(r, 16)}, ${parseInt(g, 16)}, ${parseInt(b, 16)}`
-}
+import styles from './recipe-view.module.scss'
 
 interface ConversionResult {
     value: number
     unit: string
 }
 
+function useWakeLock() {
+    useEffect(() => {
+        const wakeLock = navigator.wakeLock
+        if (!wakeLock) return
+        let sentinel: WakeLockSentinel | null = null
+        let disposed = false
+
+        const acquire = () => {
+            if (disposed || document.visibilityState !== 'visible') return
+            wakeLock
+                .request('screen')
+                .then((s) => {
+                    sentinel = s
+                })
+                .catch(() => null)
+        }
+
+        acquire()
+        document.addEventListener('visibilitychange', acquire)
+        return () => {
+            disposed = true
+            document.removeEventListener('visibilitychange', acquire)
+            sentinel?.release().catch(() => null)
+        }
+    }, [])
+}
+
+function ChecklistRow({
+    checked,
+    onToggle,
+    children,
+    ordinal,
+}: {
+    checked: boolean
+    onToggle: () => void
+    children: React.ReactNode
+    ordinal?: number
+}) {
+    return (
+        <li>
+            <button
+                type="button"
+                className={styles.row}
+                data-checked={checked || undefined}
+                aria-pressed={checked}
+                onClick={onToggle}
+            >
+                {ordinal !== undefined && (
+                    <span className={styles.stepNumber} aria-hidden="true">
+                        <span>{ordinal}</span>
+                    </span>
+                )}
+                <span className={styles.rowText}>{children}</span>
+                <span className={styles.rowCheck} aria-hidden="true">
+                    <svg viewBox="0 0 18 18" className={styles.rowCheckMark}>
+                        <path d="M4 9.5 7.5 13 14 5.5" fill="none" stroke="currentColor" strokeWidth="2.2" />
+                    </svg>
+                </span>
+                <Ripple />
+            </button>
+        </li>
+    )
+}
+
 export function RecipeView({ recipe }: { recipe: Recipe }) {
     const initialServings = Number.parseInt(String(recipe.servings), 10)
-    const hasValidServings = Number.isFinite(initialServings) && initialServings > 0
+    const hasNumericServings = Number.isFinite(initialServings) && initialServings > 0
 
-    const [servings, setServings] = useState<number>(hasValidServings ? initialServings : 0)
-    const [servingsScale, setServingsScale] = useState(1)
-    const [servingsModal, setServingsModal] = useState(false)
-    const [servingsDraft, setServingsDraft] = useState<string>(hasValidServings ? String(initialServings) : '')
-    const [convertMenuOpen, setConvertMenuOpen] = useState(false)
+    const [servings, setServings] = useState(hasNumericServings ? initialServings : 0)
+    const [checkedIngredients, setCheckedIngredients] = useState<ReadonlySet<number>>(new Set())
+    const [checkedSteps, setCheckedSteps] = useState<ReadonlySet<number>>(new Set())
     const [convertValue, setConvertValue] = useState('')
     const [conversions, setConversions] = useState<ConversionResult[] | null>(null)
-    const [accent, setAccent] = useState<string | null>(null)
 
-    const onServingsSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const parsed = Number.parseInt(servingsDraft, 10)
-        setServingsModal(false)
-        if (hasValidServings && parsed > 0 && parsed <= 100) {
-            const newScale = Math.round((parsed / initialServings) * 1000) / 1000
-            setServingsScale(newScale)
-            setServings(parsed)
-        }
+    useWakeLock()
+
+    const scale = hasNumericServings && servings > 0 ? Math.round((servings / initialServings) * 1000) / 1000 : 1
+    const ingredients = useMemo(
+        () => recipe.ingredients.map((ingredient) => displayIngredient(ingredient, scale)),
+        [recipe.ingredients, scale],
+    )
+
+    const toggle = (set: ReadonlySet<number>, index: number): ReadonlySet<number> => {
+        const next = new Set(set)
+        if (next.has(index)) next.delete(index)
+        else next.add(index)
+        return next
     }
-
-    const scaleIngredient = useCallback(
-        (ingredient: string): string => {
-            // Scale only the first numeric amount in the ingredient. Replacing every
-            // number would rewrite things like "350° oven" or "stir for 5 minutes"
-            // alongside the actual quantity.
-            const amountRegex = /\d+\/\d+|\d+\.\d+|\d+/
-            let replaced = false
-            return ingredient.replace(amountRegex, (match) => {
-                if (replaced) return match
-                replaced = true
-                const n = parseAmount(match)
-                if (!Number.isFinite(n)) return match
-                return String(Math.round(n * servingsScale * 1000) / 1000)
-            })
-        },
-        [servingsScale],
-    )
-
-    const formatIngredient = useCallback(
-        (ingredient: string): string => {
-            return unescapeHtml(scaleIngredient(ingredient)).replace(/-?\d+(?:\.\d+)?/g, (n) => {
-                try {
-                    return new Fraction(n).simplify(0.001).toFraction(true)
-                } catch {
-                    return n
-                }
-            })
-        },
-        [scaleIngredient],
-    )
 
     const runConversion = () => {
         try {
@@ -139,318 +133,161 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
         }
     }
 
-    useEffect(() => {
-        let cancelled = false
-        const appliedProps: string[] = []
-        async function applyTheme() {
-            if (typeof document === 'undefined') return
-            const img = document.getElementById('recipeImage') as HTMLImageElement | null
-            if (!img) return
-            if (!img.complete) {
-                await new Promise<void>((resolve) => {
-                    img.addEventListener('load', () => resolve(), { once: true })
-                    img.addEventListener('error', () => resolve(), { once: true })
-                })
-            }
-            if (cancelled) return
-            try {
-                const theme = await themeFromImage(img)
-                const darkScheme = theme.schemes.dark
-                // Scheme stores colors behind prototype getters, so Object.entries(darkScheme)
-                // returns nothing. toJSON() gives the plain {primary, onPrimary, ...} record.
-                const entries = Object.entries(darkScheme.toJSON())
-                for (const [prop, argb] of entries) {
-                    const cssName = prop.replace(/[^a-z]/g, (l) => `-${l.toLowerCase()}`)
-                    const hex = hexFromArgb(argb)
-                    const rgb = hexToRgb(hex)
-                    const setProp = (name: string, value: string) => {
-                        document.body.style.setProperty(name, value)
-                        appliedProps.push(name)
-                    }
-                    setProp(`--md-sys-color-${cssName}`, hex)
-                    setProp(`--md-sys-color-${cssName}-dark`, hex)
-                    if (rgb) {
-                        setProp(`--md-sys-color-${cssName}-rgb`, rgb)
-                        setProp(`--md-sys-color-${cssName}-rgb-dark`, rgb)
-                    }
-                }
-                setAccent(hexFromArgb(darkScheme.primary))
-            } catch {
-                // leave default theme
-            }
-        }
-        void applyTheme()
-        return () => {
-            cancelled = true
-            for (const prop of appliedProps) {
-                document.body.style.removeProperty(prop)
-            }
-        }
-    }, [])
-
-    useEffect(() => {
-        if (typeof navigator === 'undefined') return
-        const wl = (navigator as Navigator & { wakeLock?: { request: (type: 'screen') => Promise<{ release?: () => Promise<void> }> } }).wakeLock
-        if (!wl) return
-        let sentinel: { release?: () => Promise<void> } | null = null
-        if (document.visibilityState !== 'visible') return
-        wl.request('screen').then((s) => {
-            sentinel = s
-        }).catch(() => null)
-        return () => {
-            sentinel?.release?.().catch(() => null)
-        }
-    }, [])
-
-    useEffect(() => {
-        if (!accent) return
-        const meta = document.querySelector('meta[name="theme-color"]')
-        if (!meta) return
-        const previous = meta.getAttribute('content')
-        meta.setAttribute('content', accent)
-        return () => {
-            if (previous !== null) meta.setAttribute('content', previous)
-        }
-    }, [accent])
-
-    const toggleChecklistElement = (target: HTMLElement) => {
-        const checkbox = target.querySelector("input[type='checkbox']") as HTMLInputElement | null
-        if (!checkbox) return
-        const text = target.classList.contains('instruction')
-            ? (target.querySelector('.instruction') as HTMLElement | null)
-            : (target.querySelector('span') as HTMLElement | null)
-        checkbox.checked = !checkbox.checked
-        if (text) {
-            text.setAttribute(
-                'style',
-                checkbox.checked ? 'color: var(--primary); text-decoration: line-through;' : '',
-            )
-        }
-    }
-
-    const toggleChecklistItem = (e: ReactMouseEvent<HTMLDivElement>) => {
-        toggleChecklistElement(e.currentTarget)
-    }
-
-    const onChecklistKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            toggleChecklistElement(e.currentTarget)
-        }
-    }
-
-    const ingredientItems = useMemo(
-        () => recipe.ingredients.map((i) => formatIngredient(i)),
-        [recipe.ingredients, formatIngredient],
-    )
-
     return (
-        <>
-            <Main pageName="recipe">
-                <motion.div
-                    key="recipe"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ ease: 'easeInOut', duration: 0.3 }}
-                    exit={{ opacity: 0 }}
-                >
-                    <div className={styles.header}>
-                        <div>
-                            <h1>{recipe.title}</h1>
-                            <p>{recipe.description}</p>
-                            <div className={styles.externalInfo}>
-                                <div className={styles.chip}>
-                                    <Icon className={styles.icon} name="countertops" fill="0" iconsize="18" />
-                                    <span>Prep Time: {recipe.prepTime}</span>
-                                </div>
-                                <div className={styles.chip}>
-                                    <Icon className={styles.icon} name="cooking" fill="0" iconsize="18" />
-                                    <span>Cook Time: {recipe.cookTime}</span>
-                                </div>
-                                <div className={styles.chip}>
-                                    <Icon className={styles.icon} name="schedule" fill="0" iconsize="18" />
-                                    <span>Total Time: {recipe.totalTime}</span>
-                                </div>
-                                <div className={styles.chip}>
-                                    <Icon className={styles.icon} name="people" fill="0" iconsize="18" />
-                                    <span>
-                                        Servings: {servings}
-                                        {servingsScale !== 1 ? ` (${servingsScale}x)` : ''}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className={styles.actions}>
-                                <Button onClick={() => setServingsModal(true)}>Change Servings</Button>
-                                <Link href={`/recipe/${recipe.id}/edit`} passHref>
-                                    <Button>Edit Recipe</Button>
-                                </Link>
-                            </div>
-                        </div>
-                        <div style={{ borderRadius: '16px 0 0 16px' }} className={styles.image}>
-                            {/* biome-ignore lint/performance/noImgElement: themeFromImage reads the DOM image; next/image would break pixel access */}
-                            <img
-                                style={{ borderRadius: '16px 0 0 16px' }}
-                                id="recipeImage"
-                                src={recipe.image}
-                                alt={recipe.title}
-                            />
-                        </div>
-                    </div>
-                    <div className={styles.container}>
-                        <h1 className={styles.title}>Ingredients</h1>
-                        <div className={styles.ingredients}>
-                            {ingredientItems.map((ingredient, index) => (
-                                // biome-ignore lint/suspicious/noArrayIndexKey: recipe view is static; list never reorders
-                                <Ripple key={index} feather="10px" style={{ width: '100%', borderRadius: 8 }}>
-                                    {/* biome-ignore lint/a11y/useSemanticElements: styling relies on div; <button> resets break the flex layout */}
-                                    <div
-                                        role="button"
-                                        tabIndex={0}
-                                        className={styles.ingredient}
-                                        onClick={toggleChecklistItem}
-                                        onKeyDown={onChecklistKeyDown}
-                                        aria-label={`Toggle ingredient ${ingredient}`}
-                                    >
-                                        <div className={styles.ingredientName}>
-                                            <span>{ingredient}</span>
-                                        </div>
-                                        <div className={styles.ingredientCheckbox}>
-                                            <Checkbox
-                                                readOnly
-                                                disabled
-                                                style={{ pointerEvents: 'none' }}
-                                                inputid={`ingredient-check-${index}`}
-                                            />
-                                        </div>
-                                    </div>
-                                </Ripple>
-                            ))}
-                        </div>
-                    </div>
-                    <div className={styles.container}>
-                        <h1 className={styles.title}>Directions</h1>
-                        <div className={styles.ingredients}>
-                            {recipe.instructions.map((instruction, index) => (
-                                // biome-ignore lint/suspicious/noArrayIndexKey: recipe view is static; list never reorders
-                                <Ripple key={index} feather="10px" style={{ width: '100%', borderRadius: 8 }}>
-                                    {/* biome-ignore lint/a11y/useSemanticElements: styling relies on div; <button> resets break the flex layout */}
-                                    <div
-                                        role="button"
-                                        tabIndex={0}
-                                        className={`${styles.ingredient} instruction`}
-                                        onClick={toggleChecklistItem}
-                                        onKeyDown={onChecklistKeyDown}
-                                        aria-label={`Toggle step ${index + 1}`}
-                                    >
-                                        <div className={styles.directionNumber}>
-                                            <span className={`${styles.number} number`}>{index + 1}</span>
-                                            <svg width="120" height="120" aria-hidden="true">
-                                                <path d="M0.839206 40.5976C-4.14625 17.3914 16.4721 -3.42453 40.5835 0.47246L54.2854 2.68703C58.0691 3.29855 61.931 3.29855 65.7146 2.68703L79.4165 0.47246C103.528 -3.42453 124.146 17.3914 119.161 40.5976L116.514 52.9168C115.54 57.4515 115.54 62.1322 116.514 66.6669L119.251 79.4036C124.211 102.496 103.809 123.261 79.7848 119.573L65.436 117.37C61.8344 116.817 58.1656 116.817 54.564 117.37L40.2152 119.573C16.1906 123.261 -4.21146 102.496 0.749499 79.4036L3.48578 66.6669C4.45997 62.1322 4.45998 57.4515 3.48578 52.9168L0.839206 40.5976Z" />
-                                            </svg>
-                                        </div>
-                                        <div className={styles.ingredientName}>
-                                            <span className="instruction">{instruction}</span>
-                                        </div>
-                                        <div className={styles.ingredientCheckbox}>
-                                            <Checkbox
-                                                readOnly
-                                                disabled
-                                                style={{ pointerEvents: 'none' }}
-                                                inputid={`instruction-check-${index}`}
-                                            />
-                                        </div>
-                                    </div>
-                                </Ripple>
-                            ))}
-                        </div>
-                    </div>
-                    {recipe.notes.length > 0 ? (
-                        <div className={styles.container}>
-                            <h1 className={styles.title}>Notes</h1>
-                            <p>{recipe.notes}</p>
-                        </div>
-                    ) : null}
-                </motion.div>
-            </Main>
-
-            <Modal
-                opened={servingsModal}
-                title="Change Servings"
-                closefunction={() => setServingsModal(false)}
-            >
-                <form onSubmit={onServingsSubmit}>
-                    <Input
-                        type="number"
-                        pattern="[0-9]*"
-                        inputMode="numeric"
-                        label="Servings"
-                        name="servings"
-                        id="servings"
-                        icon="people"
-                        min={1}
-                        max={100}
-                        fullwidth
-                        value={servingsDraft}
-                        onChange={(e) => setServingsDraft(e.currentTarget.value)}
-                        required
-                    />
-                    <div style={{ width: '100%', height: 24 }} />
-                    <Button type="submit">Set Servings</Button>
-                </form>
-            </Modal>
-
-            <div className={styles.fab}>
-                <Ripple feather="5px" speedms={500}>
-                    <button type="button" onClick={() => setConvertMenuOpen(true)}>
-                        <Icon name="scale" iconsize="24" />
-                    </button>
-                </Ripple>
-            </div>
-
-            <AnimatePresence>
-                {convertMenuOpen ? (
-                    <motion.div
-                        key="helpmenu"
-                        initial={{ scale: 0.92, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ ease: 'easeInOut', duration: 0.1 }}
-                        exit={{ opacity: 0 }}
-                        className={`${styles.sheet} ${styles.options}`}
-                    >
-                        <div className={styles.top}>
-                            <span>Conversion Menu</span>
-                            <Button onClick={() => setConvertMenuOpen(false)}>Close</Button>
-                        </div>
-                        <div className={styles.initialValue}>
-                            <Input
-                                id="convertValue"
-                                autoComplete="off"
-                                label="Value"
-                                name="convertValue"
-                                type="text"
-                                placeholder="Ex: 10 tablespoons"
-                                icon="scale"
-                                value={convertValue}
-                                onChange={(e) => setConvertValue(e.currentTarget.value)}
-                            />
-                            <Button onClick={runConversion}>Convert!</Button>
-                        </div>
-                        <div>
-                            {conversions === null ? null : conversions.length === 0 ? (
-                                <h1>That unit was not found</h1>
-                            ) : (
-                                <ul style={{ width: 'auto' }}>
-                                    {conversions.map((item) => (
-                                        <li key={`${item.unit}-${item.value}`}>
-                                            {new Fraction(item.value).simplify(0.001).toFraction(true)} {item.unit}
-                                        </li>
-                                    ))}
-                                </ul>
+        <div data-recipe-scope className={styles.scope}>
+            <main className={styles.main}>
+                <header className={styles.hero}>
+                    <div className={styles.heroText}>
+                        <h1 className={styles.title}>{unescapeHtml(recipe.title)}</h1>
+                        {recipe.description && <p className={styles.description}>{unescapeHtml(recipe.description)}</p>}
+                        <div className={styles.chips}>
+                            {recipe.prepTime && <Chip icon="restaurant">Prep {recipe.prepTime}</Chip>}
+                            {recipe.cookTime && <Chip icon="oven_gen">Cook {recipe.cookTime}</Chip>}
+                            {recipe.totalTime && <Chip icon="schedule">{recipe.totalTime} total</Chip>}
+                            {recipe.servings !== '' && (
+                                <Chip icon="group">
+                                    {hasNumericServings
+                                        ? `Serves ${servings}${scale !== 1 ? ` · ${formatFraction(scale)}×` : ''}`
+                                        : `Serves ${recipe.servings}`}
+                                </Chip>
                             )}
                         </div>
-                    </motion.div>
-                ) : null}
-            </AnimatePresence>
-        </>
+                        <div className={styles.actions}>
+                            <Button variant="tonal" icon="edit" href={`/recipe/${recipe.id}/edit`}>
+                                Edit recipe
+                            </Button>
+                        </div>
+                    </div>
+                    <figure className={styles.heroImage}>
+                        <RecipeImage
+                            src={recipe.image}
+                            alt={recipe.title}
+                            priority
+                            sizes="(min-width: 840px) 45vw, 100vw"
+                        />
+                    </figure>
+                </header>
+
+                <div className={styles.columns}>
+                    <section className={styles.ingredients} aria-label="Ingredients">
+                        <div className={styles.sectionHeader}>
+                            <h2 className={styles.sectionTitle}>Ingredients</h2>
+                            {hasNumericServings && (
+                                <div className={styles.servings}>
+                                    <IconButton
+                                        icon="remove"
+                                        label="Fewer servings"
+                                        variant="tonal"
+                                        disabled={servings <= 1}
+                                        onClick={() => setServings((s) => Math.max(1, s - 1))}
+                                    />
+                                    <span className={styles.servingsValue}>
+                                        {servings}
+                                        <span className={styles.servingsLabel}>servings</span>
+                                    </span>
+                                    <IconButton
+                                        icon="add"
+                                        label="More servings"
+                                        variant="tonal"
+                                        disabled={servings >= 99}
+                                        onClick={() => setServings((s) => Math.min(99, s + 1))}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        {scale !== 1 && (
+                            <button
+                                type="button"
+                                className={styles.scaleNote}
+                                onClick={() => setServings(initialServings)}
+                            >
+                                <Icon name="scale" size={18} />
+                                Scaled to {formatFraction(scale)}× (tap to reset)
+                            </button>
+                        )}
+                        <ul className={styles.list}>
+                            {ingredients.map((ingredient, index) => (
+                                <ChecklistRow
+                                    // biome-ignore lint/suspicious/noArrayIndexKey: static list, never reorders
+                                    key={index}
+                                    checked={checkedIngredients.has(index)}
+                                    onToggle={() => setCheckedIngredients((set) => toggle(set, index))}
+                                >
+                                    {ingredient}
+                                </ChecklistRow>
+                            ))}
+                        </ul>
+                    </section>
+
+                    <section className={styles.directions} aria-label="Directions">
+                        <h2 className={styles.sectionTitle}>Directions</h2>
+                        <ul className={styles.list}>
+                            {recipe.instructions.map((instruction, index) => (
+                                <ChecklistRow
+                                    // biome-ignore lint/suspicious/noArrayIndexKey: static list, never reorders
+                                    key={index}
+                                    ordinal={index + 1}
+                                    checked={checkedSteps.has(index)}
+                                    onToggle={() => setCheckedSteps((set) => toggle(set, index))}
+                                >
+                                    {unescapeHtml(instruction)}
+                                </ChecklistRow>
+                            ))}
+                        </ul>
+
+                        {recipe.notes.length > 0 && (
+                            <div className={styles.notes}>
+                                <h2 className={styles.sectionTitle}>Notes</h2>
+                                <p className={styles.notesBody}>{recipe.notes}</p>
+                            </div>
+                        )}
+                    </section>
+                </div>
+            </main>
+
+            <BottomSheet>
+                <BottomSheetTrigger
+                    render={
+                        <Fab icon="straighten" color="tertiary" aria-label="Convert units" className={styles.fab} />
+                    }
+                />
+                <BottomSheetContent>
+                    <BottomSheetTitle>Convert units</BottomSheetTitle>
+                    <form
+                        className={styles.convertForm}
+                        onSubmit={(event) => {
+                            event.preventDefault()
+                            runConversion()
+                        }}
+                    >
+                        <TextField
+                            label="Amount"
+                            placeholder="e.g. 10 tablespoons"
+                            value={convertValue}
+                            onChange={(event) => setConvertValue(event.target.value)}
+                            leadingIcon="straighten"
+                            fullWidth
+                            autoComplete="off"
+                        />
+                        <Button type="submit">Convert</Button>
+                    </form>
+                    {conversions !== null &&
+                        (conversions.length === 0 ? (
+                            <p className={styles.convertEmpty}>
+                                That didn’t look like a quantity. Try something like “2 cups”.
+                            </p>
+                        ) : (
+                            <ul className={styles.convertResults}>
+                                {conversions.map((item) => (
+                                    <li key={item.unit}>
+                                        <span className={styles.convertValue}>{formatFraction(item.value)}</span>
+                                        <span className={styles.convertUnit}>{item.unit}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ))}
+                </BottomSheetContent>
+            </BottomSheet>
+        </div>
     )
 }
