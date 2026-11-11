@@ -34,6 +34,7 @@ const ICONS: GroceryIcons = {
     recipe: <Icon name="menu_book" />,
     empty: <Icon name="shopping_basket" />,
     browse: <Icon name="library_books" />,
+    offline: <Icon name="cloud_off" />,
 }
 
 export default async function GroceryPage() {

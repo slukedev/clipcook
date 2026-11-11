@@ -1,21 +1,30 @@
 'use client'
 
-import { type ReactNode, useRef, useState } from 'react'
+import { type ReactNode, useId, useRef, useState } from 'react'
+import { ChipSet, SuggestionChip } from '@/components/ui/chip'
 import { IconButton } from '@/components/ui/icon-button'
 import styles from './grocery.module.scss'
+import type { PastItem } from './history'
 
-/** Always-on add field. Enter adds one item; pasting several lines adds them all. */
+/**
+ * Always-on add field. Enter adds one item; pasting several lines adds them all.
+ * While it has focus, things bought before sit under it as one-tap chips.
+ */
 export function AddField({
     onAdd,
+    suggest,
     addIcon,
     submitIcon,
 }: {
     onAdd: (lines: string[]) => void
+    suggest: (query: string) => PastItem[]
     addIcon: ReactNode
     submitIcon: ReactNode
 }) {
     const [value, setValue] = useState('')
+    const [focused, setFocused] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
+    const listId = useId()
 
     function submit() {
         if (!value.trim()) return
@@ -24,49 +33,91 @@ export function AddField({
         inputRef.current?.focus()
     }
 
+    // Rendered while closed too, so the row folds away with its chips instead of emptying first.
+    const offers = suggest(value)
+    const open = focused && offers.length > 0
+
     return (
-        <form
-            className={styles.add}
-            onSubmit={(event) => {
-                event.preventDefault()
-                submit()
+        // biome-ignore lint/a11y/noStaticElementInteractions: focus tracking only; the field and chips inside are the controls
+        <div
+            className={styles.addArea}
+            onFocus={() => setFocused(true)}
+            onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)
             }}
         >
-            <span className={styles.addIcon} aria-hidden>
-                {addIcon}
-            </span>
-            <input
-                ref={inputRef}
-                className={styles.addInput}
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                onPaste={(event) => {
-                    const text = event.clipboardData.getData('text')
-                    if (!/\r?\n/.test(text.trim())) return
+            <form
+                className={styles.add}
+                onSubmit={(event) => {
                     event.preventDefault()
-                    const lines = text.split(/\r?\n/)
-                    if (value.trim()) lines.unshift(value)
-                    onAdd(lines)
-                    setValue('')
+                    submit()
                 }}
-                placeholder="Add item"
-                aria-label="Add item"
-                autoComplete="off"
-                autoCapitalize="sentences"
-                enterKeyHint="done"
-                maxLength={2000}
-            />
-            <IconButton
-                type="submit"
-                className={styles.addSubmit}
-                data-visible={value.trim() ? '' : undefined}
-                label="Add"
-                icon={submitIcon}
-                variant="filled"
-                size="s"
-                tabIndex={value.trim() ? 0 : -1}
-                aria-hidden={value.trim() ? undefined : true}
-            />
-        </form>
+            >
+                <span className={styles.addIcon} aria-hidden>
+                    {addIcon}
+                </span>
+                <input
+                    ref={inputRef}
+                    className={styles.addInput}
+                    value={value}
+                    onChange={(event) => setValue(event.target.value)}
+                    onKeyDown={(event) => {
+                        if (event.key === 'Escape' && value) {
+                            event.preventDefault()
+                            setValue('')
+                        }
+                    }}
+                    onPaste={(event) => {
+                        const text = event.clipboardData.getData('text')
+                        if (!/\r?\n/.test(text.trim())) return
+                        event.preventDefault()
+                        const lines = text.split(/\r?\n/)
+                        if (value.trim()) lines.unshift(value)
+                        onAdd(lines)
+                        setValue('')
+                    }}
+                    placeholder="Add item"
+                    aria-label="Add item"
+                    aria-controls={open ? listId : undefined}
+                    autoComplete="off"
+                    autoCapitalize="sentences"
+                    enterKeyHint="done"
+                    maxLength={2000}
+                />
+                <IconButton
+                    type="submit"
+                    className={styles.addSubmit}
+                    data-visible={value.trim() ? '' : undefined}
+                    label="Add"
+                    icon={submitIcon}
+                    variant="filled"
+                    size="s"
+                    tabIndex={value.trim() ? 0 : -1}
+                    aria-hidden={value.trim() ? undefined : true}
+                />
+            </form>
+            <div className={styles.again} data-open={open || undefined} inert={!open}>
+                <div className={styles.againInner}>
+                    {offers.length > 0 && (
+                        <ChipSet id={listId} scroll bleed label="Add again">
+                            {offers.map((item) => (
+                                <SuggestionChip
+                                    key={item.name}
+                                    icon={addIcon}
+                                    // Keeps focus (and the phone keyboard) in the field, so several go on in a row.
+                                    onPointerDown={(event) => event.preventDefault()}
+                                    onClick={() => {
+                                        onAdd([item.label])
+                                        setValue('')
+                                    }}
+                                >
+                                    {item.label}
+                                </SuggestionChip>
+                            ))}
+                        </ChipSet>
+                    )}
+                </div>
+            </div>
+        </div>
     )
 }
