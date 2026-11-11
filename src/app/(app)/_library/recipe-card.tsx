@@ -13,9 +13,10 @@ import { highlightRanges, recipeMeta, type ViewMode } from './library-data'
 import styles from './recipe-card.module.scss'
 import { RecipeMedia } from './recipe-media'
 
-export type CardAction = 'collections' | 'duplicate' | 'select' | 'remove' | 'delete'
+export type CardAction = 'cook' | 'collections' | 'duplicate' | 'select' | 'remove' | 'delete'
 
 const LABELS: Record<CardAction, string> = {
+    cook: 'Cook',
     collections: 'Add to collection',
     duplicate: 'Duplicate',
     select: 'Select',
@@ -24,6 +25,7 @@ const LABELS: Record<CardAction, string> = {
 }
 
 const ICON_FOR: Record<CardAction, keyof LibraryIcons> = {
+    cook: 'cook',
     collections: 'collection',
     duplicate: 'copy',
     select: 'select',
@@ -216,7 +218,7 @@ export function RecipeCard({
 function MenuItemFor({ action, icons, onSelect }: { action: CardAction; icons: LibraryIcons; onSelect: () => void }) {
     return (
         <>
-            {action === 'delete' && <MenuSeparator />}
+            {(action === 'delete' || action === 'collections') && <MenuSeparator />}
             <MenuItem icon={icons[ICON_FOR[action]]} onClick={onSelect}>
                 {LABELS[action]}
             </MenuItem>

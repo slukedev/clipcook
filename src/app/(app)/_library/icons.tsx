@@ -27,6 +27,7 @@ export function libraryIcons() {
         book: <Icon name="menu_book" />,
         searchOff: <Icon name="search_off" />,
         dish: <Icon name="restaurant" />,
+        cook: <Icon name="skillet" />,
         timer: <Icon name="schedule" />,
         history: <Icon name="history" />,
     }
