@@ -10,6 +10,7 @@ import {
     useSyncExternalStore,
     ViewTransition,
 } from 'react'
+import { flushSync } from 'react-dom'
 import { sendToDisplay } from '@/actions/displays'
 import { markCooked } from '@/actions/recipes'
 import { IngredientChecklist } from '@/app/(app)/recipe/[id]/_view/ingredient-checklist'
@@ -346,10 +347,13 @@ export function CookMode({
         card.style.transform = ''
         card.style.willChange = ''
         if (reduce || from === 0) return
+        // Duration and curve come from the same tokens, so the Standard scheme's shorter
+        // spring is not stretched over the Expressive duration.
+        const css = getComputedStyle(card)
+        const duration = Number.parseFloat(css.getPropertyValue('--md-sys-motion-spring-spatial-default-duration'))
         card.animate([{ transform: `translateX(${from}px)` }, { transform: 'translateX(0)' }], {
-            duration: 435,
-            easing:
-                getComputedStyle(card).getPropertyValue('--md-sys-motion-spring-spatial-default').trim() || 'ease-out',
+            duration: Number.isFinite(duration) ? duration : 435,
+            easing: css.getPropertyValue('--md-sys-motion-spring-spatial-default').trim() || 'ease-out',
         })
     }
 
@@ -386,10 +390,14 @@ export function CookMode({
             { duration: 160, easing: 'cubic-bezier(0.3, 0, 0.8, 0.15)', fill: 'forwards' },
         )
         out.onfinish = () => {
+            // Render the next step synchronously, before the browser can paint the old
+            // card back at rest for a frame between the swipe and the new step.
+            flushSync(() => {
+                if (dir < 0) next()
+                else prev()
+            })
             card.style.transform = ''
             card.style.willChange = ''
-            if (dir < 0) next()
-            else prev()
             out.cancel()
         }
     }

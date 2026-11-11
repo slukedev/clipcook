@@ -140,24 +140,44 @@ export function useTimers(): readonly KitchenTimer[] {
 }
 
 // A clock that ticks once per displayed second, only while something runs and the page
-// is visible. rAF keeps it in step with the display without a free-running interval.
+// is visible. Between ticks it sleeps (no work on every frame of a 120Hz screen), then
+// wakes a little early and lands the change on a rAF so it paints with the next frame.
 let now = 0
 const clockListeners = new Set<() => void>()
 let frame = 0
+let sleep = 0
+
+function running() {
+    return document.visibilityState === 'visible' && timers.some((t) => t.state === 'running')
+}
 
 function tick() {
     frame = 0
-    if (document.visibilityState !== 'visible' || !timers.some((t) => t.state === 'running')) return
+    if (!running()) return
     const current = Date.now()
     if (Math.floor(current / 1000) !== Math.floor(now / 1000)) {
         now = current
         for (const listener of clockListeners) listener()
     }
-    frame = requestAnimationFrame(tick)
+    const untilNext = 1000 - (Date.now() % 1000)
+    // Wake about a frame early; the rAF loop covers the last few milliseconds.
+    if (untilNext > 24)
+        sleep = window.setTimeout(() => {
+            sleep = 0
+            frame = requestAnimationFrame(tick)
+        }, untilNext - 20)
+    else frame = requestAnimationFrame(tick)
+}
+
+function stopClock() {
+    cancelAnimationFrame(frame)
+    window.clearTimeout(sleep)
+    frame = 0
+    sleep = 0
 }
 
 function wake() {
-    if (!frame && clockListeners.size) {
+    if (!frame && !sleep && clockListeners.size) {
         now = Date.now()
         for (const listener of clockListeners) listener()
         frame = requestAnimationFrame(tick)
@@ -175,8 +195,7 @@ function subscribeClock(onChange: () => void) {
         if (clockListeners.size === 0) {
             listeners.delete(wake)
             document.removeEventListener('visibilitychange', wake)
-            cancelAnimationFrame(frame)
-            frame = 0
+            stopClock()
         }
     }
 }

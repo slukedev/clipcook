@@ -74,8 +74,8 @@
     inset: 0;
     z-index: -1;
     background-color: color-mix(in srgb, var(--md-sys-color-on-tertiary-container) 10%, transparent);
+    transform: scaleX(0);
     transform-origin: left center;
-    transition: transform 1s linear;
 
     .item[data-state="done"] & {
         display: none;
