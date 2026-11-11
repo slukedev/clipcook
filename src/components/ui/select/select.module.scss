@@ -1,0 +1,179 @@
+@use '../../../styles/mixins/typography' as type;
+@use '../../../styles/mixins/state-layer';
+
+.root {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-inline-size: 0;
+}
+
+.trigger {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-block-size: 56px;
+    padding-inline: 16px 12px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    color: var(--md-sys-color-on-surface);
+    text-align: start;
+    cursor: pointer;
+    outline: none;
+    --md-icon-size: 24px;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        box-shadow: inset 0 0 0 var(--_ring-width, 0px) var(--_ring-color, transparent);
+        pointer-events: none;
+    }
+
+    &[data-variant='filled'] {
+        background-color: var(--md-sys-color-surface-container-highest);
+    }
+
+    &[data-variant='outlined'] {
+        border-radius: var(--md-sys-shape-corner-extra-small);
+        --_ring-width: 1px;
+        --_ring-color: var(--md-sys-color-outline);
+    }
+
+    &:focus-visible,
+    &[data-popup-open] {
+        --_ring-width: 2px;
+        --_ring-color: var(--md-sys-color-primary);
+    }
+
+    &[data-disabled] {
+        cursor: default;
+        opacity: var(--md-sys-state-disabled-content-opacity);
+    }
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.label {
+    @include type.role(body-small);
+    color: var(--md-sys-color-on-surface-variant);
+
+    [data-popup-open] & {
+        color: var(--md-sys-color-primary);
+    }
+}
+
+.value {
+    @include type.role(body-large);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &[data-placeholder] {
+        color: var(--md-sys-color-on-surface-variant);
+    }
+}
+
+.arrow {
+    color: var(--md-sys-color-on-surface-variant);
+    transition: rotate var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    [data-popup-open] & {
+        rotate: 180deg;
+    }
+}
+
+.positioner {
+    z-index: 1000;
+    outline: 0;
+}
+
+.popup {
+    min-inline-size: var(--anchor-width);
+    max-block-size: min(var(--available-height), 420px);
+    padding: 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface-container);
+    box-shadow: var(--md-sys-elevation-level2);
+    outline: 0;
+    transform-origin: var(--transform-origin);
+    transition:
+        transform var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+        opacity: 0;
+        transform: scale(0.94);
+    }
+
+    &[data-side='none'] {
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+        &[data-starting-style],
+        &[data-ending-style] {
+            transform: none;
+        }
+    }
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.item {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+    @include type.role(label-large);
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-block-size: 48px;
+    padding-inline: 12px;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+    outline: none;
+    transition: border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+    --md-icon-size: 20px;
+
+    &[data-highlighted] {
+        border-radius: var(--md-sys-shape-corner-medium);
+
+        &::before {
+            opacity: var(--md-sys-state-focus-state-layer-opacity);
+        }
+    }
+
+    &[data-selected] {
+        border-radius: var(--md-sys-shape-corner-medium);
+        background-color: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+    }
+
+    &[data-disabled] {
+        opacity: var(--md-sys-state-disabled-content-opacity);
+        cursor: default;
+    }
+}
+
+.itemText {
+    flex: 1;
+}
+
+.indicator {
+    display: grid;
+    place-items: center;
+}
