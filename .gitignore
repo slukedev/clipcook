@@ -47,3 +47,6 @@ yarn-error.log*
 next-env.d.ts
 # local backend data (CLIPCOOK_BACKEND=local)
 /.data/
+
+# agent worktrees
+/.claude/worktrees/
