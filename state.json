@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "clipcook_session",
+      "value": "v1.eyJ1aWQiOiJsb2NhbC1kZW1vLWNvb2siLCJuYW1lIjoiRGVtbyBjb29rIiwiZXhwIjoxNzk1NTc5OTcwNDI0fQ.Bm5DHZb4DwNopR9Z793cQoaTC-rIjwYBGkdjZ1npfWU",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1795579970.452757,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}
