@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { type ReactNode, useState } from 'react'
 import { listPickerRecipes } from '@/actions/collections'
 import { Button } from '@/components/ui/button'
@@ -136,9 +137,16 @@ export function CollectionView({
                         title="Nothing Here Yet"
                         titleAs="h2"
                         action={
-                            <Button icon={icons.add} onClick={openPicker} disabled={libraryCount === 0}>
-                                Add recipes
-                            </Button>
+                            libraryCount === 0 ? (
+                                // Nothing to add yet: the way forward is a first recipe, not a disabled button.
+                                <Button icon={icons.link} render={<Link href="/clip" />} nativeButton={false}>
+                                    Clip a recipe
+                                </Button>
+                            ) : (
+                                <Button icon={icons.add} onClick={openPicker}>
+                                    Add recipes
+                                </Button>
+                            )
                         }
                     />
                 )}
