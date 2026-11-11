@@ -59,13 +59,54 @@ export function settleTime(spec: SpringSpec, epsilon = 0.001): number {
     return last
 }
 
-/** A CSS `linear()` easing that traces the spring over its settle time. */
-export function springLinear(spec: SpringSpec, samples = 40): string {
+/**
+ * A CSS `linear()` easing that traces the spring over its settle time.
+ *
+ * The browser samples this curve once per displayed frame, whatever the refresh rate,
+ * so the curve itself has to be smooth at 120Hz and beyond. Evenly spaced stops leave
+ * the fast start under-sampled (visible speed kinks on long moves) and waste stops on
+ * the flat tail. Instead the spring is traced at 0.5ms and simplified until no point
+ * strays more than `tolerance` (fraction of the distance) from the true curve.
+ */
+export function springLinear(spec: SpringSpec, tolerance = 0.0005): string {
     const duration = settleTime(spec)
+    const steps = Math.max(1, Math.ceil(duration / 0.0005))
+    const xs: number[] = []
+    const ys: number[] = []
+    for (let i = 0; i <= steps; i++) {
+        xs.push(i / steps)
+        ys.push(i === steps ? 1 : springAt((duration * i) / steps, spec))
+    }
+    const keep = new Uint8Array(xs.length)
+    keep[0] = 1
+    keep[xs.length - 1] = 1
+    // Ramer–Douglas–Peucker on the progress axis (vertical error is what the eye sees).
+    const stack: Array<[number, number]> = [[0, xs.length - 1]]
+    while (stack.length) {
+        const [a, b] = stack.pop() as [number, number]
+        const xa = xs[a] as number
+        const ya = ys[a] as number
+        const slope = ((ys[b] as number) - ya) / ((xs[b] as number) - xa)
+        let worst = -1
+        let error = tolerance
+        for (let i = a + 1; i < b; i++) {
+            const e = Math.abs((ys[i] as number) - (ya + slope * ((xs[i] as number) - xa)))
+            if (e > error) {
+                error = e
+                worst = i
+            }
+        }
+        if (worst > 0) {
+            keep[worst] = 1
+            stack.push([a, worst], [worst, b])
+        }
+    }
+    const round = (v: number, places: number) => String(Math.round(v * 10 ** places) / 10 ** places)
     const points: string[] = []
-    for (let i = 0; i <= samples; i++) {
-        const value = i === samples ? 1 : springAt((duration * i) / samples, spec)
-        points.push(String(Math.round(value * 1000) / 1000))
+    for (let i = 0; i < xs.length; i++) {
+        if (!keep[i]) continue
+        const y = round(ys[i] as number, 4)
+        points.push(i === 0 || i === xs.length - 1 ? y : `${y} ${round((xs[i] as number) * 100, 2)}%`)
     }
     return `linear(${points.join(', ')})`
 }

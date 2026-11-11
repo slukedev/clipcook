@@ -6,7 +6,20 @@
     display: grid;
     grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.6fr);
     block-size: 100dvh;
-    transition: filter var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow);
+
+    // Dimming is a black layer fading in, not filter: brightness(). The result is
+    // identical (brightness 0.55 is 45% black over the top) but opacity runs on the
+    // compositor, while a full-screen filter repaints every pixel each frame.
+    &::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        background-color: #000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow);
+    }
 
     @media (orientation: portrait) {
         grid-template-columns: minmax(0, 1fr);
@@ -14,8 +27,8 @@
     }
 
     // Ambient: tiles go away, the clock stays, the whole screen drops in brightness.
-    &[data-dim] {
-        filter: brightness(0.55);
+    &[data-dim]::after {
+        opacity: 0.45;
         transition-duration: 1.2s;
     }
 }
@@ -43,6 +56,9 @@
     display: grid;
     gap: clamp(4px, 1.2vmin, 12px);
     transition: transform 3s ease-in-out;
+    // Its own layer, so the few-pixel drift glides at sub-pixel steps instead of the
+    // text snapping a whole pixel at a time.
+    will-change: transform;
 }
 
 .time {

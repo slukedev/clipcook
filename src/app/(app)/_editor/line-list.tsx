@@ -81,10 +81,15 @@ interface Drag {
     heights: number[]
     gap: number
     frame: number
+    /** rAF timestamp of the last autoscroll frame, so speed is per second, not per frame. */
+    lastFrame: number
+    /** Sub-pixel scroll carried between frames. */
+    carry: number
     rows: HTMLElement[]
 }
 
 const EDGE = 72
+const AUTOSCROLL_PX_PER_S = 840
 
 /** Rich list editor for ingredients or steps: inline editing, reorder, headings, paste. */
 export function LineList({ kind, lines, onChange, icons }: LineListProps) {
@@ -276,6 +281,8 @@ export function LineList({ kind, lines, onChange, icons }: LineListProps) {
             heights: rects.map((r) => r.height),
             gap,
             frame: 0,
+            lastFrame: 0,
+            carry: 0,
             rows: items,
         }
         list.dataset.sorting = ''
@@ -314,16 +321,27 @@ export function LineList({ kind, lines, onChange, icons }: LineListProps) {
         })
     }
 
-    function autoScroll() {
+    // Up to 840px/s (14px a frame at 60Hz) near an edge, measured in time so it scrolls
+    // at the same speed on 60, 90, 120 and 144Hz screens.
+    function autoScroll(now: number) {
         const d = drag.current
         if (!d) return
+        const dt = d.lastFrame ? Math.min(0.05, (now - d.lastFrame) / 1000) : 0
+        d.lastFrame = now
         const y = d.lastClientY
         let speed = 0
-        if (y < EDGE) speed = -Math.ceil(((EDGE - y) / EDGE) * 14)
-        else if (y > window.innerHeight - EDGE) speed = Math.ceil(((y - (window.innerHeight - EDGE)) / EDGE) * 14)
+        if (y < EDGE) speed = -((EDGE - y) / EDGE) * AUTOSCROLL_PX_PER_S
+        else if (y > window.innerHeight - EDGE) speed = ((y - (window.innerHeight - EDGE)) / EDGE) * AUTOSCROLL_PX_PER_S
         if (speed) {
-            window.scrollBy(0, speed)
-            layout()
+            d.carry += speed * dt
+            const step = Math.trunc(d.carry)
+            if (step) {
+                d.carry -= step
+                window.scrollBy(0, step)
+                layout()
+            }
+        } else {
+            d.carry = 0
         }
         d.frame = requestAnimationFrame(autoScroll)
     }
