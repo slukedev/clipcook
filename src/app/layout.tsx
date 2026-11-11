@@ -57,6 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             className={googleSansFlex.variable}
             data-theme={preference.theme === 'system' ? undefined : preference.theme}
             data-contrast={preference.contrast === 'standard' ? undefined : preference.contrast}
+            data-motion={preference.motion === 'standard' ? 'standard' : undefined}
             suppressHydrationWarning
         >
             <head>

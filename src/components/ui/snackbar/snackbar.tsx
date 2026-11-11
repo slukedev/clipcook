@@ -16,7 +16,14 @@ export interface SnackbarOptions {
     duration?: number
     /** Announce assertively (errors). */
     urgent?: boolean
+    /** Runs once when the snackbar leaves, with what made it leave. */
+    onClose?: (reason: SnackbarCloseReason) => void
 }
+
+export type SnackbarCloseReason = 'timeout' | 'action' | 'dismiss' | 'swipe'
+
+/** Why each open snackbar is closing, set just before Base UI closes it. */
+type Reasons = Map<string, SnackbarCloseReason>
 
 type Show = (options: SnackbarOptions | string) => void
 
@@ -24,19 +31,20 @@ const SnackbarContext = createContext<Show | null>(null)
 
 /** Shows snackbars one at a time, in order. Mount once near the root. */
 export function SnackbarProvider({ children }: { children: ReactNode }) {
+    const reasons = useRef<Reasons>(new Map()).current
     return (
         <Toast.Provider limit={1}>
-            <Queue>{children}</Queue>
+            <Queue reasons={reasons}>{children}</Queue>
             <Toast.Portal>
                 <Toast.Viewport className={styles.viewport}>
-                    <SnackbarList />
+                    <SnackbarList reasons={reasons} />
                 </Toast.Viewport>
             </Toast.Portal>
         </Toast.Provider>
     )
 }
 
-function Queue({ children }: { children: ReactNode }) {
+function Queue({ children, reasons }: { children: ReactNode; reasons: Reasons }) {
     const manager = Toast.useToastManager()
     const queue = useRef<SnackbarOptions[]>([])
     const active = useRef(false)
@@ -48,12 +56,26 @@ function Queue({ children }: { children: ReactNode }) {
             return
         }
         active.current = true
-        manager.add({
+        const id = manager.add({
             description: options.message,
             timeout: options.duration ?? (options.action ? 8000 : 4000),
             priority: options.urgent ? 'high' : 'low',
             data: { closable: options.closable ?? false },
-            actionProps: options.action ? { children: options.action, onClick: () => options.onAction?.() } : undefined,
+            actionProps: options.action
+                ? {
+                      children: options.action,
+                      onClick: () => {
+                          reasons.set(id, 'action')
+                          manager.close(id)
+                          options.onAction?.()
+                      },
+                  }
+                : undefined,
+            onClose: () => {
+                const reason = reasons.get(id) ?? 'timeout'
+                reasons.delete(id)
+                options.onClose?.(reason)
+            },
             onRemove: next,
         })
     }
@@ -78,16 +100,35 @@ function usePauseWhenHidden() {
     }, [])
 }
 
-function SnackbarList() {
+function SnackbarList({ reasons }: { reasons: Reasons }) {
     const { toasts } = Toast.useToastManager()
     usePauseWhenHidden()
+    // Our handler runs before Base UI's swipe end, which closes synchronously when the
+    // swipe went far enough. The mark is cleared before any click that follows.
+    const markSwipe = (id: string) => {
+        if (reasons.has(id)) return
+        reasons.set(id, 'swipe')
+        queueMicrotask(() => {
+            if (reasons.get(id) === 'swipe') reasons.delete(id)
+        })
+    }
     return toasts.map((toast) => (
-        <Toast.Root key={toast.id} toast={toast} className={styles.snackbar} swipeDirection={['down', 'left', 'right']}>
+        <Toast.Root
+            key={toast.id}
+            toast={toast}
+            className={styles.snackbar}
+            swipeDirection={['down', 'left', 'right']}
+            onPointerUp={() => markSwipe(toast.id)}
+        >
             <Toast.Content className={styles.content}>
                 <Toast.Description className={styles.message} />
                 {toast.actionProps && <Toast.Action className={styles.action} />}
                 {(toast.data as { closable?: boolean } | undefined)?.closable && (
-                    <Toast.Close className={styles.close} aria-label="Dismiss">
+                    <Toast.Close
+                        className={styles.close}
+                        aria-label="Dismiss"
+                        onClick={() => reasons.set(toast.id, 'dismiss')}
+                    >
                         <Glyph name="close" />
                     </Toast.Close>
                 )}

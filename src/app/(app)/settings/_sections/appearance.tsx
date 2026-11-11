@@ -1,38 +1,14 @@
 'use client'
 
-import { type ReactNode, useSyncExternalStore } from 'react'
+import type { ReactNode } from 'react'
 import { ConnectedButtonGroup, ConnectedButtonGroupItem } from '@/components/ui/button-group'
 import { List, ListItem } from '@/components/ui/list'
 import { useThemePreference } from '@/components/theme/theme-provider'
-import type { Contrast, ThemeMode } from '@/lib/theme/preference'
-import { type MotionPreference, MOTION_KEY, readMotion, saveMotion } from '../../_shell/preferences'
+import type { Contrast, MotionMode, ThemeMode } from '@/lib/theme/preference'
 import styles from './sections.module.scss'
 
 interface AppearanceProps {
     icons: { theme: ReactNode; contrast: ReactNode; motion: ReactNode }
-}
-
-const motionListeners = new Set<() => void>()
-
-function subscribeMotion(listener: () => void) {
-    motionListeners.add(listener)
-    const onStorage = (event: StorageEvent) => {
-        if (event.key === MOTION_KEY) listener()
-    }
-    window.addEventListener('storage', onStorage)
-    return () => {
-        motionListeners.delete(listener)
-        window.removeEventListener('storage', onStorage)
-    }
-}
-
-function useMotionPreference(): [MotionPreference, (value: MotionPreference) => void] {
-    const value = useSyncExternalStore(subscribeMotion, readMotion, () => 'expressive' as const)
-    const set = (next: MotionPreference) => {
-        saveMotion(next)
-        for (const listener of motionListeners) listener()
-    }
-    return [value, set]
 }
 
 /** A row whose control drops under its label on narrow windows. */
@@ -77,8 +53,7 @@ function ChoiceRow<T extends string>({
 }
 
 export function AppearanceSection({ icons }: AppearanceProps) {
-    const { theme, contrast, setTheme, setContrast } = useThemePreference()
-    const [motion, setMotion] = useMotionPreference()
+    const { theme, contrast, motion, setTheme, setContrast, setMotion } = useThemePreference()
     return (
         <List segmented label="Appearance">
             <ChoiceRow<ThemeMode>
@@ -103,7 +78,7 @@ export function AppearanceSection({ icons }: AppearanceProps) {
                     { value: 'high', label: 'High' },
                 ]}
             />
-            <ChoiceRow<MotionPreference>
+            <ChoiceRow<MotionMode>
                 icon={icons.motion}
                 label="Motion"
                 value={motion}

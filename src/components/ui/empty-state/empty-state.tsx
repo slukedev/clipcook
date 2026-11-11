@@ -14,7 +14,7 @@ export interface EmptyStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 't
     /** The one next step, usually a Button. */
     action?: ReactNode
     /** Heading level for the title. */
-    titleAs?: 'h2' | 'h3' | 'p'
+    titleAs?: 'h1' | 'h2' | 'h3' | 'p'
 }
 
 export function EmptyState({
