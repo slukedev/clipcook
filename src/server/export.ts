@@ -35,17 +35,15 @@ async function recipeIds(uid: string): Promise<string[]> {
     return snap.docs.map((d) => d.id).sort()
 }
 
-/** Yields the user's docs a few at a time so photos never pile up in memory. */
-async function* recipeDocs(uid: string, ids: string[]): AsyncGenerator<DocumentSnapshot> {
+/** Yields the user's docs in small batches so photos never pile up in memory. */
+async function* recipeBatches(uid: string, ids: string[]): AsyncGenerator<DocumentSnapshot[]> {
     const col = adminDb().collection(COLLECTION)
     for (let i = 0; i < ids.length; i += BATCH) {
         const refs = ids.slice(i, i + BATCH).map((id) => col.doc(id))
         if (refs.length === 0) continue
         const snaps = await adminDb().getAll(...refs)
-        for (const snap of snaps) {
-            // Re-check ownership on the full doc, not just the query.
-            if (snap.exists && snap.get('uid') === uid) yield snap
-        }
+        // Re-check ownership on the full doc, not just the query.
+        yield snaps.filter((snap) => snap.exists && snap.get('uid') === uid)
     }
 }
 
@@ -115,12 +113,17 @@ export async function planExport(uid: string): Promise<ExportPlan> {
     const ids = await recipeIds(uid)
     const bucket = bucketName()
     const entries: Array<{ id: string; bytes: number }> = []
-    for await (const doc of recipeDocs(uid, ids)) {
-        const data = doc.data() ?? {}
-        const recipe = mapLegacyRecipe(doc.id, data, '')
-        if (!recipe) continue
-        const chars = await photoChars(uid, photoSourceOf(data, bucket))
-        entries.push({ id: doc.id, bytes: estimateRecipeBytes(recipe, chars) })
+    for await (const docs of recipeBatches(uid, ids)) {
+        const sized = await Promise.all(
+            docs.map(async (doc) => {
+                const data = doc.data() ?? {}
+                const recipe = mapLegacyRecipe(doc.id, data, '')
+                if (!recipe) return null
+                const chars = await photoChars(uid, photoSourceOf(data, bucket))
+                return { id: doc.id, bytes: estimateRecipeBytes(recipe, chars) }
+            }),
+        )
+        for (const entry of sized) if (entry) entries.push(entry)
     }
     return { total: entries.length, parts: planParts(entries) }
 }
@@ -140,18 +143,26 @@ export function exportPartStream(uid: string, from: string, to: string | null, n
                 let written = byteLength(head) + byteLength(FILE_TAIL)
                 let count = 0
                 controller.enqueue(encoder.encode(head))
-                for await (const doc of recipeDocs(uid, ids)) {
-                    const data = doc.data() ?? {}
-                    const bare = mapLegacyRecipe(doc.id, data, '')
-                    if (!bare) continue
-                    let image = await photoValue(uid, photoSourceOf(data, bucket))
-                    const textBytes = estimateRecipeBytes(bare, 0)
-                    // Stay under the importer's limit even if photos grew since planning.
-                    if (written + textBytes + image.length > HARD_PART_BYTES) image = ''
-                    const chunk = `${count ? ',' : ''}\n${JSON.stringify({ ...bare, image })}`
-                    written += byteLength(chunk)
-                    count += 1
-                    controller.enqueue(encoder.encode(chunk))
+                for await (const docs of recipeBatches(uid, ids)) {
+                    // Photos for a batch download in parallel; output keeps id order.
+                    const mapped = await Promise.all(
+                        docs.map(async (doc) => {
+                            const data = doc.data() ?? {}
+                            const bare = mapLegacyRecipe(doc.id, data, '')
+                            if (!bare) return null
+                            return { bare, image: await photoValue(uid, photoSourceOf(data, bucket)) }
+                        }),
+                    )
+                    for (const item of mapped) {
+                        if (!item) continue
+                        let { image } = item
+                        // Stay under the importer's limit even if photos grew since planning.
+                        if (written + estimateRecipeBytes(item.bare, image.length) > HARD_PART_BYTES) image = ''
+                        const chunk = `${count ? ',' : ''}\n${JSON.stringify({ ...item.bare, image })}`
+                        written += byteLength(chunk)
+                        count += 1
+                        controller.enqueue(encoder.encode(chunk))
+                    }
                 }
                 controller.enqueue(encoder.encode(FILE_TAIL))
                 controller.close()

@@ -4,8 +4,8 @@ import { getSession } from '@/server/auth'
 import { exportPartStream, planExport } from '@/server/export'
 import { checkRateLimit } from '@/server/rate-limit'
 
-// Downloading photos for a large part can take a while.
-export const maxDuration = 300
+// Downloading photos for a large part can take a while. 60 s is the Hobby plan maximum.
+export const maxDuration = 60
 
 const docId = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/)
 const partQuery = z.object({
