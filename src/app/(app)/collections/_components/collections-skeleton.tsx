@@ -1,8 +1,8 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import type { ViewMode } from '../../_library/library-data'
 import { RecipeGridSkeleton } from '../../_library/library-skeleton'
-import grid from './collections-grid.module.scss'
 import page from './collection-view.module.scss'
+import grid from './collections-grid.module.scss'
 
 export function CollectionsSkeleton() {
     return (

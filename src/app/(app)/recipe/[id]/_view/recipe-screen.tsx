@@ -133,10 +133,7 @@ export function RecipeScreen({
                                 {source && !recipe.sourceUrl && <p className={styles.sourceText}>{source}</p>}
                                 {recipe.description && <p className={styles.description}>{recipe.description}</p>}
                                 {stats.length > 0 && (
-                                    <dl
-                                        className={styles.stats}
-                                        style={{ '--_count': stats.length } as CSSProperties}
-                                    >
+                                    <dl className={styles.stats} style={{ '--_count': stats.length } as CSSProperties}>
                                         {stats.map((s) => (
                                             <div key={s.label} className={styles.stat}>
                                                 <dt>{s.label}</dt>

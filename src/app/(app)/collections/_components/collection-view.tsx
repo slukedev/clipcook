@@ -8,15 +8,15 @@ import { IconButton } from '@/components/ui/icon-button'
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/ui/menu'
 import { PageTransition, TransitionLink, useViewTransitionRouter } from '@/components/ui/view-transition'
 import type { RecipeSummary } from '@/lib/domain/types'
-import { writeCookie } from '../../_shell/preferences'
 import type { CollectionRef } from '../../_library/collection-dialog'
 import type { LibraryIcons } from '../../_library/icons'
 import { LIBRARY_COOKIE, type LibraryPrefs, serializeLibraryPrefs, sortRecipes } from '../../_library/library-data'
 import { RecipeBrowser } from '../../_library/recipe-browser'
 import { useLibraryRecipes } from '../../_library/use-library-recipes'
+import { writeCookie } from '../../_shell/preferences'
 import { CollectionNameDialog, DeleteCollectionDialog, type NameDialogTarget } from './collection-dialogs'
-import { RecipePicker, type PickerTarget } from './recipe-picker'
 import styles from './collection-view.module.scss'
+import { type PickerTarget, RecipePicker } from './recipe-picker'
 
 interface CollectionViewProps {
     collection: CollectionRef

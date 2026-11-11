@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getThemePreference } from '@/lib/theme/server'
 import { recipeColorCss } from '@/lib/cook/color'
+import { getThemePreference } from '@/lib/theme/server'
 import { requireSession } from '@/server/auth'
 import { getRecipe, listCollections } from '@/server/queries'
 import { recipeIdSchema } from '@/server/schemas'

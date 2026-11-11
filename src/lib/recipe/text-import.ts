@@ -1,8 +1,8 @@
 // Pasted free text → ImportedRecipe. Client-safe.
 
 import type { ImportedRecipe } from '@/lib/domain/types'
-import { normalizeDurationLabel } from './time'
 import { cleanText, collapseWhitespace } from './text'
+import { normalizeDurationLabel } from './time'
 
 type Section = 'intro' | 'ingredients' | 'instructions' | 'notes'
 
@@ -28,7 +28,8 @@ const META: Array<[RegExp, MetaKey]> = [
     [new RegExp(`^(?:total(?: time)?|ready in)${TIME_VALUE}$`, 'i'), 'totalTime'],
 ]
 
-const SERVINGS_VALUE = /^(?:about\s+|approx(?:imately|\.)?\s+|up to\s+)?(?:\d|[½⅓⅔¼¾]|one|two|three|four|five|six|seven|eight|nine|ten|twelve|a dozen)/i
+const SERVINGS_VALUE =
+    /^(?:about\s+|approx(?:imately|\.)?\s+|up to\s+)?(?:\d|[½⅓⅔¼¾]|one|two|three|four|five|six|seven|eight|nine|ten|twelve|a dozen)/i
 const DURATION_VALUE = /\d|hour|minute|\bmin|\bhr/i
 const MAX_SERVINGS_LENGTH = 24
 

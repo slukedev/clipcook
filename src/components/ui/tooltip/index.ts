@@ -1,1 +1,1 @@
-export { RichTooltip, type RichTooltipProps, Tooltip, TooltipProvider, type TooltipProps } from './tooltip'
+export { RichTooltip, type RichTooltipProps, Tooltip, type TooltipProps, TooltipProvider } from './tooltip'

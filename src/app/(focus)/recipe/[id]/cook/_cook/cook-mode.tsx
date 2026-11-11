@@ -2,22 +2,22 @@
 
 import { useRouter } from 'next/navigation'
 import {
-    type PointerEvent as ReactPointerEvent,
     type ReactNode,
+    type PointerEvent as ReactPointerEvent,
     useEffect,
     useRef,
     useState,
     useSyncExternalStore,
     ViewTransition,
 } from 'react'
-import { markCooked } from '@/actions/recipes'
 import { sendToDisplay } from '@/actions/displays'
-import { rememberDisplay } from '@/app/(app)/recipe/[id]/_view/send-to-display'
-import { DisplayLabel, sentMessage, sortByPresence } from '@/components/kitchen/display-presence'
+import { markCooked } from '@/actions/recipes'
 import { IngredientChecklist } from '@/app/(app)/recipe/[id]/_view/ingredient-checklist'
+import { rememberDisplay } from '@/app/(app)/recipe/[id]/_view/send-to-display'
 import { TimerChip } from '@/app/(app)/recipe/[id]/_view/timer-chip'
 import { TimerTray } from '@/app/(app)/recipe/[id]/_view/timer-tray'
 import type { DisplayOption } from '@/app/(app)/recipe/[id]/_view/types'
+import { DisplayLabel, sentMessage, sortByPresence } from '@/components/kitchen/display-presence'
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
 import { cx } from '@/components/ui/cx'
@@ -30,10 +30,10 @@ import { vtName } from '@/components/ui/view-transition'
 import { flatSteps, ingredientSections, mentionedIngredients, stepShape } from '@/lib/cook/content'
 import { cookStep, doneSteps, recipeScale, useRecipeState } from '@/lib/cook/recipe-state'
 import { timerActions, useTimers } from '@/lib/cook/timers'
+import { useFitText } from '@/lib/cook/use-fit-text'
 import { useReducedMotion } from '@/lib/motion'
 import { findTimers } from '@/lib/recipe/timers'
 import styles from './cook-mode.module.scss'
-import { useFitText } from '@/lib/cook/use-fit-text'
 import { speak, useHandsFree, useSpeechSupported, type VoiceCommand } from './use-hands-free'
 import { useWakeLock } from './use-wake-lock'
 
@@ -435,9 +435,11 @@ export function CookMode({
                                 follow(value === 'off' ? null : (displays.find((d) => d.id === value) ?? null))
                             }
                         >
-                            <MenuRadioItem value="off">Off</MenuRadioItem>
+                            <MenuRadioItem value="off" closeOnClick>
+                                Off
+                            </MenuRadioItem>
                             {sortByPresence(displays).map((d) => (
-                                <MenuRadioItem key={d.id} value={d.id} icon={icons.tv}>
+                                <MenuRadioItem key={d.id} value={d.id} icon={icons.tv} closeOnClick>
                                     <DisplayLabel display={d} now={menuNow} />
                                 </MenuRadioItem>
                             ))}
@@ -563,9 +565,7 @@ export function CookMode({
                                     <ul className={cx(styles.uses, styles.compactOnly)} aria-label="Uses">
                                         {mentionedItems.map((item) => (
                                             <li key={item.index} className={styles.use}>
-                                                {item.amount && (
-                                                    <span className={styles.useAmount}>{item.amount}</span>
-                                                )}{' '}
+                                                {item.amount && <span className={styles.useAmount}>{item.amount}</span>}{' '}
                                                 {item.rest}
                                             </li>
                                         ))}
@@ -596,8 +596,8 @@ export function CookMode({
                             className={styles.stepTimers}
                             onClickCapture={(event) => {
                                 // detail 0: Enter or Space, so focus should follow the timer it started.
-                                const label = (event.target as HTMLElement).closest<HTMLElement>('[data-label]')?.dataset
-                                    .label
+                                const label = (event.target as HTMLElement).closest<HTMLElement>('[data-label]')
+                                    ?.dataset.label
                                 if (event.detail === 0 && label) handoff.current = `${recipe.id}:${index + 1}:${label}`
                             }}
                         >

@@ -81,11 +81,7 @@ export function SendToDisplay({
                         actions={
                             <>
                                 <DialogClose render={<Button variant="text" />}>Not now</DialogClose>
-                                <Button
-                                    variant="text"
-                                    render={<Link href="/settings/displays" />}
-                                    nativeButton={false}
-                                >
+                                <Button variant="text" render={<Link href="/settings/displays" />} nativeButton={false}>
                                     Set up a display
                                 </Button>
                             </>

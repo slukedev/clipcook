@@ -203,6 +203,8 @@ interface IngredientName {
     keys: string[]
     /** The other naming words ('bell' in bell pepper), used to tell same-head ingredients apart. */
     modifiers: string[]
+    /** The word right before the head, which steps often use alone ('cayenne', 'paprika'). */
+    lead: string | null
 }
 
 /**
@@ -222,7 +224,8 @@ function ingredientNames(line: string): IngredientName[] {
         if (!head) continue
         const before = ws[ws.length - 2]
         const keys = before && PART.has(head) ? [head, before] : [head]
-        names.push({ keys, modifiers: ws.filter((w) => !keys.includes(w)) })
+        const modifiers = ws.filter((w) => !keys.includes(w))
+        names.push({ keys, modifiers, lead: keys.length === 1 && before ? before : null })
     }
     return names
 }
@@ -278,5 +281,13 @@ export function mentionedIngredients(step: string, lines: readonly string[]): nu
         if (best) hits.push({ index, ...best })
     })
     const specificKeys = new Set(hits.filter((h) => h.specific).map((h) => h.key))
-    return hits.filter((h) => h.specific || !specificKeys.has(h.key)).map((h) => h.index)
+    const out = hits.filter((h) => h.specific || !specificKeys.has(h.key)).map((h) => h.index)
+    // 'Add the cayenne' names cayenne pepper by its lead word, unless that word is another
+    // ingredient's own name ('chicken' in chicken broth when there are chicken thighs).
+    const keys = new Set(hits.map((h) => h.key))
+    lines.forEach((line, index) => {
+        if (isHeadingLine(line) || out.includes(index)) return
+        if (ingredientNames(line).some((n) => n.lead && stepWords.has(n.lead) && !keys.has(n.lead))) out.push(index)
+    })
+    return out.sort((a, b) => a - b)
 }

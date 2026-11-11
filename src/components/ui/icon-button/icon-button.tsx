@@ -85,7 +85,11 @@ export function IconButton(props: IconButtonProps) {
         )
     }
     return (
-        <BaseButton {...(rest as Omit<PlainProps, keyof CommonProps>)} {...shared} {...linkSemantics(rest.render, rest.role)}>
+        <BaseButton
+            {...(rest as Omit<PlainProps, keyof CommonProps>)}
+            {...shared}
+            {...linkSemantics(rest.render, rest.role)}
+        >
             <span data-touch-target aria-hidden />
             <Ripple />
             <span className={styles.icon}>{icon}</span>

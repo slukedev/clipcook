@@ -5,8 +5,8 @@ import { createContext, type ReactNode, use, useEffect, useRef, useState } from 
 import { Badge } from '../badge/badge'
 import { cx } from '../cx'
 import { ExtendedFab } from '../fab/fab'
-import { IconButton } from '../icon-button/icon-button'
 import { Glyph } from '../icon/glyph'
+import { IconButton } from '../icon-button/icon-button'
 import { type NavItemProps, useNavSelected } from '../navigation-bar/navigation-bar'
 import styles from './navigation-rail.module.scss'
 

@@ -4,7 +4,7 @@ import { PageTransition } from '@/components/ui/view-transition'
 import type { GroceryCategory } from '@/lib/domain/types'
 import { requireSession } from '@/server/auth'
 import { getGroceryList, listRecipes } from '@/server/queries'
-import { GroceryList, type GroceryIcons } from './grocery-list'
+import { type GroceryIcons, GroceryList } from './grocery-list'
 
 export const metadata: Metadata = { title: 'Grocery list' }
 

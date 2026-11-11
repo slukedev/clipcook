@@ -1,11 +1,11 @@
 import { ChipSet } from '@/components/ui/chip'
 import { cx } from '@/components/ui/cx'
 import { Skeleton } from '@/components/ui/skeleton'
+import library from './library.module.scss'
 import type { ViewMode } from './library-data'
+import styles from './library-skeleton.module.scss'
 import browser from './recipe-browser.module.scss'
 import card from './recipe-card.module.scss'
-import library from './library.module.scss'
-import styles from './library-skeleton.module.scss'
 
 /** The recipe grid or list placeholder: the same columns, photo boxes and text rows as the real cards. */
 export function RecipeGridSkeleton({ count = 12, view = 'grid' }: { count?: number; view?: ViewMode }) {

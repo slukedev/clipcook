@@ -1,8 +1,8 @@
 import { type Cheerio, type CheerioAPI, load } from 'cheerio'
 import type { AnyNode, Element } from 'domhandler'
 import type { ImportedRecipe } from '@/lib/domain/types'
-import { normalizeDurationLabel } from '@/lib/recipe/time'
 import { cleanLines, cleanText, decodeEntities, stripTags } from '@/lib/recipe/text'
+import { normalizeDurationLabel } from '@/lib/recipe/time'
 
 export type ExtractMethod = 'jsonld' | 'microdata' | 'wprm' | 'tasty' | 'mvcreate' | 'heuristic'
 

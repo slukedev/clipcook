@@ -1,9 +1,9 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { useThemePreference } from '@/components/theme/theme-provider'
 import { ConnectedButtonGroup, ConnectedButtonGroupItem } from '@/components/ui/button-group'
 import { List, ListItem } from '@/components/ui/list'
-import { useThemePreference } from '@/components/theme/theme-provider'
 import type { Contrast, MotionMode, ThemeMode } from '@/lib/theme/preference'
 import styles from './sections.module.scss'
 

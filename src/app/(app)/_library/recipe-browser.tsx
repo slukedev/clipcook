@@ -11,8 +11,8 @@ import { CollectionDialog, type CollectionRef, type CollectionTarget } from './c
 import type { LibraryIcons } from './icons'
 import type { ViewMode } from './library-data'
 import { scheduleDelete, UNDO_WINDOW } from './pending-deletes'
-import { type CardAction, RecipeCard } from './recipe-card'
 import styles from './recipe-browser.module.scss'
+import { type CardAction, RecipeCard } from './recipe-card'
 
 export interface RecipeBrowserProps {
     recipes: RecipeSummary[]

@@ -12,8 +12,7 @@
         "progress" auto
         "stage" minmax(0, 1fr)
         "dock" auto
-        "controls" auto
-        / minmax(0, 1fr);
+        "controls" auto / minmax(0, 1fr);
     block-size: 100dvh;
     overflow: hidden;
     background-color: var(--md-sys-color-surface);
@@ -32,8 +31,7 @@
             "progress progress" auto
             "stage side" minmax(0, 1fr)
             "dock side" auto
-            "controls controls" auto
-            / minmax(0, 1fr) clamp(300px, 32vw, 420px);
+            "controls controls" auto / minmax(0, 1fr) clamp(300px, 32vw, 420px);
         column-gap: 24px;
     }
 }

@@ -22,10 +22,10 @@ import styles from './recipe-editor.module.scss'
 import { TagField } from './tag-field'
 import { useUnsavedGuard } from './use-unsaved-guard'
 import {
+    EDITOR_SCOPE,
     type EditorCollection,
     type EditorLine,
     type EditorPhoto,
-    EDITOR_SCOPE,
     type EditorValues,
     snapshot,
     toFormData,

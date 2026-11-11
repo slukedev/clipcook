@@ -9,7 +9,7 @@ import {
     SchemeVibrant,
     TonalPalette,
 } from '@material/material-color-utilities'
-import { type Contrast, CONTRAST_LEVEL } from './preference'
+import { CONTRAST_LEVEL, type Contrast } from './preference'
 import { parseSeed, type Seed } from './seed'
 
 /**

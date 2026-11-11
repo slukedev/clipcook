@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { IconButton } from '@/components/ui/icon-button'
 import { Icon } from '@/components/ui/icon'
+import { IconButton } from '@/components/ui/icon-button'
 import { TopAppBar } from '@/components/ui/top-app-bar'
 import { PageTransition } from '@/components/ui/view-transition'
 import { requireSession } from '@/server/auth'
 import { listDisplays } from '@/server/queries'
-import { LinkForm } from './link-form'
 import { CODE_LENGTH, normalizeCode } from './code'
+import { LinkForm } from './link-form'
 
 export const metadata: Metadata = { title: 'Link a display' }
 

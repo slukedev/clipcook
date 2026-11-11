@@ -3,8 +3,8 @@
 import { Drawer } from '@base-ui/react/drawer'
 import type { ComponentProps, ReactNode } from 'react'
 import { cx } from '../cx'
-import { IconButton } from '../icon-button/icon-button'
 import { Glyph } from '../icon/glyph'
+import { IconButton } from '../icon-button/icon-button'
 import styles from './side-sheet.module.scss'
 
 export function SideSheet(props: Omit<ComponentProps<typeof Drawer.Root>, 'swipeDirection'>) {

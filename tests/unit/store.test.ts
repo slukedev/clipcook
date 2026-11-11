@@ -2,11 +2,11 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { resolveBackend } from '@/server/db'
 import { LocalStore } from '@/server/db/local'
 import { recipeFromData } from '@/server/db/normalize'
 import type { DisplayRecord, RecipeRecord } from '@/server/db/types'
 import { StoreError } from '@/server/db/types'
-import { resolveBackend } from '@/server/db'
 
 let dir: string
 let store: LocalStore
