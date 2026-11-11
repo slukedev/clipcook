@@ -1,0 +1,48 @@
+.root {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--md-loading-size, 48px);
+    block-size: var(--md-loading-size, 48px);
+    border-radius: 50%;
+    color: var(--md-sys-color-primary);
+
+    &[data-contained] {
+        background-color: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+    }
+}
+
+.svg {
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+}
+
+// The slow global spin runs as a CSS animation so it stays smooth even when the
+// main thread is busy loading the thing we are waiting for.
+.root[data-indeterminate] .svg {
+    animation: md-loading-spin 4666ms linear infinite;
+}
+
+.indicator {
+    fill: currentcolor;
+}
+
+@keyframes md-loading-spin {
+    to {
+        rotate: 360deg;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .root[data-indeterminate] .svg {
+        animation: md-loading-pulse 1600ms ease-in-out infinite alternate;
+    }
+}
+
+@keyframes md-loading-pulse {
+    to {
+        opacity: 0.45;
+    }
+}

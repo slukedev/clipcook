@@ -1,0 +1,110 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
+
+.root {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+}
+
+.list {
+    position: relative;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &[data-scrollable] {
+        padding-inline-start: var(--md-tabs-inset, 0px);
+
+        > .tab {
+            flex: 0 0 auto;
+        }
+    }
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.tab {
+    @include state-layer.host;
+    @include focus-ring.inward;
+    @include type.role(title-small);
+
+    --md-icon-size: 24px;
+
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-inline-size: 90px;
+    min-block-size: 48px;
+    padding-inline: 16px;
+    color: var(--md-sys-color-on-surface-variant);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[data-has-icon] {
+        min-block-size: 64px;
+    }
+
+    &[data-active] {
+        color: var(--md-sys-color-primary);
+    }
+
+    [data-variant="secondary"] & {
+        flex-direction: row;
+        gap: 8px;
+
+        &[data-active] {
+            color: var(--md-sys-color-on-surface);
+        }
+    }
+
+    &[data-disabled] {
+        cursor: default;
+        opacity: var(--md-sys-state-disabled-content-opacity);
+    }
+}
+
+.content {
+    display: inline-flex;
+    flex-direction: inherit;
+    align-items: center;
+    gap: inherit;
+}
+
+// Primary: 3dp, as wide as the label, rounded top. Secondary: 2dp, full tab width.
+.indicator {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    block-size: 3px;
+    border-radius: 3px 3px 0 0;
+    background-color: var(--md-sys-color-primary);
+    translate: calc(var(--active-tab-left) + var(--_inset)) 0;
+    inline-size: calc(var(--active-tab-width) - 2 * var(--_inset));
+    --_inset: max(0px, calc((var(--active-tab-width) - max(24px, var(--_content, 40px))) / 2));
+    transition:
+        translate var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
+        inline-size var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default);
+
+    [data-variant="secondary"] & {
+        --_inset: 0px;
+        block-size: 2px;
+        border-radius: 0;
+    }
+}
+
+.panel {
+    outline: none;
+
+    &:focus-visible {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: -3px;
+    }
+}

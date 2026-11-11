@@ -4,6 +4,9 @@ const nextConfig = {
     poweredByHeader: false,
     reactCompiler: true,
     experimental: {
+        // Library cards fully prefetch a recipe on hover so its photo can morph in; a minute
+        // bounds how stale such a page can be when edited elsewhere. Our own edits revalidate.
+        staleTimes: { static: 60 },
         serverActions: {
             // Original photos upload as FormData Files; the client pre-resizes
             // to ~2560px so real payloads stay a fraction of this.
@@ -16,6 +19,9 @@ const nextConfig = {
             { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
         ],
     },
+    async redirects() {
+        return [{ source: '/create', destination: '/new', permanent: true }]
+    },
     async headers() {
         return [
             {
@@ -24,7 +30,7 @@ const nextConfig = {
                     { key: 'X-Frame-Options', value: 'DENY' },
                     { key: 'X-Content-Type-Options', value: 'nosniff' },
                     { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-                    { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+                    { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
                     { key: 'X-DNS-Prefetch-Control', value: 'on' },
                     // NOT `same-origin`: that would break signInWithPopup.
                     { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },

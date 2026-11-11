@@ -1,0 +1,69 @@
+@use "../../../../styles/mixins/typography" as type;
+@use "../../../../styles/mixins/media";
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    inline-size: 100%;
+    max-inline-size: 1840px;
+    margin-inline: auto;
+    padding: calc(8px + var(--safe-top)) var(--md-sys-layout-margin) calc(64px + 56px + 32px);
+
+    @include media.medium-up {
+        gap: 28px;
+        padding-block: calc(16px + var(--safe-top)) 48px;
+    }
+}
+
+.header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 8px;
+    min-block-size: 64px;
+}
+
+.back {
+    margin-inline-start: -8px;
+}
+
+.title {
+    @include type.role(headline-small, $emphasized: true);
+
+    overflow-wrap: anywhere;
+    color: var(--md-sys-color-on-surface);
+
+    @include media.medium-up {
+        @include type.role(headline-medium, $emphasized: true);
+    }
+
+    @include media.expanded-up {
+        @include type.role(headline-large, $emphasized: true);
+    }
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    // 40dp icon buttons 8dp apart: their 48dp touch zones meet without overlapping.
+    gap: 8px;
+    margin-inline-end: -4px;
+}
+
+// Compact windows keep "Add recipes" in the menu so the title has room.
+.addButton {
+    @include media.compact {
+        display: none;
+    }
+}
+
+.menuAdd {
+    @include media.medium-up {
+        display: none;
+    }
+}
+
+.empty {
+    margin-block: clamp(24px, 10dvh, 96px);
+}

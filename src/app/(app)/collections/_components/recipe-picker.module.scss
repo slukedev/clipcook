@@ -1,0 +1,87 @@
+@use "../../../../styles/mixins/typography" as type;
+@use "../../../../styles/mixins/media";
+
+.dialog {
+    @include media.medium-up {
+        inline-size: min(600px, 100%);
+    }
+}
+
+.search {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    padding-block-end: 8px;
+    background-color: inherit;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    margin-inline: -12px;
+    list-style: none;
+
+    @include media.medium-up {
+        max-block-size: min(56dvh, 520px);
+        overflow-y: auto;
+    }
+}
+
+.item {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 64px;
+}
+
+.row {
+    display: flex;
+    gap: 12px;
+    inline-size: 100%;
+    min-block-size: 64px;
+    padding-inline: 4px 12px;
+    border-radius: var(--md-sys-shape-corner-large);
+
+    @media (hover: hover) {
+        &:hover {
+            background-color: color-mix(
+                in srgb,
+                var(--md-sys-color-on-surface) calc(var(--md-sys-state-hover-state-layer-opacity) * 100%),
+                transparent
+            );
+        }
+    }
+}
+
+.thumb {
+    position: relative;
+    flex: none;
+    inline-size: 44px;
+    block-size: 44px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-medium);
+}
+
+.title {
+    @include type.role(body-large);
+
+    flex: 1;
+    min-inline-size: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+.loading {
+    display: grid;
+    place-items: center;
+    min-block-size: 160px;
+}
+
+.none {
+    @include type.role(body-large);
+
+    padding-block: 32px;
+    color: var(--md-sys-color-on-surface-variant);
+    text-align: center;
+}

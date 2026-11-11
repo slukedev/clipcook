@@ -1,57 +1,75 @@
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
 
+// Cards: medium (12dp) corners. Elevated sits on surfaceContainerLow at level 1,
+// filled on surfaceContainerHighest, outlined on surface with outlineVariant.
 .card {
     position: relative;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
     border-radius: var(--md-sys-shape-corner-medium);
+    color: var(--md-sys-color-on-surface);
+    background-color: var(--_container);
+    box-shadow: var(--_shadow, none);
     overflow: hidden;
-    text-align: inherit;
-    transition:
-        box-shadow var(--md-sys-motion-duration-short3) var(--md-sys-motion-easing-standard),
-        border-radius var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized);
+    text-decoration: none;
+    transition: box-shadow var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
 }
 
 .elevated {
-    background-color: var(--md-sys-color-surface-container-low);
-    box-shadow: var(--md-sys-elevation-shadow-1);
+    --_container: var(--md-sys-color-surface-container-low);
+    --_shadow: var(--md-sys-elevation-level1);
 }
 
 .filled {
-    background-color: var(--md-sys-color-surface-container-highest);
+    --_container: var(--md-sys-color-surface-container-highest);
 }
 
 .outlined {
-    background-color: var(--md-sys-color-surface);
-    border: 1px solid var(--md-sys-color-outline-variant);
+    --_container: var(--md-sys-color-surface);
+
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border: 1px solid var(--md-sys-color-outline-variant);
+        border-radius: inherit;
+        pointer-events: none;
+    }
 }
 
 .interactive {
-    @include state-layer.host;
+    @include state-layer.host(var(--md-sys-color-on-surface));
     @include focus-ring.ring;
 
-    padding: 0;
-    border-radius: var(--md-sys-shape-corner-medium);
     cursor: pointer;
-    color: inherit;
-    font: inherit;
-    -webkit-tap-highlight-color: transparent;
+    text-align: start;
 
-    // Keep the state layer above media children.
+    // State layer and ripple paint over media, under nothing else.
     &::before {
         z-index: 1;
     }
 
-    &.elevated {
-        @media (hover: hover) {
-            &:hover {
-                box-shadow: var(--md-sys-elevation-shadow-2);
-            }
+    > [data-ripple-surface] {
+        z-index: 1;
+    }
+
+    @media (hover: hover) {
+        &.elevated:hover {
+            --_shadow: var(--md-sys-elevation-level2);
+        }
+
+        &.filled:hover,
+        &.outlined:hover {
+            --_shadow: var(--md-sys-elevation-level1);
         }
     }
 
-    // Expressive press morph: cards round further while pressed.
-    &:active {
-        border-radius: var(--md-sys-shape-corner-large-increased);
+    &[data-disabled] {
+        pointer-events: none;
+        opacity: var(--md-sys-state-disabled-content-opacity);
     }
 }

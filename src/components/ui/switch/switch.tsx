@@ -1,41 +1,39 @@
 'use client'
 
 import { Switch as BaseSwitch } from '@base-ui/react/switch'
-import { useId } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
+import fieldStyles from '../checkbox/checkbox.module.scss'
 import { cx } from '../cx'
-import { Icon } from '../icon'
+import { Glyph } from '../icon/glyph'
 import styles from './switch.module.scss'
 
-interface SwitchProps extends Omit<React.ComponentProps<typeof BaseSwitch.Root>, 'className'> {
-    /** Renders a clickable label row before the switch. */
-    label?: React.ReactNode
+export interface SwitchProps extends Omit<ComponentProps<typeof BaseSwitch.Root>, 'className'> {
+    label?: ReactNode
+    /** Check and close glyphs inside the thumb. */
+    icons?: boolean
     className?: string
 }
 
-/**
- * M3 switch: 52×32 track, handle grows on selection and press,
- * check glyph appears when on.
- */
-export function Switch({ label, className, id: idProp, ...props }: SwitchProps) {
-    const generatedId = useId()
-    const id = idProp ?? (label ? generatedId : undefined)
-
+/** M3 switch: the thumb grows on press and springs across. */
+export function Switch({ label, icons = false, className, ...rest }: SwitchProps) {
     const control = (
-        <BaseSwitch.Root id={id} className={cx(styles.track, className)} {...props}>
-            <BaseSwitch.Thumb className={styles.handle}>
-                <Icon name="check" size={20} className={styles.check} />
+        <BaseSwitch.Root className={cx(styles.root, !label && className)} data-icons={icons || undefined} {...rest}>
+            <BaseSwitch.Thumb className={styles.thumb}>
+                {icons && (
+                    <>
+                        <Glyph name="check" className={styles.on} />
+                        <Glyph name="close" className={styles.off} />
+                    </>
+                )}
             </BaseSwitch.Thumb>
         </BaseSwitch.Root>
     )
-
     if (!label) return control
-
     return (
-        <span className={styles.row}>
-            <label htmlFor={id} className={styles.label}>
-                {label}
-            </label>
+        // biome-ignore lint/a11y/noLabelWithoutControl: the Base UI root inside is the control
+        <label className={cx(fieldStyles.field, className)} data-switch-field="">
+            {label}
             {control}
-        </span>
+        </label>
     )
 }

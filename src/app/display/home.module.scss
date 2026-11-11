@@ -1,0 +1,215 @@
+@use "../../styles/mixins/typography" as type;
+@use "../../styles/mixins/state-layer";
+@use "../../styles/mixins/focus-ring";
+
+.root {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.6fr);
+    block-size: 100dvh;
+    transition: filter var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow);
+
+    @media (orientation: portrait) {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    // Ambient: tiles go away, the clock stays, the whole screen drops in brightness.
+    &[data-dim] {
+        filter: brightness(0.55);
+        transition-duration: 1.2s;
+    }
+}
+
+.clockPane {
+    container-type: inline-size;
+    display: grid;
+    align-content: center;
+    padding: clamp(32px, 6vmin, 64px) clamp(28px, 5vw, 64px);
+
+    @media (orientation: portrait) {
+        justify-items: center;
+        padding-block: clamp(48px, 10vmin, 96px) clamp(16px, 4vmin, 40px);
+        text-align: center;
+    }
+
+    .root[data-dim] & {
+        grid-column: 1 / -1;
+        justify-items: center;
+        text-align: center;
+    }
+}
+
+.clock {
+    display: grid;
+    gap: clamp(4px, 1.2vmin, 12px);
+    transition: transform 3s ease-in-out;
+}
+
+.time {
+    font-size: min(clamp(4.5rem, 22vmin, 11rem), 26cqi);
+    line-height: 0.95;
+    white-space: nowrap;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    font-variation-settings:
+        "ROND" 100,
+        "GRAD" var(--md-sys-typescale-grade, 0);
+    color: var(--md-sys-color-on-surface);
+    @include type.numeric;
+}
+
+.dayPeriod {
+    margin-inline-start: 0.12em;
+    font-size: 0.32em;
+    letter-spacing: 0;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.date {
+    font-size: clamp(1.25rem, 0.75rem + 2.5vmin, 2.25rem);
+    line-height: 1.3;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.name {
+    margin-block-start: clamp(8px, 2vmin, 20px);
+    font-size: clamp(1rem, 0.75rem + 1.6vmin, 1.5rem);
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--md-sys-color-primary);
+}
+
+.tilesPane {
+    display: grid;
+    align-content: start;
+    gap: clamp(24px, 4vmin, 40px);
+    min-block-size: 0;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    padding: clamp(28px, 5vmin, 48px) clamp(24px, 4vw, 48px) clamp(28px, 5vmin, 48px) 0;
+    scrollbar-width: none;
+    transition: opacity var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow);
+
+    @media (orientation: portrait) {
+        padding-inline-start: clamp(24px, 4vw, 48px);
+    }
+
+    .root[data-dim] & {
+        display: none;
+    }
+}
+
+.section {
+    display: grid;
+    gap: clamp(12px, 2.4vmin, 20px);
+}
+
+// The first heading leaves room for the corner menu.
+.sectionTitle {
+    padding-inline-end: calc(64px + 16px);
+    font-size: clamp(1.25rem, 0.875rem + 1.8vmin, 1.75rem);
+    font-weight: 500;
+    line-height: 1.3;
+    min-block-size: 56px;
+    display: flex;
+    align-items: center;
+    color: var(--md-sys-color-on-surface);
+}
+
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: clamp(12px, 2vmin, 20px);
+    list-style: none;
+
+    // Every card in a row ends on the same line, whatever its title length.
+    > li {
+        display: grid;
+    }
+}
+
+.tile {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+    @include focus-ring.ring;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    align-content: start;
+    gap: 6px;
+    padding: 8px 8px 14px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface);
+    transition:
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    &:active {
+        border-radius: var(--md-sys-shape-corner-large);
+        scale: 0.97;
+    }
+}
+
+.tilePhoto {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface-container-highest);
+
+    img {
+        position: absolute;
+        inset: 0;
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: cover;
+    }
+}
+
+.tileFallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-on-surface-variant);
+    --md-icon-size: 48px;
+}
+
+.tileTitle {
+    padding-inline: 8px;
+    font-size: clamp(1.0625rem, 0.875rem + 0.8vmin, 1.375rem);
+    font-weight: 500;
+    line-height: 1.25;
+    // Two lines reserved, so a one-line title does not lift the time under it.
+    min-block-size: 2lh;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.tileMeta {
+    display: flex;
+    align-self: end;
+    align-items: center;
+    gap: 6px;
+    padding-inline: 8px;
+    font-size: 1rem;
+    color: var(--md-sys-color-on-surface-variant);
+    --md-icon-size: 18px;
+}
+
+.empty {
+    display: grid;
+    justify-items: center;
+    gap: 24px;
+    padding-block: 15vmin;
+    font-size: clamp(1.25rem, 0.75rem + 2vmin, 2rem);
+    color: var(--md-sys-color-on-surface-variant);
+    text-align: center;
+}
+
+.emptyShape {
+    --md-shape-size: 120px;
+    color: var(--md-sys-color-secondary-container);
+}

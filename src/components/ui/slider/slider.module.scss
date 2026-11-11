@@ -1,0 +1,179 @@
+@use "../../../styles/mixins/typography" as type;
+
+// Expressive slider sizes (MDC slider tokens): track 16/24/40/56/96,
+// outer corners 8/8/12/16/28, handle 44/44/44/68/108. A 4dp handle bar with
+// 6dp gaps either side; 2dp inner corners at the gap.
+.root {
+    --_track: 16px;
+    --_outer: 8px;
+    --_handle: 44px;
+    --_gap: 6px;
+    --_half: 2px;
+
+    position: relative;
+    inline-size: 100%;
+    touch-action: pan-y;
+
+    &[data-size="s"] {
+        --_track: 24px;
+    }
+    &[data-size="m"] {
+        --_track: 40px;
+        --_outer: 12px;
+    }
+    &[data-size="l"] {
+        --_track: 56px;
+        --_outer: 16px;
+        --_handle: 68px;
+    }
+    &[data-size="xl"] {
+        --_track: 96px;
+        --_outer: 28px;
+        --_handle: 108px;
+    }
+}
+
+.control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    block-size: max(48px, var(--_handle));
+    cursor: pointer;
+
+    [data-disabled] & {
+        cursor: default;
+        opacity: var(--md-sys-state-disabled-content-opacity);
+    }
+}
+
+.track {
+    position: relative;
+    inline-size: 100%;
+    block-size: var(--_track);
+    container-type: inline-size;
+}
+
+// The indicator itself is invisible; its pseudo-elements draw the active part
+// (up to the gap) and the inactive part (from the gap to the end).
+.indicator {
+    position: absolute;
+    block-size: 100%;
+
+    &::before,
+    &::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+    }
+
+    &::before {
+        inset-inline-start: 0;
+        inline-size: max(0px, calc(100% - var(--_gap) - var(--_half)));
+        border-radius: var(--_outer) var(--_half) var(--_half) var(--_outer);
+        background-color: var(--md-sys-color-primary);
+    }
+
+    &::after {
+        inset-inline-start: calc(100% + var(--_gap) + var(--_half));
+        inline-size: max(0px, calc(100cqi - 100% - var(--_gap) - var(--_half)));
+        border-radius: var(--_half) var(--_outer) var(--_outer) var(--_half);
+        // Stop indicator: a 4dp dot 6dp before the end.
+        background:
+            radial-gradient(circle 2px, var(--md-sys-color-on-secondary-container) 99%, transparent) right
+                calc(var(--_track) / 2 - 2px) center / 4px 4px no-repeat,
+            var(--md-sys-color-secondary-container);
+    }
+}
+
+:dir(rtl) .indicator {
+    &::before {
+        border-radius: var(--_half) var(--_outer) var(--_outer) var(--_half);
+    }
+
+    &::after {
+        border-radius: var(--_outer) var(--_half) var(--_half) var(--_outer);
+        background-position:
+            left calc(var(--_track) / 2 - 2px) center,
+            0 0;
+    }
+}
+
+.thumb {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 20px;
+    block-size: var(--_handle);
+    outline: none;
+
+    // The visible handle: a 4dp bar that thins to 2dp while dragging.
+    &::before {
+        content: "";
+        inline-size: 4px;
+        block-size: 100%;
+        border-radius: 9999px;
+        background-color: var(--md-sys-color-primary);
+        transition: inline-size var(--md-sys-motion-spring-spatial-fast-duration)
+            var(--md-sys-motion-spring-spatial-fast);
+    }
+
+    &[data-dragging]::before {
+        inline-size: 2px;
+    }
+
+    &:has(:focus-visible)::before {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: 2px;
+    }
+}
+
+.value {
+    @include type.role(label-large);
+    @include type.numeric;
+
+    position: absolute;
+    inset-block-end: calc(100% + 4px);
+    inset-inline-start: 50%;
+    display: grid;
+    place-items: center;
+    min-inline-size: 48px;
+    block-size: 44px;
+    padding-inline: 16px;
+    border-radius: 9999px;
+    background-color: var(--md-sys-color-inverse-surface);
+    color: var(--md-sys-color-inverse-on-surface);
+    pointer-events: none;
+    translate: -50% 0;
+    scale: 0.5;
+    opacity: 0;
+    transform-origin: bottom center;
+    transition:
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    .thumb[data-dragging] &,
+    .thumb:has(:focus-visible) & {
+        scale: 1;
+        opacity: 1;
+    }
+}
+
+:dir(rtl) .value {
+    translate: 50% 0;
+}
+
+.insetIcon {
+    position: absolute;
+    inset-inline-start: 10px;
+    inset-block: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-on-primary);
+    pointer-events: none;
+    --md-icon-size: 24px;
+
+    [data-size="xl"] & {
+        --md-icon-size: 32px;
+    }
+}

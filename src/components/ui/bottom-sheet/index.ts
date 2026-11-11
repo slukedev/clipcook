@@ -1,1 +1,8 @@
-export { BottomSheet, BottomSheetTrigger, BottomSheetContent, BottomSheetTitle, BottomSheetClose } from './bottom-sheet'
+export {
+    BottomSheet,
+    BottomSheetClose,
+    BottomSheetContent,
+    type BottomSheetContentProps,
+    type BottomSheetProps,
+    BottomSheetTrigger,
+} from './bottom-sheet'

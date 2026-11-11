@@ -1,0 +1,215 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+
+.main {
+    display: grid;
+    justify-items: center;
+    gap: var(--md-sys-space-8);
+    inline-size: 100%;
+    max-inline-size: 560px;
+    margin-inline: auto;
+    padding: var(--md-sys-space-6) max(16px, var(--safe-right)) calc(var(--md-sys-space-16) + var(--safe-bottom))
+        max(16px, var(--safe-left));
+
+    @include media.medium-up {
+        padding-block-start: var(--md-sys-space-12);
+    }
+}
+
+// The shape morphs with the flow: cookie at rest, spinning cookie while linking, sunny when done.
+.art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 128px;
+    block-size: 128px;
+    color: var(--md-sys-color-secondary-container);
+    transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[data-state="done"] {
+        color: var(--md-sys-color-primary);
+    }
+
+    &[data-state="error"] {
+        color: var(--md-sys-color-error-container);
+    }
+}
+
+.artShape {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    fill: currentcolor;
+    transition: rotate var(--md-sys-motion-spring-spatial-slow-duration) var(--md-sys-motion-spring-spatial-slow);
+
+    .art[data-state="done"] & {
+        rotate: 45deg;
+    }
+}
+
+.artIcon {
+    grid-area: 1 / 1;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-on-secondary-container);
+    --md-icon-size: 48px;
+    transition:
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    .art[data-state="done"] & {
+        color: var(--md-sys-color-on-primary);
+    }
+
+    .art[data-state="error"] & {
+        color: var(--md-sys-color-on-error-container);
+    }
+
+    &[data-hidden] {
+        opacity: 0;
+        scale: 0.6;
+    }
+}
+
+.form {
+    display: grid;
+    gap: var(--md-sys-space-8);
+    inline-size: 100%;
+}
+
+.codeField {
+    display: grid;
+    gap: var(--md-sys-space-3);
+}
+
+.codeLabel {
+    @include type.role(title-medium);
+    color: var(--md-sys-color-on-surface);
+    text-align: center;
+}
+
+// One real input stretched over six drawn slots: paste, autofill and IME all just work.
+.code {
+    position: relative;
+    justify-self: center;
+    inline-size: min(100%, 420px);
+}
+
+.codeInput {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    inline-size: 100%;
+    block-size: 100%;
+    border: 0;
+    background: transparent;
+    color: transparent;
+    caret-color: transparent;
+    outline: none;
+    font-size: 16px;
+    letter-spacing: 0;
+
+    &::selection {
+        background: transparent;
+    }
+}
+
+.slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) var(--md-sys-space-4) repeat(3, 1fr);
+    gap: var(--md-sys-space-2);
+
+    > :nth-child(4) {
+        grid-column: 5;
+    }
+}
+
+.slot {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 5;
+    min-block-size: 56px;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+    font-size: clamp(1.75rem, 1rem + 3.5vw, 2.5rem);
+    font-weight: 500;
+    font-variation-settings:
+        "ROND" 100,
+        "GRAD" var(--md-sys-typescale-grade, 0);
+    @include type.numeric;
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+    transition:
+        outline-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
+
+    &[data-filled] {
+        border-radius: var(--md-sys-shape-corner-extra-large);
+        background-color: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
+    }
+
+    &[data-active] {
+        outline-color: var(--md-sys-color-primary);
+    }
+
+    .code[data-invalid] & {
+        outline-color: var(--md-sys-color-error);
+    }
+}
+
+.error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--md-sys-space-2);
+    min-block-size: 20px;
+    @include type.role(body-medium);
+    color: var(--md-sys-color-error);
+    text-align: center;
+}
+
+.errorIcon {
+    display: inline-grid;
+    flex: none;
+    --md-icon-size: 18px;
+}
+
+.nameField {
+    display: grid;
+    gap: var(--md-sys-space-3);
+}
+
+.submit {
+    inline-size: 100%;
+
+    @include media.medium-up {
+        justify-self: center;
+        inline-size: auto;
+        min-inline-size: 240px;
+    }
+}
+
+.success {
+    display: grid;
+    justify-items: center;
+    gap: var(--md-sys-space-8);
+    text-align: center;
+}
+
+.successTitle {
+    @include type.role(headline-medium, $emphasized: true);
+    color: var(--md-sys-color-on-surface);
+}
+
+.successActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--md-sys-space-3);
+}

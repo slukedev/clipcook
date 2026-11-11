@@ -1,0 +1,21 @@
+@use "../../../styles/mixins/typography" as type;
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-inline-size: 6px;
+    block-size: 6px;
+    border-radius: 9999px;
+    background-color: var(--md-sys-color-error);
+    color: var(--md-sys-color-on-error);
+    @include type.numeric;
+
+    &[data-large] {
+        @include type.role(label-small);
+        min-inline-size: 16px;
+        block-size: 16px;
+        padding-inline: 4px;
+    }
+}

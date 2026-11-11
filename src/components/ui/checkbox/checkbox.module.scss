@@ -1,94 +1,155 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/typography" as type;
 
-.target {
-    position: relative;
+// Shared shape for checkbox, radio and switch rows: control plus label text.
+.field {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--md-sys-shape-corner-full);
-    color: var(--md-sys-color-primary);
+    gap: 4px;
+    min-block-size: 48px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    @include type.role(body-large);
 
-    // State layer keyed off the inner control's state.
-    &:has(.box:hover)::before,
-    &:has(.box:focus-visible)::before {
-        opacity: var(--md-sys-state-hover-state-layer-opacity);
-    }
-
-    &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background-color: var(--md-sys-color-on-surface);
-        opacity: 0;
-        transition: opacity var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-linear);
+    &:has([data-disabled]) {
+        cursor: default;
+        color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
     }
 }
 
-.box {
-    @include focus-ring.ring;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.125rem;
-    height: 1.125rem;
-    padding: 0;
-    border: 2px solid var(--md-sys-color-on-surface-variant);
-    border-radius: 2px;
-    background: none;
+// 40dp state-layer circle around an 18dp box; 48dp target.
+.root {
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    inline-size: 48px;
+    block-size: 48px;
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition:
-        background-color var(--md-sys-motion-duration-short3) var(--md-sys-motion-easing-standard),
-        border-color var(--md-sys-motion-duration-short3) var(--md-sys-motion-easing-standard);
+    outline: none;
+    --_color: var(--md-sys-color-primary);
+    --_on: var(--md-sys-color-on-primary);
+    --_outline: var(--md-sys-color-on-surface-variant);
 
-    &[data-checked] {
-        background-color: var(--md-sys-color-primary);
-        border-color: var(--md-sys-color-primary);
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        z-index: -1;
+        border-radius: 50%;
+        background-color: var(--md-sys-color-on-surface);
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    &[data-checked]::before,
+    &[data-indeterminate]::before {
+        background-color: var(--_color);
+    }
+
+    @media (hover: hover) {
+        &:hover:not([data-disabled])::before {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+    }
+
+    &:focus-visible::before {
+        opacity: var(--md-sys-state-focus-state-layer-opacity);
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: 0;
+    }
+
+    &:active:not([data-disabled])::before {
+        opacity: var(--md-sys-state-pressed-state-layer-opacity);
+    }
+
+    &[data-invalid] {
+        --_color: var(--md-sys-color-error);
+        --_on: var(--md-sys-color-on-error);
+        --_outline: var(--md-sys-color-error);
     }
 
     &[data-disabled] {
         cursor: default;
-        border-color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
-
-        &[data-checked] {
-            background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
-            border-color: transparent;
-        }
+        --_color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
+        --_outline: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
+        --_on: var(--md-sys-color-surface);
     }
 }
 
-.indicator {
-    display: flex;
-    color: var(--md-sys-color-on-primary);
+.box {
+    display: grid;
+    place-items: center;
+    inline-size: 18px;
+    block-size: 18px;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 2px var(--_outline);
+    transition:
+        background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        box-shadow var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
 
-    &[data-unchecked] .check {
-        stroke-dashoffset: 20;
+    .root[data-checked] &,
+    .root[data-indeterminate] & {
+        background-color: var(--_color);
+        box-shadow: inset 0 0 0 2px var(--_color);
     }
+
+    // The box squeezes slightly under the finger.
+    .root:active:not([data-disabled]) & {
+        scale: 0.9;
+    }
+
+    transition-property: background-color, box-shadow, scale;
+    transition-duration:
+        var(--md-sys-motion-spring-effects-fast-duration),
+        var(--md-sys-motion-spring-effects-fast-duration),
+        var(--md-sys-motion-spring-spatial-fast-duration);
+    transition-timing-function:
+        var(--md-sys-motion-spring-effects-fast),
+        var(--md-sys-motion-spring-effects-fast),
+        var(--md-sys-motion-spring-spatial-fast);
 }
 
+.mark {
+    inline-size: 18px;
+    block-size: 18px;
+    fill: none;
+    stroke: var(--_on);
+    stroke-width: 2px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    overflow: visible;
+}
+
+// The check draws itself along its path.
 .check {
-    width: 0.875rem;
-    height: 0.875rem;
-    stroke-dasharray: 20;
-    stroke-dashoffset: 0;
-    transition: stroke-dashoffset var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized-decelerate);
+    stroke-dasharray: 14;
+    stroke-dashoffset: 14;
+    transition: stroke-dashoffset var(--md-sys-motion-spring-spatial-default-duration)
+        var(--md-sys-motion-spring-effects-default);
+
+    .root[data-checked] & {
+        stroke-dashoffset: 0;
+    }
 }
 
-.row {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
+.dash {
+    opacity: 0;
+    scale: 0 1;
+    transform-origin: center;
+    transition:
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    .root[data-indeterminate] & {
+        opacity: 1;
+        scale: 1 1;
+    }
 }
 
-.label {
-    @include type.role(body-large);
-    color: var(--md-sys-color-on-surface);
-    cursor: pointer;
-    user-select: none;
+@media (prefers-reduced-motion: reduce) {
+    .check {
+        transition-duration: 0ms;
+    }
 }

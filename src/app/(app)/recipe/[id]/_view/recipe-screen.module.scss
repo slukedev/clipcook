@@ -1,0 +1,433 @@
+@use "../../../../../styles/mixins/typography" as type;
+@use "../../../../../styles/mixins/focus-ring";
+
+// Layout follows the space the page actually gets (the shell's rail takes some), so it
+// runs on container queries named `recipe`:
+//   < 600   one column, full-bleed photo under a floating bar, summary sheet over it
+//   600+    one column, photo beside the summary
+//   780+    photo | summary on top, then ingredients (sticky, beside the steps) | steps,
+//           so the first screen always shows what you need and what you do
+//   1100+   wider gutters; 1400+ more air, never longer lines
+
+.root {
+    container: recipe / inline-size;
+    min-block-size: 100dvh;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+
+    ::selection {
+        background-color: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+    }
+}
+
+.layout {
+    --_margin: var(--md-sys-layout-margin);
+    --_bar: calc(64px + var(--safe-top));
+
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding-block-end: calc(48px + var(--safe-bottom));
+}
+
+.lead,
+.main {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    min-inline-size: 0;
+}
+
+.main {
+    padding-inline: var(--_margin);
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+}
+
+.photoFrame {
+    position: relative;
+    container-type: size;
+    aspect-ratio: 4 / 3;
+    max-block-size: 64svh;
+    inline-size: 100%;
+    overflow: hidden;
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
+.photo {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 0;
+}
+
+.summary {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-inline: var(--_margin);
+}
+
+.title {
+    @include type.role(display-small, $emphasized: true);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+}
+
+.source {
+    @include type.role(label-large);
+    @include focus-ring.ring;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-block-size: 48px;
+    margin-block: -12px;
+    color: var(--md-sys-color-primary);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, currentcolor 40%, transparent);
+    border-radius: var(--md-sys-shape-corner-small);
+
+    @media (hover: hover) {
+        &:hover {
+            text-decoration-color: currentcolor;
+        }
+    }
+}
+
+.sourceText {
+    @include type.role(label-large);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.description {
+    @include type.role(body-large);
+    max-inline-size: 65ch;
+    color: var(--md-sys-color-on-surface-variant);
+    text-wrap: pretty;
+}
+
+// One row of equal tiles, never a lone tile wrapped under the others.
+.stats {
+    display: grid;
+    grid-template-columns: repeat(var(--_count, 4), minmax(0, 1fr));
+    gap: 8px;
+    inline-size: 100%;
+    max-inline-size: calc(var(--_count, 4) * 152px);
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+    padding: 10px 16px;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface-container-high);
+
+    dt {
+        @include type.role(label-medium);
+        color: var(--md-sys-color-on-surface-variant);
+    }
+
+    dd {
+        @include type.role(title-medium);
+        @include type.numeric;
+        text-wrap: balance;
+    }
+}
+
+.cook {
+    align-self: stretch;
+}
+
+.chips {
+    flex-wrap: wrap;
+}
+
+.sectionTitle {
+    @include type.role(headline-small, $emphasized: true);
+}
+
+.notes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-inline-size: 72ch;
+    padding: 20px 24px 24px;
+    border-radius: var(--md-sys-shape-corner-large-increased);
+    background-color: var(--md-sys-color-surface-container);
+
+    p {
+        @include type.role(body-large);
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+        color: var(--md-sys-color-on-surface-variant);
+    }
+}
+
+.footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+// Compact: the photo runs under the floating bar and the summary rises over it as a sheet.
+@container recipe (width < 600px) {
+    .photoFrame {
+        margin-block-start: calc(-1 * var(--_bar));
+        max-block-size: calc(56svh + var(--_bar));
+        aspect-ratio: 1 / 1;
+    }
+
+    .stat {
+        padding-inline: 12px;
+    }
+
+    .root:not([data-has-photo]) .photoFrame {
+        margin-block-start: 0;
+        aspect-ratio: 16 / 11;
+    }
+
+    .summary {
+        margin-block-start: -28px;
+        padding-block-start: 24px;
+        border-start-start-radius: var(--md-sys-shape-corner-extra-large);
+        border-start-end-radius: var(--md-sys-shape-corner-extra-large);
+        background-color: var(--md-sys-color-surface);
+    }
+
+    @supports (animation-timeline: scroll()) {
+        .photo {
+            animation: recipe-photo-parallax linear both;
+            animation-timeline: scroll(root block);
+            animation-range: 0 64svh;
+        }
+    }
+}
+
+@keyframes recipe-photo-parallax {
+    to {
+        transform: translateY(28%) scale(1.06);
+    }
+}
+
+// Medium: photo beside the summary, then ingredients and steps stacked.
+@container recipe (600px <= width < 780px) {
+    .header {
+        display: grid;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        gap: 24px;
+        align-items: start;
+        padding-inline: var(--_margin);
+        padding-block-start: 8px;
+    }
+
+    .photoFrame {
+        aspect-ratio: 4 / 5;
+        border-radius: var(--md-sys-shape-corner-extra-large);
+    }
+
+    .summary {
+        padding-inline: 0;
+    }
+
+    .title {
+        @include type.role(headline-large, $emphasized: true);
+    }
+}
+
+// Two panes on one grid: the photo sits over the ingredients column and the summary over
+// the steps, so both pairs share an edge. Ingredients follow the photo directly (not the
+// longer summary), stick under the bar beside the steps and scroll on their own when long.
+@container recipe (width >= 780px) {
+    .layout {
+        --_side: clamp(300px, 36%, 400px);
+        display: grid;
+        grid-template-columns: var(--_side) minmax(0, 1fr);
+        grid-template-areas:
+            "photo summary"
+            "ingredients summary"
+            "ingredients main";
+        // min-content, not auto: auto rows also absorb the tall sticky ingredients pane,
+        // which opened a gap between the summary and the steps.
+        grid-template-rows: min-content min-content 1fr;
+        align-items: start;
+        column-gap: var(--md-sys-layout-pane-spacer);
+        row-gap: 32px;
+        padding-inline: var(--_margin);
+        padding-block-start: 8px;
+    }
+
+    .lead {
+        display: contents;
+    }
+
+    .header {
+        display: contents;
+    }
+
+    .photoFrame {
+        grid-area: photo;
+        // Short windows (a 1024x600 display) keep the photo from pushing the ingredients down.
+        max-block-size: 40dvh;
+        border-radius: var(--md-sys-shape-corner-extra-large);
+    }
+
+    .summary {
+        grid-area: summary;
+        padding-inline: 0;
+    }
+
+    .title {
+        @include type.role(headline-large, $emphasized: true);
+    }
+
+    .ingredients {
+        grid-area: ingredients;
+        position: sticky;
+        inset-block-start: calc(var(--_bar) + 8px);
+        max-block-size: calc(100dvh - var(--_bar) - 16px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+        padding-block-end: 24px;
+        // Room for focus rings at the pane's edge.
+        margin-inline: -6px;
+        padding-inline: 6px;
+    }
+
+    .main {
+        grid-area: main;
+        padding-inline: 0;
+    }
+}
+
+@container recipe (width >= 1100px) {
+    .layout {
+        --_side: minmax(340px, 400px);
+        grid-template-columns: var(--_side) minmax(0, 76ch);
+        column-gap: 48px;
+        padding-inline: 32px;
+    }
+
+    .title {
+        @include type.role(display-small, $emphasized: true);
+    }
+}
+
+@container recipe (width >= 1400px) {
+    .layout {
+        --_side: 420px;
+        justify-content: center;
+        column-gap: 72px;
+        padding-inline: 48px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .photo {
+        animation: none;
+    }
+}
+
+// Paper: no chrome, no controls, ingredients in two columns, steps full width.
+// biome-ignore-start lint/complexity/noImportantStyles: print must beat every screen rule, inline styles included
+@media print {
+    :global(body):has(.root) *:not(:has(.root), .root, .root *) {
+        display: none !important;
+    }
+
+    :global(body):has(.root) *:has(.root) {
+        display: block !important;
+        position: static !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        inline-size: auto !important;
+        max-inline-size: none !important;
+        min-block-size: 0 !important;
+        background: none !important;
+    }
+
+    .root {
+        container-type: normal;
+        background: none;
+        color: #000;
+    }
+
+    .layout {
+        display: block;
+        padding: 0;
+    }
+
+    .lead,
+    .ingredients,
+    .main {
+        position: static;
+        display: block;
+        max-block-size: none;
+        overflow: visible;
+        padding: 0;
+        margin: 0;
+    }
+
+    .header {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 16pt;
+        align-items: flex-start;
+        margin-block-end: 16pt;
+    }
+
+    .photoFrame {
+        flex: none;
+        inline-size: 5cm;
+        aspect-ratio: 1;
+        margin: 0;
+        border-radius: 8pt;
+    }
+
+    .photoFrame:has([data-photo="none"]),
+    .cook,
+    .chips {
+        display: none !important;
+    }
+    // biome-ignore-end lint/complexity/noImportantStyles: print block above
+
+    .summary {
+        margin: 0;
+        padding: 0;
+        gap: 8pt;
+    }
+
+    .title {
+        font-size: 24pt;
+        line-height: 1.15;
+    }
+
+    .stat {
+        padding: 4pt 8pt;
+        background: none;
+        border: 1px solid #999;
+    }
+
+    .description,
+    .notes p {
+        color: #222;
+    }
+
+    .notes {
+        padding: 0;
+        margin-block-start: 16pt;
+        background: none;
+        break-inside: avoid;
+    }
+}

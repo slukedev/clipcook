@@ -1,30 +1,39 @@
 'use client'
 
 import { Avatar as BaseAvatar } from '@base-ui/react/avatar'
+import type { CSSProperties } from 'react'
 import { cx } from '../cx'
+import { shapeMask } from '../shape/shape'
+import type { ShapeName } from '../shape/shape-paths'
 import styles from './avatar.module.scss'
 
-interface AvatarProps {
+export interface AvatarProps {
     src?: string | null
-    /** Display name — used for the initials fallback and alt text. */
+    /** Person or thing pictured; initials come from it when there is no image. */
     name: string
-    size?: 32 | 40 | 48
+    /** Diameter in px (24, 32, 40, 56...). */
+    size?: number
+    /** Clip to a MaterialShape instead of a circle. */
+    shape?: ShapeName
     className?: string
 }
 
-function initialsOf(name: string): string {
+function initials(name: string) {
     const parts = name.trim().split(/\s+/)
-    const first = parts[0]?.[0] ?? ''
-    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : ''
-    return (first + last).toUpperCase() || '?'
+    return ((parts[0]?.[0] ?? '') + (parts.length > 1 ? (parts.at(-1)?.[0] ?? '') : '')).toUpperCase()
 }
 
-/** Circular avatar with tonal initials fallback. */
-export function Avatar({ src, name, size = 40, className }: AvatarProps) {
+export function Avatar({ src, name, size = 40, shape, className }: AvatarProps) {
+    const style = {
+        '--_size': `${size}px`,
+        ...(shape ? { mask: shapeMask(shape), WebkitMask: shapeMask(shape), borderRadius: 0 } : {}),
+    } as CSSProperties
     return (
-        <BaseAvatar.Root className={cx(styles.avatar, className)} style={{ width: size, height: size }}>
-            {src && <BaseAvatar.Image src={src} className={styles.image} alt={name} referrerPolicy="no-referrer" />}
-            <BaseAvatar.Fallback className={styles.fallback}>{initialsOf(name)}</BaseAvatar.Fallback>
+        <BaseAvatar.Root className={cx(styles.avatar, className)} style={style}>
+            {src && <BaseAvatar.Image src={src} alt={name} className={styles.image} />}
+            <BaseAvatar.Fallback className={styles.fallback} aria-label={name}>
+                {initials(name)}
+            </BaseAvatar.Fallback>
         </BaseAvatar.Root>
     )
 }

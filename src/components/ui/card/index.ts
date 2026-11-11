@@ -1,1 +1,1 @@
-export { Card, type CardVariant } from './card'
+export { Card, type CardProps, type CardVariant } from './card'

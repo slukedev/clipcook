@@ -1,0 +1,354 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
+
+.page {
+    --_row-min: 56px;
+    --_row-type-size: var(--md-sys-typescale-body-large-size);
+    --_row-line: var(--md-sys-typescale-body-large-line-height);
+    --_row-bg: var(--md-sys-color-surface-container-low);
+    padding-block-end: calc(var(--md-sys-space-16) + var(--safe-bottom));
+
+    // Store mode: bigger rows and type for reading at arm's length while walking.
+    &[data-large] {
+        --_row-min: 72px;
+        --_row-type-size: 1.375rem;
+        --_row-line: 1.875rem;
+    }
+}
+
+.body {
+    display: grid;
+    gap: var(--md-sys-space-6);
+    inline-size: 100%;
+    max-inline-size: 1600px;
+    // Aligned with the app bar title, which keeps 16dp at every width.
+    padding-inline: max(16px, var(--safe-left)) max(16px, var(--safe-right));
+}
+
+.top {
+    display: grid;
+    gap: var(--md-sys-space-4);
+    inline-size: 100%;
+    max-inline-size: 720px;
+}
+
+// Add field: a pill on the container-high surface, like the search bar it sits beside in the shell.
+.add {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-1);
+    min-block-size: 56px;
+    padding-inline: var(--md-sys-space-4) var(--md-sys-space-2);
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
+
+    &:focus-within {
+        background-color: var(--md-sys-color-surface-container-highest);
+        outline: 2px solid var(--md-sys-color-primary);
+        outline-offset: -2px;
+    }
+}
+
+.addIcon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 24px;
+    color: var(--md-sys-color-on-surface-variant);
+    --md-icon-size: 24px;
+}
+
+.addInput {
+    flex: 1;
+    min-inline-size: 0;
+    block-size: 56px;
+    padding-inline: var(--md-sys-space-3) var(--md-sys-space-2);
+    border: 0;
+    background: none;
+    outline: none;
+    @include type.role(body-large);
+
+    &::placeholder {
+        color: var(--md-sys-color-on-surface-variant);
+        opacity: 1;
+    }
+}
+
+.addSubmit {
+    flex: none;
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+    transition:
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        transform var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    &[data-visible] {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+    }
+}
+
+.recipes {
+    display: grid;
+    gap: var(--md-sys-space-2);
+}
+
+.recipesLabel {
+    @include type.role(title-small);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+// Aisles flow into columns on wider windows; Done always closes the list.
+.groups {
+    display: grid;
+    gap: var(--md-sys-space-6);
+
+    @include media.expanded-up {
+        display: block;
+        columns: 2 340px;
+        column-gap: var(--md-sys-space-6);
+
+        > * {
+            break-inside: avoid;
+            margin-block-end: var(--md-sys-space-6);
+        }
+    }
+
+    @include media.large-up {
+        columns: 3 340px;
+    }
+}
+
+.group {
+    display: grid;
+    gap: var(--md-sys-space-2);
+
+    &[data-done] {
+        column-span: all;
+        max-inline-size: 720px;
+
+        @include media.expanded-up {
+            padding-block-start: var(--md-sys-space-4);
+        }
+    }
+}
+
+.groupHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-3);
+    min-block-size: 40px;
+    padding-inline: var(--md-sys-space-1);
+}
+
+.groupIcon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 32px;
+    block-size: 32px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    --md-icon-size: 20px;
+
+    .group[data-done] & {
+        background-color: var(--md-sys-color-surface-container-highest);
+        color: var(--md-sys-color-on-surface-variant);
+    }
+}
+
+.groupTitle {
+    @include type.role(title-medium);
+    color: var(--md-sys-color-on-surface);
+}
+
+.groupCount {
+    @include type.role(label-large);
+    @include type.numeric;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.groupAction {
+    margin-inline-start: auto;
+}
+
+// Segmented rows: 2dp gaps, 16dp outer corners, 4dp inner corners.
+.rows {
+    display: grid;
+    gap: 2px;
+    list-style: none;
+}
+
+.item {
+    position: relative;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    list-style: none;
+
+    &:first-child {
+        border-start-start-radius: var(--md-sys-shape-corner-large);
+        border-start-end-radius: var(--md-sys-shape-corner-large);
+    }
+
+    &:last-child {
+        border-end-start-radius: var(--md-sys-shape-corner-large);
+        border-end-end-radius: var(--md-sys-shape-corner-large);
+    }
+}
+
+.swipeBackdrop {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: var(--md-sys-space-6);
+    border-radius: inherit;
+    background-color: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    pointer-events: none;
+    --md-icon-size: 24px;
+}
+
+.row {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-1);
+    min-block-size: var(--_row-min);
+    padding-inline: var(--md-sys-space-1) var(--md-sys-space-2);
+    border-radius: inherit;
+    background-color: var(--_row-bg);
+    cursor: pointer;
+    touch-action: pan-y;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    transition: border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    @include media.hover {
+        &:hover {
+            border-radius: var(--md-sys-shape-corner-medium);
+        }
+    }
+
+    &:has(:focus-visible),
+    &:active {
+        border-radius: var(--md-sys-shape-corner-large);
+    }
+}
+
+.check {
+    flex: none;
+}
+
+.text {
+    flex: 1;
+    min-inline-size: 0;
+    align-self: stretch;
+    padding-block: var(--md-sys-space-3);
+    padding-inline-end: var(--md-sys-space-2);
+    text-align: start;
+    font-size: var(--_row-type-size);
+    line-height: var(--_row-line);
+    letter-spacing: var(--md-sys-typescale-body-large-tracking);
+    overflow-wrap: anywhere;
+    color: var(--md-sys-color-on-surface);
+    text-decoration-line: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-color: transparent;
+    cursor: inherit;
+    @include focus-ring.inward;
+    border-radius: var(--md-sys-shape-corner-small);
+    transition:
+        color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        text-decoration-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
+
+    @include media.hover {
+        cursor: text;
+    }
+
+    .item[data-checked] & {
+        color: var(--md-sys-color-on-surface-variant);
+        text-decoration-color: currentcolor;
+    }
+}
+
+.editInput {
+    flex: 1;
+    min-inline-size: 0;
+    block-size: 44px;
+    padding-inline: var(--md-sys-space-3);
+    border: 0;
+    border-radius: var(--md-sys-shape-corner-small);
+    background-color: var(--md-sys-color-surface-container-highest);
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -2px;
+    font-size: var(--_row-type-size);
+    line-height: var(--_row-line);
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+// Delete shows on hover or keyboard focus with a mouse. On touch it is always there, quiet,
+// so deleting is discoverable; swiping the row away stays the shortcut.
+.delete {
+    flex: none;
+    color: var(--md-sys-color-on-surface-variant);
+
+    @media (hover: hover) and (pointer: fine) {
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+        .row:hover &,
+        .row:focus-within & {
+            opacity: 1;
+        }
+    }
+
+    .item[data-checked] & {
+        color: var(--md-sys-color-outline);
+    }
+}
+
+.empty {
+    padding-block: var(--md-sys-space-12);
+}
+
+.srOnly {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+// Loading skeleton mirrors the real layout.
+.skeletonRows {
+    display: grid;
+    gap: 2px;
+
+    > * {
+        border-radius: var(--md-sys-shape-corner-extra-small);
+
+        &:first-child {
+            border-start-start-radius: var(--md-sys-shape-corner-large);
+            border-start-end-radius: var(--md-sys-shape-corner-large);
+        }
+
+        &:last-child {
+            border-end-start-radius: var(--md-sys-shape-corner-large);
+            border-end-end-radius: var(--md-sys-shape-corner-large);
+        }
+    }
+}

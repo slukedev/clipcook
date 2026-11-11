@@ -1,0 +1,41 @@
+@use "../../styles/mixins/typography" as type;
+
+.text {
+    display: grid;
+    min-inline-size: 0;
+    padding-block: 8px;
+}
+
+.name,
+.status {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.meta {
+    @include type.role(body-small);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-inline-size: 0;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.dot {
+    flex: none;
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: 50%;
+    outline: 1.5px solid var(--md-sys-color-outline);
+    outline-offset: -1.5px;
+
+    &[data-presence="online"] {
+        outline-color: transparent;
+        background-color: var(--md-sys-color-primary);
+    }
+
+    &[data-presence="unlinked"] {
+        outline-style: dashed;
+    }
+}

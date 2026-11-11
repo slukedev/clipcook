@@ -1,9 +1,8 @@
 {
     "name": "clipcook",
     "version": "1.0.0",
-    "private": true,
     "engines": {
-        "node": ">=20.0.0"
+        "node": ">=24.12.0"
     },
     "scripts": {
         "dev": "next dev --turbopack",
@@ -12,39 +11,47 @@
         "lint": "biome lint .",
         "format": "biome format --write .",
         "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:e2e": "playwright test",
         "generate:theme": "esbuild scripts/generate-theme.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/generate-theme.cjs --log-level=error && node node_modules/.cache/generate-theme.cjs",
-        "generate:icons": "esbuild scripts/generate-icons.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/generate-icons.cjs --log-level=error && node node_modules/.cache/generate-icons.cjs"
+        "generate:icons": "esbuild scripts/generate-icons.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/generate-icons.cjs --log-level=error && node node_modules/.cache/generate-icons.cjs",
+        "seed:demo": "esbuild scripts/seed-demo.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/seed-demo.cjs --alias:server-only=./node_modules/server-only/empty.js --external:sharp --external:firebase-admin --external:next --log-level=error && node node_modules/.cache/seed-demo.cjs"
     },
     "dependencies": {
-        "@base-ui/react": "^1.6.0",
+        "@base-ui/react": "^1.9.0",
         "@material/material-color-utilities": "^0.4.0",
         "cheerio": "^1.2.0",
-        "firebase": "^12.16.0",
-        "firebase-admin": "^14.1.0",
+        "firebase": "^13.2.0",
+        "firebase-admin": "^14.5.0",
         "fraction.js": "^5.3.4",
         "js-quantities": "^1.8.0",
-        "motion": "^12.42.2",
-        "next": "^16.2.10",
+        "motion": "^14.12.0",
+        "next": "^16.4.6",
         "parse-iso-duration": "^1.1.0",
-        "react": "^19.2.7",
-        "react-dom": "^19.2.7",
-        "sass": "^1.101.0",
+        "qrcode": "^1.5.4",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1",
+        "sass": "^1.108.1",
         "server-only": "^0.0.1",
-        "sharp": "^0.35.3",
-        "undici": "^8.7.0",
-        "zod": "^4.4.3"
+        "sharp": "^0.35.5",
+        "undici": "^8.12.4",
+        "zod": "^4.6.7"
     },
     "devDependencies": {
-        "@biomejs/biome": "^2.5.3",
-        "@material-symbols/svg-400": "^0.45.7",
+        "@biomejs/biome": "^2.6.6",
+        "@material-symbols/svg-400": "^0.48.3",
+        "@playwright/test": "1.63.0",
         "@types/js-quantities": "^1.6.6",
-        "@types/node": "^26.1.1",
-        "@types/react": "^19.2.17",
-        "@types/react-dom": "^19.2.3",
+        "@types/node": "^26.6.6",
+        "@types/qrcode": "^1.5.6",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
         "babel-plugin-react-compiler": "^1.0.0",
-        "esbuild": "^0.28.1",
-        "serwist": "^9.5.11",
-        "typescript": "~6.0.3"
+        "esbuild": "^0.28.2",
+        "serwist": "^9.5.13",
+        "typescript": "~6.0.3",
+        "vitest": "^5.1.0"
     },
     "overrides": {
         "jose": "^5.10.0"
@@ -56,5 +63,11 @@
         "protobufjs@7.6.5": true,
         "esbuild@0.28.1": true,
         "@parcel/watcher@2.5.6": true
-    }
+    },
+    "license": "GPL-3.0-only",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/slukedev/clipcook.git"
+    },
+    "private": true
 }

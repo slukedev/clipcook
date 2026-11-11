@@ -1,44 +1,318 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/media' as media;
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
 
-.main {
-    max-width: 64rem;
-    margin-inline: auto;
-    padding: 1rem 1rem 6rem;
+.page {
+    min-block-size: 100dvh;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    padding-block-end: 120px;
+}
+
+.controls {
+    z-index: 30;
 
     @include media.medium-up {
-        padding-inline: 2rem;
+        position: sticky;
+        inset-block-start: 0;
+    }
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    padding: 12px var(--md-sys-layout-margin);
+    background-color: var(--md-sys-color-surface-container);
+}
+
+.brand {
+    @include type.role(title-large, $emphasized: true);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-inline-end: auto;
+    color: var(--md-sys-color-on-surface);
+}
+
+.brandShape {
+    color: var(--md-sys-color-primary);
+}
+
+.controlGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.controlLabel {
+    @include type.role(label-medium);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.seeds {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.seed {
+    inline-size: 32px;
+    block-size: 32px;
+    border-radius: 50%;
+    border: 0;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    transition: border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    &[aria-pressed="true"] {
+        border-radius: 10px;
+        outline: 2px solid var(--md-sys-color-on-surface);
+        outline-offset: 2px;
+    }
+
+    &:focus-visible {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: 2px;
     }
 }
 
+.variantSelect {
+    min-inline-size: 150px;
+}
+
+.colorInput {
+    inline-size: 32px;
+    block-size: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+}
+
+.layout {
+    display: grid;
+    gap: 24px;
+    padding: 24px var(--md-sys-layout-margin);
+    max-inline-size: 1600px;
+    margin-inline: auto;
+
+    @include media.expanded-up {
+        grid-template-columns: 200px minmax(0, 1fr);
+    }
+}
+
+.toc {
+    display: none;
+
+    @include media.expanded-up {
+        position: sticky;
+        inset-block-start: 96px;
+        align-self: start;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        max-block-size: calc(100dvh - 120px);
+        overflow-y: auto;
+    }
+
+    a {
+        @include type.role(label-large);
+        padding: 8px 12px;
+        border-radius: 9999px;
+        color: var(--md-sys-color-on-surface-variant);
+
+        &:hover {
+            background-color: var(--md-sys-color-surface-container-high);
+            color: var(--md-sys-color-on-surface);
+        }
+    }
+}
+
+.sections {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    min-inline-size: 0;
+}
+
 .section {
-    margin-block: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-margin-block-start: 120px;
 }
 
 .sectionTitle {
+    @include type.role(headline-medium, $emphasized: true);
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-surface);
+    box-shadow: inset 0 0 0 1px var(--md-sys-color-outline-variant);
+    min-inline-size: 0;
+    overflow: hidden;
+
+    @include media.compact {
+        padding: 16px;
+    }
+}
+
+.panelTitle {
     @include type.role(title-medium);
-    color: var(--md-sys-color-primary);
-    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1rem;
+    gap: 12px;
 }
 
-.demoCard {
-    flex: 1 1 16rem;
-    max-width: 20rem;
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 16px;
 }
 
-.demoCardBody {
-    padding: 1rem;
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.typeRow {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    align-items: baseline;
+    gap: 16px;
+    overflow: hidden;
+
+    > span:first-child {
+        @include type.role(label-medium);
+        color: var(--md-sys-color-on-surface-variant);
+    }
+
+    @include media.compact {
+        grid-template-columns: 1fr;
+        gap: 2px;
+    }
+}
+
+.swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.swatch {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-block-size: 72px;
+    padding: 10px 12px;
+    border-radius: var(--md-sys-shape-corner-large);
+    @include type.role(label-medium);
+
+    small {
+        @include type.role(label-small);
+        opacity: 0.8;
+    }
+}
+
+.shapes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 16px;
+}
+
+.shapeCell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--md-sys-color-primary);
+    @include type.role(label-small);
+
+    span {
+        color: var(--md-sys-color-on-surface-variant);
+    }
+}
+
+.morphStage {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+    color: var(--md-sys-color-tertiary);
+}
+
+.frame {
+    position: relative;
+    block-size: 280px;
+    overflow: auto;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface);
+    isolation: isolate;
+
+    // Gallery-only: keep app bars inside their frame.
+    header > div {
+        // biome-ignore lint/complexity/noImportantStyles: gallery only; app bars are fixed by their own component styles
+        position: relative !important;
+    }
+}
+
+.frameBody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+}
+
+.railFrame {
+    display: flex;
+    block-size: 520px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface);
+
+    nav {
+        block-size: 100%;
+        position: relative;
+    }
+}
+
+.navFrame {
+    border-radius: var(--md-sys-shape-corner-large);
+    overflow: hidden;
+
+    nav {
+        position: relative;
+    }
+}
+
+.cardMedia {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    --md-icon-size: 48px;
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
 
     h3 {
         @include type.role(title-medium);
-        margin-bottom: 0.25rem;
     }
 
     p {
@@ -47,10 +321,33 @@
     }
 }
 
-.listDemo {
-    width: 100%;
-    max-width: 26rem;
-    border-radius: var(--md-sys-shape-corner-medium);
-    background: var(--md-sys-color-surface-container-low);
-    overflow: hidden;
+.carouselTile {
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    block-size: 100%;
+    --md-icon-size: 56px;
+}
+
+.thumb {
+    display: grid;
+    place-items: center;
+    inline-size: 56px;
+    block-size: 56px;
+    border-radius: var(--md-sys-shape-corner-small);
+    background-color: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+}
+
+.fabStage {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    min-block-size: 120px;
+}
+
+.dynamicNote {
+    @include type.role(body-medium);
+    color: var(--md-sys-color-on-surface-variant);
 }

@@ -1,0 +1,149 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
+
+// Shared by Button, IconButton, SplitButton and the connected ButtonGroup.
+// Per-size custom properties (Compose Button*Tokens, Expressive sizes):
+//   --_h height, --_pad inline padding, --_gap icon gap, --_icon icon size,
+//   --_square / --_pressed / --_selected corner radii, --_outline outline width.
+
+@mixin sizes {
+    &[data-size="xs"] {
+        --_h: 32px;
+        --_pad: 12px;
+        --_gap: 4px;
+        --_icon: 20px;
+        --_square: 12px;
+        --_pressed: 8px;
+        --_outline: 1px;
+        @include type.role(label-large);
+    }
+
+    &[data-size="s"] {
+        --_h: 40px;
+        --_pad: 16px;
+        --_gap: 8px;
+        --_icon: 20px;
+        --_square: 12px;
+        --_pressed: 8px;
+        --_outline: 1px;
+        @include type.role(label-large);
+    }
+
+    &[data-size="m"] {
+        --_h: 56px;
+        --_pad: 24px;
+        --_gap: 8px;
+        --_icon: 24px;
+        --_square: 16px;
+        --_pressed: 12px;
+        --_outline: 1px;
+        @include type.role(title-medium);
+    }
+
+    &[data-size="l"] {
+        --_h: 96px;
+        --_pad: 48px;
+        --_gap: 12px;
+        --_icon: 32px;
+        --_square: 28px;
+        --_pressed: 16px;
+        --_outline: 2px;
+        @include type.role(headline-small);
+    }
+
+    &[data-size="xl"] {
+        --_h: 136px;
+        --_pad: 64px;
+        --_gap: 16px;
+        --_icon: 40px;
+        --_square: 28px;
+        --_pressed: 16px;
+        --_outline: 3px;
+        @include type.role(headline-large);
+    }
+}
+
+@mixin base {
+    @include state-layer.host;
+    @include focus-ring.ring(var(--md-focus-ring-offset));
+    @include sizes;
+
+    --_round: calc(var(--_h) / 2);
+    --_radius: var(--_round);
+    --md-icon-size: var(--_icon);
+
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: var(--_gap);
+    block-size: var(--_h);
+    padding-inline: var(--_pad);
+    border: 0;
+    border-radius: var(--_radius);
+    background-color: var(--_container, transparent);
+    color: var(--_content);
+    box-shadow: var(--_shadow, none);
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition:
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
+        color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        box-shadow var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        outline-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[data-shape="square"] {
+        --_radius: var(--_square);
+    }
+
+    // Outline drawn inside the shape so it morphs with the radius.
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        border: var(--_outline) solid var(--_outline-color, transparent);
+        pointer-events: none;
+    }
+
+    // 48px minimum touch target for the short sizes.
+    > [data-touch-target] {
+        position: absolute;
+        inset-block: min(0px, calc((var(--_h) - 48px) / 2));
+        inset-inline: min(0px, calc((var(--_h) - 48px) / 2));
+    }
+
+    // Press squares the corners off; it wins over every resting shape.
+    &:active:not(:disabled, [data-disabled]),
+    &[data-ripple-pressed] {
+        // biome-ignore lint/complexity/noImportantStyles: the pressed corner wins over every resting and selected shape
+        --_radius: var(--_pressed) !important;
+    }
+
+    &:disabled,
+    &[data-disabled] {
+        cursor: default;
+        --_container: color-mix(
+            in srgb,
+            var(--md-sys-color-on-surface) calc(var(--md-sys-state-disabled-container-opacity) * 100%),
+            transparent
+        );
+        --_content: color-mix(
+            in srgb,
+            var(--md-sys-color-on-surface) calc(var(--md-sys-state-disabled-content-opacity) * 100%),
+            transparent
+        );
+        --_shadow: none;
+    }
+
+    &[data-loading] {
+        cursor: progress;
+    }
+}

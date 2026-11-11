@@ -1,0 +1,229 @@
+@use "../../styles/mixins/typography" as type;
+
+// Landscape smart displays first (1024x600, 1280x800); portrait tablets stack.
+.root {
+    --_qr: min(44vmin, 360px);
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(24px, 5vw, 80px);
+    min-block-size: 100dvh;
+    padding: clamp(32px, 7vmin, 72px) clamp(32px, 7vw, 96px);
+    // Clear of the 64dp corner menu.
+    padding-inline-end: max(clamp(32px, 7vw, 96px), calc(var(--display-edge) + 64px + 16px));
+
+    // Portrait tablets and phones: the QR on top, the words centered under it, with even
+    // side margins and the top kept clear of the corner menu.
+    @media (orientation: portrait) {
+        --_qr: min(50vmin, 320px);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        align-content: center;
+        gap: clamp(24px, 4vmin, 48px);
+        padding: calc(var(--display-edge) + 64px + 8px) clamp(24px, 6vw, 64px) clamp(32px, 6vmin, 64px);
+        text-align: center;
+
+        .visual {
+            order: -1;
+        }
+    }
+}
+
+.text {
+    // Inline-size container: the code scales with the column. The column needs a definite
+    // width for that, so it stretches instead of shrinking to its (container) content.
+    container-type: inline-size;
+    display: grid;
+    gap: clamp(16px, 3.5vmin, 32px);
+    justify-self: stretch;
+    min-inline-size: 0;
+
+    @media (orientation: portrait) {
+        justify-items: center;
+        inline-size: 100%;
+        max-inline-size: 36rem;
+        margin-inline: auto;
+    }
+}
+
+.title {
+    @include type.role(headline-large, $emphasized: true);
+    font-size: clamp(1.75rem, 1rem + 2.5vmin, 2.75rem);
+    line-height: 1.2;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.code {
+    display: flex;
+    gap: 0.35em;
+    margin-inline-start: -0.04em;
+    // Six fixed cells plus the gap: about 5.1em, so it never wraps inside its column.
+    font-size: min(clamp(3.5rem, 15vmin, 9rem), 19cqi);
+    line-height: 1;
+    white-space: nowrap;
+    font-weight: 600;
+    font-variation-settings:
+        "ROND" 100,
+        "wdth" 100,
+        "GRAD" var(--md-sys-typescale-grade, 0);
+    color: var(--md-sys-color-on-surface);
+    @include type.numeric;
+
+    @media (orientation: portrait) {
+        justify-content: center;
+    }
+}
+
+.codeGroup {
+    display: inline-flex;
+}
+
+.codeChar {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 0.78em;
+}
+
+.codePlaceholder {
+    display: block;
+    inline-size: 5.5em;
+    block-size: 1em;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
+.instruction {
+    font-size: clamp(1.25rem, 0.75rem + 2.4vmin, 2rem);
+    line-height: 1.35;
+    color: var(--md-sys-color-on-surface-variant);
+    transition: opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    strong {
+        font-weight: 600;
+        color: var(--md-sys-color-primary);
+        overflow-wrap: anywhere;
+    }
+
+    &[data-hidden] {
+        opacity: 0;
+    }
+}
+
+.progress {
+    inline-size: min(100%, 420px);
+    min-block-size: 10px;
+}
+
+.error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: clamp(1rem, 0.75rem + 1.5vmin, 1.375rem);
+    color: var(--md-sys-color-on-surface-variant);
+    text-align: start;
+    --md-icon-size: 28px;
+}
+
+.wait {
+    @include type.numeric;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+}
+
+.srOnly {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+// QR on a fixed light tile (it must scan in any theme), over a cookie that blooms on claim.
+.visual {
+    position: relative;
+    display: grid;
+    place-items: center;
+    justify-self: center;
+    inline-size: calc(var(--_qr) * 1.32);
+    aspect-ratio: 1;
+}
+
+.blob {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    color: var(--md-sys-color-tertiary-container);
+    transition:
+        color var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow),
+        scale var(--md-sys-motion-spring-spatial-slow-duration) var(--md-sys-motion-spring-spatial-slow),
+        rotate var(--md-sys-motion-spring-spatial-slow-duration) var(--md-sys-motion-spring-spatial-slow);
+
+    .root[data-phase="claimed"] & {
+        color: var(--md-sys-color-primary);
+        scale: 0.8;
+        rotate: 60deg;
+    }
+}
+
+.qr {
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    inline-size: var(--_qr);
+    aspect-ratio: 1;
+    padding: calc(var(--_qr) * 0.06);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    // The display is always dark, so the inverse surface is a light tile: dark modules scan best.
+    background-color: var(--md-sys-color-inverse-surface);
+    color: var(--md-sys-color-inverse-on-surface);
+    transition:
+        opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
+        scale var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default);
+
+    // No code yet: a smaller tonal tile with the loading indicator, not an empty white card.
+    &[data-waiting] {
+        scale: 0.72;
+        background-color: var(--md-sys-color-surface-container-high);
+        color: var(--md-sys-color-primary);
+    }
+
+    .root[data-phase="claimed"] & {
+        opacity: 0;
+        scale: 0.9;
+    }
+}
+
+.qrCode {
+    inline-size: 100%;
+    block-size: 100%;
+
+    :global(svg) {
+        inline-size: 100%;
+        block-size: 100%;
+        shape-rendering: crispEdges;
+    }
+}
+
+.check {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-on-primary);
+    opacity: 0;
+    scale: 0.9;
+    --md-icon-size: calc(var(--_qr) * 0.4);
+    transition:
+        opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    .root[data-phase="claimed"] & {
+        opacity: 1;
+        scale: 1;
+        transition-delay: 150ms;
+    }
+}
