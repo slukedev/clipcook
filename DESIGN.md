@@ -1,0 +1,44 @@
+# Design
+
+ClipCook follows [Material 3 Expressive](https://m3.material.io) closely. Numbers come from Google's Compose and MDC sources where the spec site does not publish them. The component library lives in `src/components/ui` (API reference in its README), and `/dev/gallery` shows every component and state in development.
+
+## Type
+
+Google Sans Flex, variable, loaded with `next/font`. The full M3 baseline and emphasized type scales are tokens in `src/styles/theme/typescale.css` with SCSS mixins in `src/styles/mixins`. Emphasized display and headline styles use the ROND axis for the rounded Expressive look; body text stays calm. Quantities and timers use tabular figures. High contrast mode raises the GRAD axis.
+
+## Color
+
+Generated with Material Color Utilities (`npm run generate:theme`, source in `src/lib/theme`).
+
+- **App:** seed `#C2502A` (paprika) through `SchemeTonalSpot` with the 2025 spec, with the primary palette held at chroma 60. Plain TonalSpot pulls warm reds toward brown; holding chroma keeps the primary appetizing while keeping TonalSpot's warm neutrals and saffron tertiary.
+- **Recipes:** each recipe page and kitchen display view is re-themed from its photo's seed color with `SchemeContent`, rendered on the server so there is no flash. Content keeps each dish's own hue, which TonalSpot flattens.
+- Light and dark follow the system unless overridden. Contrast has standard, medium and high levels. Preferences are cookies applied before first paint.
+
+## Shape
+
+The Expressive corner scale (none to full, including large-increased, extra-large-increased and extra-extra-large) and all 35 MaterialShapes as SVG (`@/components/ui/shape`). Shapes are used with intent: the loading indicator morphs through them, step numbers sit in them, photo-less recipes get a tinted shape, and the sign-in screen and success moments use them. Buttons morph from round to square when pressed or selected.
+
+## Motion
+
+The Expressive motion scheme by default, the Standard scheme as a setting.
+
+| Spring | Damping | Stiffness |
+| --- | --- | --- |
+| Spatial fast / default / slow | 0.6 / 0.8 / 0.8 | 800 / 380 / 200 |
+| Effects fast / default / slow | 1.0 | 3800 / 1600 / 800 |
+
+Spatial springs move things (position, size, shape). Effects springs change color and opacity and never overshoot. JS motion uses `src/lib/motion.ts`; CSS uses `linear()` approximations of the same springs in `src/styles/theme/motion.css`. Route changes use React view transitions: shared axis between destinations, and a shared element morph from a library card to its recipe. Reduced motion removes movement and keeps short fades.
+
+## Layout
+
+M3 window classes: compact under 600px, medium 600 to 839, expanded 840 to 1199, large 1200 to 1599, extra-large 1600 and up. Compact gets a navigation bar and FAB menu, medium a collapsed rail, and wider screens an expanded rail. Recipe pages switch to two panes on wide screens, and steps never exceed a comfortable reading measure. Kitchen display views are designed for 1024x600 and 1280x800 landscape screens first.
+
+## Interaction
+
+- State layers on every interactive surface, a 3px focus ring offset by 2px, and 10% pressed and focus layers.
+- Targets are at least 48px, checklist rows at least 56px, display targets at least 64px.
+- Optimistic updates for toggles, with undo for destructive actions.
+
+## Copy
+
+Labels are one to three plain words. Buttons name the action. Errors say what happened and what to do next in one sentence. No taglines, no exclamation marks, no em dashes.
