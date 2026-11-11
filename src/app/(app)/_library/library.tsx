@@ -56,6 +56,8 @@ interface LibraryProps {
     icons: LibraryIcons
     /** Ingredient matches for the query the page was loaded with. */
     initialSearch?: { key: string; ids: string[] }
+    /** Tonight's planned dish, shown above everything while nothing is filtered. */
+    tonight?: React.ReactNode
 }
 
 /** 'all', 'fav', or 'c:<collection id>'. */
@@ -75,6 +77,7 @@ export function Library({
     prefs: initialPrefs,
     icons,
     initialSearch,
+    tonight,
 }: LibraryProps) {
     const params = useSearchParams()
     const user = useSessionUser()
@@ -422,6 +425,7 @@ export function Library({
 
                 <ViewTransition key={resultsKey} enter="cc-results" exit="cc-results" default="none">
                     <div className={styles.results}>
+                        {!filtering && tonight}
                         {cooked.length > 0 && <JumpBackIn recipes={cooked} />}
 
                         {visible.length > 0 ? (

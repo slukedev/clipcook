@@ -34,6 +34,7 @@ export function recipeIcons() {
         next: <Icon name="arrow_forward" />,
         done: <Icon name="done_all" />,
         restart: <Icon name="restart_alt" />,
+        plan: <Icon name="calendar_add_on" />,
     } satisfies Record<string, ReactElement>
 }
 

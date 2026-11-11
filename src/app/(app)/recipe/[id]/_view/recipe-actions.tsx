@@ -12,6 +12,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { useViewTransitionRouter } from '@/components/ui/view-transition'
 import { recipeText } from '@/lib/cook/content'
 import { recipeScale } from '@/lib/cook/recipe-state'
+import { AddToPlanSheet } from '../../../plan/_components/add-to-plan-sheet'
 import { CollectionsDialog } from './collections-dialog'
 import { SendToDisplay } from './send-to-display'
 import type { CollectionOption, DisplayOption } from './types'
@@ -30,6 +31,7 @@ type IconKey =
     | 'delete'
     | 'add'
     | 'tv'
+    | 'plan'
 
 export interface ActionRecipe {
     id: string
@@ -66,6 +68,8 @@ export function RecipeActions({
     const [collectionsOpen, setCollectionsOpen] = useState(false)
     // A fresh key per opening resets the dialog's picks while keeping its exit animation.
     const [collectionsKey, setCollectionsKey] = useState(0)
+    const [planOpen, setPlanOpen] = useState(false)
+    const [planKey, setPlanKey] = useState(0)
 
     const toggleFavorite = (value: boolean) => {
         startFavorite(async () => {
@@ -154,6 +158,15 @@ export function RecipeActions({
                     >
                         Add to collection
                     </MenuItem>
+                    <MenuItem
+                        icon={icons.plan}
+                        onClick={() => {
+                            setPlanKey((k) => k + 1)
+                            setPlanOpen(true)
+                        }}
+                    >
+                        Add to plan
+                    </MenuItem>
                     <MenuSeparator />
                     <MenuItem icon={icons.share} onClick={share}>
                         Share
@@ -176,6 +189,15 @@ export function RecipeActions({
                     initial={recipe.collectionIds}
                     collections={collections}
                     addIcon={icons.add}
+                />
+            )}
+            {planKey > 0 && (
+                <AddToPlanSheet
+                    key={planKey}
+                    open={planOpen}
+                    onOpenChange={setPlanOpen}
+                    recipe={recipe}
+                    scale={recipeScale.get(recipe.id)}
                 />
             )}
             <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>

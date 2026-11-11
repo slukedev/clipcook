@@ -10,6 +10,7 @@ import { AppearanceSection } from './_sections/appearance'
 import { ClippingSection } from './_sections/clipping'
 import { DataSection } from './_sections/data'
 import { requestOrigin } from './_sections/origin'
+import { PlanSection } from './_sections/plan'
 import styles from './_sections/sections.module.scss'
 
 export const metadata: Metadata = { title: 'Settings' }
@@ -52,6 +53,10 @@ export default async function SettingsPage() {
                             motion: <Icon name="animation" />,
                         }}
                     />
+                </Section>
+
+                <Section id="plan" title="Meal Plan">
+                    <PlanSection />
                 </Section>
 
                 <Section id="displays" title="Kitchen Displays">
