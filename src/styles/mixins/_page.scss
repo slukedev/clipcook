@@ -1,0 +1,37 @@
+@use "sass:map";
+
+// Page frames: center a page's content at one of the widths in theme/layout.css.
+//
+//   .page { @include page.frame(wide); }
+//
+// Sets --cc-page-max on the element so a TopAppBar inside it aligns with the
+// content, and pads the sides by the window margin (and the safe area).
+
+$_widths: (
+    wide: var(--cc-page-wide),
+    medium: var(--cc-page-medium),
+    narrow: var(--cc-page-narrow),
+);
+
+@mixin frame($width: wide) {
+    --cc-page-max: #{map.get($_widths, $width)};
+
+    inline-size: 100%;
+    max-inline-size: calc(var(--cc-page-max) + 2 * var(--md-sys-layout-margin));
+    margin-inline: auto;
+    padding-inline: max(var(--md-sys-layout-margin), var(--safe-left)) max(var(--md-sys-layout-margin), var(--safe-right));
+}
+
+// Only the custom property: for a wrapper that holds the TopAppBar but should stay
+// full width (so the bar's background spans the window), with framed children.
+@mixin max($width: wide) {
+    --cc-page-max: #{map.get($_widths, $width)};
+}
+
+// Inner content that should follow the page's frame without setting a new one.
+@mixin inner {
+    inline-size: 100%;
+    max-inline-size: calc(var(--cc-page-max, 100%) + 2 * var(--md-sys-layout-margin));
+    margin-inline: auto;
+    padding-inline: max(var(--md-sys-layout-margin), var(--safe-left)) max(var(--md-sys-layout-margin), var(--safe-right));
+}

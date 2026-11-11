@@ -17,7 +17,10 @@
     gap: 4px;
     min-block-size: calc(64px + var(--safe-top));
     padding-block-start: var(--safe-top);
-    padding-inline: max(4px, var(--safe-left)) max(4px, var(--safe-right));
+    // Inside a page frame (--cc-page-max), the row insets so its title and actions sit
+    // on the content edge rather than the window edge.
+    --_inset: max(4px, (100% - var(--cc-page-max, 100%)) / 2 - var(--md-sys-layout-margin) + 4px);
+    padding-inline: max(var(--_inset), var(--safe-left)) max(var(--_inset), var(--safe-right));
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
     --md-icon-size: 24px;
@@ -95,8 +98,8 @@
     flex-direction: column;
     justify-content: flex-end;
     min-block-size: var(--_expanded);
-    padding-inline: max(var(--md-sys-layout-margin), var(--safe-left))
-        max(var(--md-sys-layout-margin), var(--safe-right));
+    --_inset: max(var(--md-sys-layout-margin), (100% - var(--cc-page-max, 100%)) / 2);
+    padding-inline: max(var(--_inset), var(--safe-left)) max(var(--_inset), var(--safe-right));
     padding-block-end: 12px;
     background-color: var(--md-sys-color-surface);
     transform-origin: left bottom;

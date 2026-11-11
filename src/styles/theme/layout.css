@@ -17,6 +17,16 @@
     --md-sys-layout-pane-spacer: 24px;
     --md-sys-layout-max-body: 75ch;
 
+    /*
+     * Page frames. Every page centers its content in one of three widths, and its top
+     * app bar reads the same --cc-page-max so the title and actions line up with the
+     * content edge instead of the window edge. Wide: browsing grids and boards.
+     * Medium: a single recipe or form with a side pane. Narrow: one column of settings.
+     */
+    --cc-page-wide: 1600px;
+    --cc-page-medium: 1280px;
+    --cc-page-narrow: 760px;
+
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
