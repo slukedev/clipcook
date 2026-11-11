@@ -18,6 +18,14 @@
     --cc-vt-exit-ease: cubic-bezier(0.3, 0, 0.8, 0.15);
     --cc-vt-enter-ease: cubic-bezier(0.05, 0.7, 0.1, 1);
     --cc-vt-axis: 30px;
+    // Fade keyframe names alternate between transitions (see the end of this file).
+    --cc-vt-fade-out: cc-vt-fade-out;
+    --cc-vt-fade-in: cc-vt-fade-in;
+}
+
+:root[data-vt-parity="1"] {
+    --cc-vt-fade-out: cc-vt-fade-out-alt;
+    --cc-vt-fade-in: cc-vt-fade-in-alt;
 }
 
 // Taps during a transition reach the live page instead of the overlay.
@@ -31,24 +39,29 @@
 // data-vt-root because their changes happen in the root itself.
 :root:not([data-vt-root])::view-transition-old(root) {
     display: none;
+    animation: none;
 }
 
 :root:not([data-vt-root])::view-transition-new(root) {
     animation: none;
 }
 
-:root[data-vt-root="theme"]::view-transition-old(root),
+:root[data-vt-root="theme"]::view-transition-old(root) {
+    animation: var(--cc-vt-fade-out) var(--md-sys-motion-spring-effects-slow-duration)
+        var(--md-sys-motion-spring-effects-slow) both;
+}
+
 :root[data-vt-root="theme"]::view-transition-new(root) {
-    animation-duration: var(--md-sys-motion-spring-effects-slow-duration);
-    animation-timing-function: var(--md-sys-motion-spring-effects-slow);
+    animation: var(--cc-vt-fade-in) var(--md-sys-motion-spring-effects-slow-duration)
+        var(--md-sys-motion-spring-effects-slow) both;
 }
 
 :root[data-vt-root="back"]::view-transition-old(root) {
-    animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+    animation: var(--cc-vt-fade-out) var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
 }
 
 :root[data-vt-root="back"]::view-transition-new(root) {
-    animation: cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) both;
+    animation: var(--cc-vt-fade-in) var(--cc-vt-enter) var(--cc-vt-enter-ease) both;
 }
 
 // The navigation bar and rail have their own names so they sit above the page snapshots,
@@ -67,7 +80,7 @@
 }
 
 .cc-vt-fab {
-    view-transition-name: cc-fab;
+    view-transition-class: cc-fab;
 }
 
 // Matched by name rather than class so the chrome stays put on every browser.
@@ -82,6 +95,7 @@
 :root:not([data-vt-root="theme"])::view-transition-old(cc-nav-rail),
 :root:not([data-vt-root="theme"])::view-transition-old(cc-nav-rail-large) {
     display: none;
+    animation: none;
 }
 
 :root:not([data-vt-root="theme"])::view-transition-new(cc-nav-bar),
@@ -91,22 +105,9 @@
 }
 
 // The FAB belongs to the library alone: it leaves quickly and arrives with the page.
-::view-transition-group(cc-fab) {
+// Its name is set inline and changes with every transition (view-transition/generation).
+::view-transition-group(.cc-fab) {
     z-index: 1;
-}
-
-// Safari can miss the old page's view-transition-name (React works around the same bug),
-// leaving the old page in the root snapshot under the new one. On WebKit the root fades
-// through as well, so whatever Safari captures, only one page shows at a time.
-@supports (font: -apple-system-body) {
-    :root:not([data-vt-root])::view-transition-old(root) {
-        display: block;
-        animation: cc-vt-fade-out 90ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
-    }
-
-    :root:not([data-vt-root])::view-transition-new(root) {
-        animation: cc-vt-fade-in 210ms cubic-bezier(0.05, 0.7, 0.1, 1) 90ms both;
-    }
 }
 
 // Opening cook mode: the old screen holds still under the growing container, and the
@@ -117,7 +118,7 @@
 }
 
 :root:active-view-transition-type(cook)::view-transition-new(root) {
-    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+    animation: var(--cc-vt-fade-in) var(--md-sys-motion-spring-effects-default-duration)
         var(--md-sys-motion-spring-effects-default) var(--md-sys-motion-spring-spatial-fast-duration) both;
 }
 
@@ -129,11 +130,11 @@
 // Anything without a more specific rule fades through, so two pages never show at once.
 // This is also the whole behavior on browsers without view-transition-class.
 ::view-transition-old(*) {
-    animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+    animation: var(--cc-vt-fade-out) var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
 }
 
 ::view-transition-new(*) {
-    animation: cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
+    animation: var(--cc-vt-fade-in) var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
 }
 
 // Shared elements travel above the page snapshots, which would otherwise cover them
@@ -151,12 +152,12 @@
 
 // A straight crossfade: the photo never dips out mid-flight.
 ::view-transition-old(.cc-shared) {
-    animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-default-duration)
+    animation: var(--cc-vt-fade-out) var(--md-sys-motion-spring-effects-default-duration)
         var(--md-sys-motion-spring-effects-default) both;
 }
 
 ::view-transition-new(.cc-shared) {
-    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+    animation: var(--cc-vt-fade-in) var(--md-sys-motion-spring-effects-default-duration)
         var(--md-sys-motion-spring-effects-default) both;
 }
 
@@ -177,24 +178,24 @@
 }
 
 ::view-transition-old(.cc-cook) {
-    animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
+    animation: var(--cc-vt-fade-out) var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
         both;
 }
 
 ::view-transition-new(.cc-cook) {
-    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+    animation: var(--cc-vt-fade-in) var(--md-sys-motion-spring-effects-default-duration)
         var(--md-sys-motion-spring-effects-default) both;
 }
 
 // Fade through: out quickly, then in while settling from a slightly smaller scale.
 ::view-transition-old(.cc-fade) {
-    animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+    animation: var(--cc-vt-fade-out) var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
 }
 
 ::view-transition-new(.cc-fade) {
     transform-origin: 50% 0;
     animation:
-        cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both,
+        var(--cc-vt-fade-in) var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both,
         cc-vt-grow calc(var(--cc-vt-exit) + var(--cc-vt-enter)) var(--cc-vt-enter-ease) both;
 }
 
@@ -205,7 +206,7 @@
     animation:
         cc-vt-axis-out var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default)
             both,
-        cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+        var(--cc-vt-fade-out) var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
 }
 
 ::view-transition-new(.cc-forward),
@@ -213,7 +214,7 @@
     animation:
         cc-vt-axis-in var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default)
             both,
-        cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
+        var(--cc-vt-fade-in) var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
 }
 
 ::view-transition-old(.cc-forward),
@@ -228,23 +229,23 @@
 
 // Skeleton to content: a straight crossfade with no gap between them.
 ::view-transition-old(.cc-reveal) {
-    animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
+    animation: var(--cc-vt-fade-out) var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
         both;
 }
 
 ::view-transition-new(.cc-reveal) {
-    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+    animation: var(--cc-vt-fade-in) var(--md-sys-motion-spring-effects-default-duration)
         var(--md-sys-motion-spring-effects-default) both;
 }
 
 // Library results after a filter, tag, sort or layout change: the same place with
 // different content, so a quick fade through with no movement and no overlap.
 ::view-transition-old(.cc-results) {
-    animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+    animation: var(--cc-vt-fade-out) var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
 }
 
 ::view-transition-new(.cc-results) {
-    animation: cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
+    animation: var(--cc-vt-fade-in) var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
 }
 
 ::view-transition-group(.cc-results) {
@@ -255,13 +256,30 @@
     animation: none;
 }
 
+// WebKit reuses a pseudo-element's animations from an earlier transition when the same
+// view-transition-name comes back with the same keyframes, and those are already finished
+// or cancelled, so the snapshot never animates. Elements get a fresh name for every
+// transition (src/components/ui/view-transition/generation.ts). The root and the chrome
+// cannot be renamed, so their fades alternate between these identical pairs instead.
 @keyframes cc-vt-fade-out {
     to {
         opacity: 0;
     }
 }
 
+@keyframes cc-vt-fade-out-alt {
+    to {
+        opacity: 0;
+    }
+}
+
 @keyframes cc-vt-fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes cc-vt-fade-in-alt {
     from {
         opacity: 0;
     }
@@ -294,13 +312,13 @@
     ::view-transition-old(.cc-forward),
     ::view-transition-old(.cc-back),
     ::view-transition-old(.cc-fade) {
-        animation: cc-vt-fade-out var(--cc-vt-exit) linear both;
+        animation: var(--cc-vt-fade-out) var(--cc-vt-exit) linear both;
     }
 
     ::view-transition-new(.cc-forward),
     ::view-transition-new(.cc-back),
     ::view-transition-new(.cc-fade) {
-        animation: cc-vt-fade-in var(--cc-vt-enter) linear var(--cc-vt-exit) both;
+        animation: var(--cc-vt-fade-in) var(--cc-vt-enter) linear var(--cc-vt-exit) both;
     }
 }
 

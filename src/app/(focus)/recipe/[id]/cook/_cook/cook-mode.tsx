@@ -8,7 +8,6 @@ import {
     useRef,
     useState,
     useSyncExternalStore,
-    ViewTransition,
 } from 'react'
 import { flushSync } from 'react-dom'
 import { sendToDisplay } from '@/actions/displays'
@@ -27,7 +26,7 @@ import { Menu, MenuContent, MenuGroup, MenuRadioGroup, MenuRadioItem, MenuTrigge
 import { MorphShape, type ShapeName } from '@/components/ui/shape'
 import { useSnackbar } from '@/components/ui/snackbar'
 import { Tooltip } from '@/components/ui/tooltip'
-import { goBackWithMorph, morphTarget, vtName } from '@/components/ui/view-transition'
+import { goBackWithMorph, morphTarget, SharedElement, vtName } from '@/components/ui/view-transition'
 import { flatSteps, ingredientSections, mentionedIngredients, stepShape } from '@/lib/cook/content'
 import { findEquipment } from '@/lib/cook/equipment'
 import { cookStarted, cookStep, doneSteps, recipeScale, useRecipeState } from '@/lib/cook/recipe-state'
@@ -530,7 +529,7 @@ export function CookMode({
     )
 
     return (
-        <ViewTransition name={vtName('cook', recipe.id)} share="cc-cook" default="none">
+        <SharedElement name={vtName('cook', recipe.id)} share="cc-cook">
             <div
                 className={styles.root}
                 data-recipe={recipe.id}
@@ -782,6 +781,6 @@ export function CookMode({
                     </div>
                 )}
             </div>
-        </ViewTransition>
+        </SharedElement>
     )
 }
