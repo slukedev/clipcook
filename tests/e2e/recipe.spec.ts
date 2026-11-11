@@ -8,6 +8,8 @@ const PANCAKES = 'Lemon Blueberry Buttermilk Pancakes'
 async function groceryQuantity(page: Page, name: string): Promise<number> {
     await page.goto('/grocery')
     await expect(page.getByRole('heading', { level: 1, name: 'Grocery List' })).toBeVisible()
+    // The loading skeleton carries the same heading; count items only once the list is in.
+    await expect(page.locator('[aria-busy="true"]')).toHaveCount(0)
     const item = page
         .getByRole('main')
         .getByRole('checkbox', { name: new RegExp(`^\\d+ cups? ${name}$`), checked: false })

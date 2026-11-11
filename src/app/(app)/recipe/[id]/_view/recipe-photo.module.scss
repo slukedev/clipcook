@@ -6,6 +6,14 @@
     object-fit: cover;
 }
 
+.layered {
+    inline-size: 100%;
+    block-size: 100%;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
 .underlay {
     position: absolute;
     inset: 0;

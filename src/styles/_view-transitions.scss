@@ -56,33 +56,37 @@
 // module, because modules hash view-transition-name values.
 .cc-vt-bar {
     view-transition-name: cc-nav-bar;
-    view-transition-class: cc-chrome;
 }
 
 .cc-vt-rail {
     view-transition-name: cc-nav-rail;
-    view-transition-class: cc-chrome;
 }
 
 .cc-vt-rail-large {
     view-transition-name: cc-nav-rail-large;
-    view-transition-class: cc-chrome;
 }
 
 .cc-vt-fab {
     view-transition-name: cc-fab;
 }
 
-::view-transition-group(.cc-chrome) {
+// Matched by name rather than class so the chrome stays put on every browser.
+::view-transition-group(cc-nav-bar),
+::view-transition-group(cc-nav-rail),
+::view-transition-group(cc-nav-rail-large) {
     z-index: 1;
     animation: none;
 }
 
-:root:not([data-vt-root="theme"])::view-transition-old(.cc-chrome) {
+:root:not([data-vt-root="theme"])::view-transition-old(cc-nav-bar),
+:root:not([data-vt-root="theme"])::view-transition-old(cc-nav-rail),
+:root:not([data-vt-root="theme"])::view-transition-old(cc-nav-rail-large) {
     display: none;
 }
 
-:root:not([data-vt-root="theme"])::view-transition-new(.cc-chrome) {
+:root:not([data-vt-root="theme"])::view-transition-new(cc-nav-bar),
+:root:not([data-vt-root="theme"])::view-transition-new(cc-nav-rail),
+:root:not([data-vt-root="theme"])::view-transition-new(cc-nav-rail-large) {
     animation: none;
 }
 
@@ -108,10 +112,14 @@
     animation-timing-function: var(--md-sys-motion-spring-spatial-default);
 }
 
-::view-transition-old(*),
+// Anything without a more specific rule fades through, so two pages never show at once.
+// This is also the whole behavior on browsers without view-transition-class.
+::view-transition-old(*) {
+    animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+}
+
 ::view-transition-new(*) {
-    animation-duration: var(--md-sys-motion-spring-effects-default-duration);
-    animation-timing-function: var(--md-sys-motion-spring-effects-default);
+    animation: cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
 }
 
 // Shared elements travel above the page snapshots, which would otherwise cover them
@@ -125,6 +133,17 @@
 ::view-transition-new(.cc-shared) {
     height: 100%;
     object-fit: cover;
+}
+
+// A straight crossfade: the photo never dips out mid-flight.
+::view-transition-old(.cc-shared) {
+    animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) both;
+}
+
+::view-transition-new(.cc-shared) {
+    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) both;
 }
 
 // Cook button to cook mode and back: a container transform. The bounds morph on the
@@ -205,14 +224,13 @@
 }
 
 // Library results after a filter, tag, sort or layout change: the same place with
-// different content, so a short crossfade with no movement.
+// different content, so a quick fade through with no movement and no overlap.
 ::view-transition-old(.cc-results) {
     animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
 }
 
 ::view-transition-new(.cc-results) {
-    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
-        var(--md-sys-motion-spring-effects-default) both;
+    animation: cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
 }
 
 ::view-transition-group(.cc-results) {
