@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useEffectEvent, useState } from 'react'
+import { useThemePreference } from '@/components/theme/theme-provider'
 import { ExtendedFab, FabMenu, FabMenuItem } from '@/components/ui/fab'
 import { Menu, MenuContent, MenuLinkItem, MenuTrigger } from '@/components/ui/menu'
 import { NavigationBar, NavigationBarItem } from '@/components/ui/navigation-bar'
 import { NavigationRail, NavigationRailItem, useRailExpanded } from '@/components/ui/navigation-rail'
 import { captureInstallPrompt } from './install-prompt'
-import { applyMotion, RAIL_COOKIE, readMotion, writeCookie } from './preferences'
+import { RAIL_COOKIE, takeLegacyMotion, writeCookie } from './preferences'
 import styles from './app-shell.module.scss'
 
 export interface Destination {
@@ -56,9 +57,14 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
     const router = useRouter()
     const [largeExpanded, setLargeExpanded] = useState(railExpanded)
 
+    const { setMotion } = useThemePreference()
+    const adoptLegacyMotion = useEffectEvent(() => {
+        if (takeLegacyMotion()) setMotion('standard')
+    })
+
     useEffect(() => {
         captureInstallPrompt()
-        applyMotion(readMotion())
+        adoptLegacyMotion()
     }, [])
 
     const railItems = destinations.map((d) => (

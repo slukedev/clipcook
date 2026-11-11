@@ -1,10 +1,8 @@
-// Small per-device preferences. Cookies when the server must render them (no layout
-// shift on load), localStorage when only the client needs them.
+// Small per-device preferences, in cookies so the server renders them without a
+// layout shift. Theme, contrast and motion live in @/lib/theme.
 
 export const RAIL_COOKIE = 'clipcook_rail'
-export const MOTION_KEY = 'clipcook_motion'
-
-export type MotionPreference = 'expressive' | 'standard'
+const LEGACY_MOTION_KEY = 'clipcook_motion'
 
 const YEAR = 60 * 60 * 24 * 400
 
@@ -13,26 +11,17 @@ export function writeCookie(name: string, value: string) {
     document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${YEAR}; samesite=lax`
 }
 
-export function readMotion(): MotionPreference {
+/**
+ * Motion used to live in localStorage. Carry an old "standard" choice over to the
+ * theme cookie once, so the pre-paint script can apply it from then on.
+ */
+export function takeLegacyMotion(): 'standard' | null {
     try {
-        return localStorage.getItem(MOTION_KEY) === 'standard' ? 'standard' : 'expressive'
+        const value = localStorage.getItem(LEGACY_MOTION_KEY)
+        if (value === null) return null
+        localStorage.removeItem(LEGACY_MOTION_KEY)
+        return value === 'standard' ? 'standard' : null
     } catch {
-        return 'expressive'
+        return null
     }
-}
-
-export function applyMotion(value: MotionPreference) {
-    const root = document.documentElement
-    if (value === 'standard') root.dataset.motion = 'standard'
-    else delete root.dataset.motion
-}
-
-export function saveMotion(value: MotionPreference) {
-    try {
-        if (value === 'standard') localStorage.setItem(MOTION_KEY, value)
-        else localStorage.removeItem(MOTION_KEY)
-    } catch {
-        // Private mode: the choice lasts for this page only.
-    }
-    applyMotion(value)
 }

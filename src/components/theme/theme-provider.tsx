@@ -5,6 +5,8 @@ import {
     COOKIE_MAX_AGE,
     CONTRAST_COOKIE,
     type Contrast,
+    MOTION_COOKIE,
+    type MotionMode,
     type ResolvedTheme,
     THEME_COOKIE,
     type ThemeMode,
@@ -16,6 +18,8 @@ interface ThemeContextValue extends ThemePreference {
     resolvedTheme: ResolvedTheme
     setTheme: (theme: ThemeMode) => void
     setContrast: (contrast: Contrast) => void
+    /** Expressive or standard springs (`data-motion` on <html>). */
+    setMotion: (motion: MotionMode) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
@@ -51,7 +55,7 @@ function withTransition(update: () => void) {
     document.startViewTransition(update).finished.then(syncThemeColor, syncThemeColor)
 }
 
-function applyAttribute(name: 'theme' | 'contrast', value: string | undefined) {
+function applyAttribute(name: 'theme' | 'contrast' | 'motion', value: string | undefined) {
     const root = document.documentElement
     if (value) root.dataset[name] = value
     else delete root.dataset[name]
@@ -84,6 +88,11 @@ export function ThemeProvider({ initial, children }: { initial: ThemePreference;
                 applyAttribute('contrast', contrast === 'standard' ? undefined : contrast)
                 setPreference((p) => ({ ...p, contrast }))
             })
+        },
+        setMotion(motion) {
+            writeCookie(MOTION_COOKIE, motion)
+            applyAttribute('motion', motion === 'standard' ? motion : undefined)
+            setPreference((p) => ({ ...p, motion }))
         },
     }
     return <ThemeContext value={value}>{children}</ThemeContext>
