@@ -11,6 +11,7 @@ import { useSnackbar } from '@/components/ui/snackbar'
 import { TopAppBar } from '@/components/ui/top-app-bar'
 import { SharedElement, TransitionLink, useViewTransitionRouter, vtName } from '@/components/ui/view-transition'
 import type { ImportedRecipe } from '@/lib/domain/types'
+import { type ReviewField, reviewChecks } from '@/lib/recipe/review-checks'
 import { headingText, isHeadingLine } from '@/lib/recipe/text'
 import type { EditorIcons } from '../_editor/icons'
 import { photoColorCss, seedFromPhoto } from '../_editor/photo'
@@ -44,12 +45,16 @@ export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipRevie
     const sourceLabel = recipe.sourceName?.trim() || host
     const ingredients = recipe.ingredients ?? []
     const steps = recipe.instructions ?? []
-    const facts = [
-        { label: 'Servings', value: recipe.servings },
-        { label: 'Prep', value: recipe.prepTime },
-        { label: 'Cook', value: recipe.cookTime },
-        { label: 'Total', value: recipe.totalTime },
-    ].filter((f): f is { label: string; value: string } => Boolean(f.value?.trim()))
+    const checks = reviewChecks(recipe)
+    const check = (field: ReviewField) => (checks.has(field) ? '' : undefined)
+    const facts = (
+        [
+            { label: 'Servings', value: recipe.servings, field: 'servings' },
+            { label: 'Prep', value: recipe.prepTime, field: 'prepTime' },
+            { label: 'Cook', value: recipe.cookTime, field: 'cookTime' },
+            { label: 'Total', value: recipe.totalTime, field: 'totalTime' },
+        ] as const
+    ).filter((f) => Boolean(f.value?.trim()))
 
     useEffect(() => {
         if (!recipe.image) return
@@ -120,20 +125,33 @@ export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipRevie
                 }
             />
             <article className={styles.body} aria-labelledby="clip-title">
-                {duplicate && (
-                    <div className={styles.duplicate} role="status">
-                        <span className={styles.duplicateIcon}>{icons.library}</span>
-                        <p className={styles.duplicateText}>Already in your library</p>
-                        <Button
-                            variant="text"
-                            size="s"
-                            render={<TransitionLink href={`/recipe/${duplicate.id}`} direction="forward" />}
-                            nativeButton={false}
-                        >
-                            Open
-                        </Button>
-                    </div>
-                )}
+                <div className={styles.notices}>
+                    {duplicate && (
+                        <div className={styles.duplicate} role="status">
+                            <span className={styles.duplicateIcon}>{icons.library}</span>
+                            <p className={styles.duplicateText}>Already in your library</p>
+                            <Button
+                                variant="text"
+                                size="s"
+                                render={<TransitionLink href={`/recipe/${duplicate.id}`} direction="forward" />}
+                                nativeButton={false}
+                            >
+                                Open
+                            </Button>
+                        </div>
+                    )}
+                    {checks.size > 0 && (
+                        <div className={styles.duplicate} role="status">
+                            <span className={styles.duplicateIcon}>{icons.edit}</span>
+                            <p className={styles.duplicateText} id="clip-checks">
+                                Check the marked details
+                            </p>
+                            <Button variant="text" size="s" onClick={onEdit}>
+                                Edit
+                            </Button>
+                        </div>
+                    )}
+                </div>
 
                 <div className={styles.lead}>
                     <div className={styles.media}>
@@ -152,7 +170,7 @@ export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipRevie
                                 </h1>
                             </SharedElement>
                         ) : (
-                            <h1 id="clip-title" className={styles.title}>
+                            <h1 id="clip-title" className={styles.title} data-check={check('title')}>
                                 {title}
                             </h1>
                         )}
@@ -171,7 +189,12 @@ export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipRevie
                         {facts.length > 0 && (
                             <dl className={styles.facts}>
                                 {facts.map((f) => (
-                                    <div key={f.label} className={styles.fact}>
+                                    <div
+                                        key={f.label}
+                                        className={styles.fact}
+                                        data-check={check(f.field)}
+                                        aria-describedby={checks.has(f.field) ? 'clip-checks' : undefined}
+                                    >
                                         <dt>{f.label}</dt>
                                         <dd>{f.value}</dd>
                                     </div>
@@ -191,7 +214,7 @@ export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipRevie
 
                     {ingredients.length > 0 && (
                         <section className={styles.ingredients} aria-labelledby="clip-ingredients">
-                            <h2 id="clip-ingredients" className={styles.sectionTitle}>
+                            <h2 id="clip-ingredients" className={styles.sectionTitle} data-check={check('ingredients')}>
                                 Ingredients
                             </h2>
                             <ul className={styles.ingredientList}>
@@ -215,7 +238,7 @@ export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipRevie
 
                 {steps.length > 0 && (
                     <section className={styles.steps} aria-labelledby="clip-steps">
-                        <h2 id="clip-steps" className={styles.sectionTitle}>
+                        <h2 id="clip-steps" className={styles.sectionTitle} data-check={check('steps')}>
                             Steps
                         </h2>
                         <ol className={styles.stepList}>

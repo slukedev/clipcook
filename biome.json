@@ -1,7 +1,18 @@
 {
     "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
     "files": {
-        "includes": ["**", "!**/.next", "!**/node_modules", "!next-env.d.ts", "!public"]
+        "includes": [
+            "**",
+            "!**/.next",
+            "!**/node_modules",
+            "!next-env.d.ts",
+            "!public",
+            "!**/.claude",
+            "!**/.data",
+            "!**/.data-e2e",
+            "!**/playwright-report",
+            "!**/test-results"
+        ]
     },
     "formatter": {
         "enabled": true,

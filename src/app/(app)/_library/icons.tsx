@@ -28,6 +28,7 @@ export function libraryIcons() {
         searchOff: <Icon name="search_off" />,
         dish: <Icon name="restaurant" />,
         timer: <Icon name="schedule" />,
+        history: <Icon name="history" />,
     }
 }
 

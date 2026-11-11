@@ -27,7 +27,8 @@ test('write a recipe at /new, then edit it, with the unsaved-changes guard on Cl
 
     const tags = form.getByRole('combobox', { name: 'Tags' })
     await tags.fill('summer')
-    await expect(page.getByRole('option', { name: 'Add “summer”' })).toBeVisible()
+    // "Add “summer”" for a new tag, or just "summer" once an earlier run has saved it.
+    await expect(page.getByRole('option', { name: /^(Add “summer”|summer)$/ }).first()).toBeVisible()
     await tags.press('Enter')
     await tags.fill('side')
     await tags.press(',')

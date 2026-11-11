@@ -38,7 +38,12 @@ export function TimerTray({
                     const where = t.recipeId === recipeId ? name : `${t.recipeTitle}, ${name.toLowerCase()}`
                     const progress = t.totalMs > 0 ? 1 - left / t.totalMs : 1
                     return (
-                        <li key={t.id} className={styles.item} data-state={t.state}>
+                        <li
+                            key={t.id}
+                            className={styles.item}
+                            data-state={t.state}
+                            data-timer={`${t.recipeId}:${t.step}:${t.label}`}
+                        >
                             <span
                                 className={styles.progress}
                                 style={{ transform: `scaleX(${Math.min(1, Math.max(0, progress))})` }}

@@ -132,8 +132,10 @@
     padding: 0;
     justify-content: flex-start;
 
+    // One row that scrolls sideways: the step above never gives up height to timers.
     .list {
-        flex-wrap: wrap;
+        margin: 0;
+        padding: 0;
         overflow: visible;
     }
 

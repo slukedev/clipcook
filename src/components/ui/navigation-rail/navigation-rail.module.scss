@@ -173,8 +173,11 @@
 .label {
     @include type.role(label-medium);
     white-space: nowrap;
-    animation: md-rail-label-a var(--md-sys-motion-spring-effects-default-duration)
-        var(--md-sys-motion-spring-effects-default);
+
+    .rail[data-toggled] & {
+        animation: md-rail-label-a var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
+    }
 
     .item[aria-current="page"] > & {
         @include type.role(label-medium, $emphasized: true);
@@ -188,8 +191,11 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     @include type.role(label-large);
-    animation: md-rail-label-b var(--md-sys-motion-spring-effects-default-duration)
-        var(--md-sys-motion-spring-effects-default);
+
+    .rail[data-toggled] & {
+        animation: md-rail-label-b var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
+    }
 
     .rail[data-expanded] & {
         display: inline;

@@ -27,12 +27,27 @@
 
 .text {
     display: inline;
+    // Greedy wrapping: 'pretty' would pull '1 teaspoon' onto a line of its own.
+    text-wrap: wrap;
     transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
 }
 
 .amount {
     @include type.numeric;
     font-weight: 600;
+    white-space: nowrap;
+}
+
+// Beside the steps, the rows the step in view uses light up as the page scrolls.
+@container recipe (width >= 780px) {
+    [data-uses] .row {
+        --md-list-item-container: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
+    }
+
+    [data-uses] .amount {
+        color: var(--md-sys-color-primary);
+    }
 }
 
 [data-checked] .text {

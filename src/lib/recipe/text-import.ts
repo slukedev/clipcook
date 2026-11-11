@@ -16,12 +16,50 @@ const BULLET = /^\s*(?:[-*•·▪◦‣⁃○●□■▢☐✓✔]|•)\s*/
 const NUMBERED = /^\s*(?:step\s*)?(\d{1,2})\s*[.):]\s*|^\s*step\s+(\d{1,2})\s*[-:.]?\s*/i
 const URL_LINE = /^https?:\/\/\S+$/i
 
-const META: Array<[RegExp, keyof ImportedRecipe]> = [
+type MetaKey = 'servings' | 'prepTime' | 'cookTime' | 'totalTime'
+
+// A time label either follows a colon ('Prep: 10 min') or starts with a number ('Prep 10 min'),
+// so 'Cook the onions until soft' stays prose.
+const TIME_VALUE = String.raw`(?::\s*|\s+(?=(?:\d|[½⅓⅔¼¾]|about|approx|around|under|an?\s+hour|half|one|two|three|four|five|ten|fifteen|twenty|thirty|forty|sixty|ninety)))(.+)`
+const META: Array<[RegExp, MetaKey]> = [
     [/^(?:serves|servings|serving size|yield|yields|makes)\s*:?\s*(.+)$/i, 'servings'],
-    [/^(?:prep(?:aration)?(?: time)?)\s*:\s*(.+)$/i, 'prepTime'],
-    [/^(?:cook(?:ing)?(?: time)?|bake time|baking time)\s*:\s*(.+)$/i, 'cookTime'],
-    [/^(?:total(?: time)?|ready in)\s*:?\s*(.+)$/i, 'totalTime'],
+    [new RegExp(`^(?:prep(?:aration)?(?: time)?)${TIME_VALUE}$`, 'i'), 'prepTime'],
+    [new RegExp(`^(?:cook(?:ing)?(?: time)?|bake time|baking time|bake)${TIME_VALUE}$`, 'i'), 'cookTime'],
+    [new RegExp(`^(?:total(?: time)?|ready in)${TIME_VALUE}$`, 'i'), 'totalTime'],
 ]
+
+const SERVINGS_VALUE = /^(?:about\s+|approx(?:imately|\.)?\s+|up to\s+)?(?:\d|[½⅓⅔¼¾]|one|two|three|four|five|six|seven|eight|nine|ten|twelve|a dozen)/i
+const DURATION_VALUE = /\d|hour|minute|\bmin|\bhr/i
+const MAX_SERVINGS_LENGTH = 24
+
+/** One header piece ('Serves 4', 'Prep: 10 min') as a meta field, or null when it is prose. */
+function readMeta(piece: string): [MetaKey, string] | null {
+    const text = piece.replace(/[.;,]+$/, '').trim()
+    for (const [re, key] of META) {
+        const value = re.exec(text)?.[1]?.trim()
+        if (!value) continue
+        if (key === 'servings') {
+            return SERVINGS_VALUE.test(value) && value.length <= MAX_SERVINGS_LENGTH ? [key, value] : null
+        }
+        return DURATION_VALUE.test(value) && value.length <= 40 ? [key, normalizeDurationLabel(value)] : null
+    }
+    return null
+}
+
+/**
+ * Splits a header line into meta pieces: 'Prep: 10 min | Cook: 20 min',
+ * 'Serves 4. Prep 30 min, cook 40 min.' or 'Prep 10 min and cook 20 min'.
+ * Returns null unless every piece reads as meta, so a sentence that happens to
+ * start with 'Serves' stays in the description.
+ */
+function readMetaLine(line: string): Array<[MetaKey, string]> | null {
+    const pieces = line
+        .split(/\s*[|•·;]\s*|(?<=\S)[.,]\s+(?=[A-Za-z])|\s+(?:and|plus)\s+(?=(?:prep|cook|bake|total|ready)\b)/i)
+        .map((p) => p.trim())
+        .filter(Boolean)
+    const read = pieces.map(readMeta)
+    return read.every((r) => r !== null) ? (read as Array<[MetaKey, string]>) : null
+}
 
 const LOOKS_LIKE_INGREDIENT = /^(?:\d|[½⅓⅔¼¾⅛⅜⅝⅞]|an?\s|one\s|two\s|three\s|pinch|dash|handful|salt|pepper)/i
 
@@ -41,13 +79,6 @@ function subheading(line: string): string | null {
     if (bare.length === 0 || bare.length > 50 || /\d/.test(bare.slice(0, 2))) return null
     if (!line.endsWith(':') && bare.split(/\s+/).length > 5) return null
     return bare
-}
-
-/** Splits 'Prep: 10 min | Cook: 20 min' into separate meta lines. */
-function explodeMeta(line: string): string[] {
-    if (!/[|•·]/.test(line)) return [line]
-    const parts = line.split(/\s*[|•·]\s*/).filter(Boolean)
-    return parts.every((p) => META.some(([re]) => re.test(p))) ? parts : [line]
 }
 
 /** Splits '1. Mix. 2. Bake.' written as one paragraph. */
@@ -113,16 +144,10 @@ export function parseRecipeText(input: string): ImportedRecipe {
 
         let isMeta = false
         const metaAllowed = section === 'intro' || (section === 'ingredients' && line.includes(':'))
-        for (const piece of metaAllowed ? explodeMeta(line) : []) {
-            for (const [re, key] of META) {
-                const m = re.exec(piece)
-                if (m?.[1] && !(key in out)) {
-                    const value = m[1].trim()
-                    ;(out as Record<string, string>)[key] = key === 'servings' ? value : normalizeDurationLabel(value)
-                    isMeta = true
-                    break
-                }
-            }
+        const meta = metaAllowed ? readMetaLine(line) : null
+        if (meta) {
+            for (const [key, value] of meta) if (!(key in out)) out[key] = value
+            isMeta = true
         }
         if (isMeta) continue
 

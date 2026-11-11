@@ -1,57 +1,26 @@
 @use "../../../styles/mixins/typography" as type;
-@use "../../../styles/mixins/media";
 
-.page {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    inline-size: 100%;
-    max-inline-size: 1840px;
-    margin-inline: auto;
-    padding: calc(12px + var(--safe-top)) var(--md-sys-layout-margin) 48px;
-
-    @include media.medium-up {
-        gap: 28px;
-        padding-block-start: calc(20px + var(--safe-top));
-    }
-}
-
-.header {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
+// Placeholders borrow the real page, card and list classes for their geometry;
+// these only paint the boxes.
 .search {
-    inline-size: 100%;
+    display: block;
     block-size: 56px;
-
-    @include media.expanded-up {
-        inline-size: 720px;
-        max-inline-size: 100%;
-    }
 }
 
-.chips {
-    display: flex;
-    gap: 8px;
-    overflow: hidden;
-    padding-block: 8px;
+.chip {
+    flex: none;
 }
 
-.tools {
-    block-size: 32px;
-
-    @include media.expanded-up {
-        display: none;
-    }
-}
-
-.media {
-    grid-area: media;
+.media.media {
     inline-size: 100%;
+    block-size: auto;
     aspect-ratio: 1;
     border-radius: var(--md-sys-shape-corner-large-increased);
+
+    [data-view="list"] > & {
+        inline-size: 72px;
+        border-radius: var(--md-sys-shape-corner-medium);
+    }
 }
 
 .title {

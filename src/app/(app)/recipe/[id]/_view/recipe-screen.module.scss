@@ -5,7 +5,8 @@
 // runs on container queries named `recipe`:
 //   < 600   one column, full-bleed photo under a floating bar, summary sheet over it
 //   600+    one column, photo beside the summary
-//   780+    two panes: photo, summary and ingredients (sticky) | steps
+//   780+    photo | summary on top, then ingredients (sticky, beside the steps) | steps,
+//           so the first screen always shows what you need and what you do
 //   1100+   wider gutters; 1400+ more air, never longer lines
 
 .root {
@@ -113,17 +114,20 @@
     text-wrap: pretty;
 }
 
+// One row of equal tiles, never a lone tile wrapped under the others.
 .stats {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(var(--_count, 4), minmax(0, 1fr));
     gap: 8px;
+    inline-size: 100%;
+    max-inline-size: calc(var(--_count, 4) * 152px);
 }
 
 .stat {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-inline-size: 72px;
+    min-inline-size: 0;
     padding: 10px 16px;
     border-radius: var(--md-sys-shape-corner-large);
     background-color: var(--md-sys-color-surface-container-high);
@@ -136,7 +140,7 @@
     dd {
         @include type.role(title-medium);
         @include type.numeric;
-        white-space: nowrap;
+        text-wrap: balance;
     }
 }
 
@@ -184,8 +188,6 @@
     }
 
     .stat {
-        flex: 1 1 auto;
-        min-inline-size: 64px;
         padding-inline: 12px;
     }
 
@@ -242,42 +244,39 @@
     }
 }
 
-// Two panes. The lead pane sticks under the bar and scrolls on its own when it is long.
+// Two panes on one grid: the photo sits over the ingredients column and the summary over
+// the steps, so both pairs share an edge. Ingredients stick under the bar beside the steps
+// and scroll on their own when long.
 @container recipe (width >= 780px) {
     .layout {
+        --_side: clamp(300px, 36%, 400px);
         display: grid;
-        grid-template-columns: clamp(320px, 38%, 440px) minmax(0, 1fr);
+        grid-template-columns: var(--_side) minmax(0, 1fr);
+        grid-template-areas:
+            "header header"
+            "ingredients main";
         align-items: start;
         column-gap: var(--md-sys-layout-pane-spacer);
+        row-gap: 32px;
         padding-inline: var(--_margin);
         padding-block-start: 8px;
     }
 
     .lead {
-        position: sticky;
-        inset-block-start: var(--_bar);
-        max-block-size: calc(100dvh - var(--_bar));
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: var(--md-sys-color-outline-variant) transparent;
-        padding-block-end: 24px;
-        // Room for focus rings at the pane's edge.
-        margin-inline: -6px;
-        padding-inline: 6px;
-    }
-
-    .main {
-        padding-inline: 0;
-        padding-block-start: 4px;
-    }
-
-    .photoFrame {
-        border-radius: var(--md-sys-shape-corner-extra-large);
-        flex: none;
+        display: contents;
     }
 
     .header {
-        gap: 24px;
+        grid-area: header;
+        display: grid;
+        grid-template-columns: subgrid;
+        align-items: center;
+    }
+
+    .photoFrame {
+        // Short windows (a 1024x600 display) keep the photo from pushing the ingredients down.
+        max-block-size: 40dvh;
+        border-radius: var(--md-sys-shape-corner-extra-large);
     }
 
     .summary {
@@ -287,17 +286,34 @@
     .title {
         @include type.role(headline-large, $emphasized: true);
     }
+
+    .ingredients {
+        grid-area: ingredients;
+        position: sticky;
+        inset-block-start: calc(var(--_bar) + 8px);
+        max-block-size: calc(100dvh - var(--_bar) - 16px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+        padding-block-end: 24px;
+        // Room for focus rings at the pane's edge.
+        margin-inline: -6px;
+        padding-inline: 6px;
+    }
+
+    .main {
+        grid-area: main;
+        padding-inline: 0;
+    }
 }
 
 @container recipe (width >= 1100px) {
     .layout {
-        grid-template-columns: minmax(380px, 440px) minmax(0, 1fr);
+        --_side: minmax(340px, 400px);
+        grid-template-columns: var(--_side) minmax(0, 76ch);
         column-gap: 48px;
         padding-inline: 32px;
-    }
-
-    .main {
-        max-inline-size: 76ch;
     }
 
     .title {
@@ -307,7 +323,7 @@
 
 @container recipe (width >= 1400px) {
     .layout {
-        grid-template-columns: 460px minmax(0, 76ch);
+        --_side: 420px;
         justify-content: center;
         column-gap: 72px;
         padding-inline: 48px;
@@ -349,6 +365,7 @@
     }
 
     .lead,
+    .ingredients,
     .main {
         position: static;
         display: block;

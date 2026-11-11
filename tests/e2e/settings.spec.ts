@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { type ExportFile, exportLibrary } from './support/library'
 import { expect, test, unique } from './support/fixtures'
+import { type ExportFile, exportLibrary } from './support/library'
 
 test('the theme choice applies at once and persists after a reload', async ({ page }) => {
     await page.goto('/settings')

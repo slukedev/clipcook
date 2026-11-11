@@ -58,6 +58,7 @@
 .core {
     grid-area: core;
     gap: 16px;
+    container-type: inline-size;
 }
 
 .lists {
@@ -71,20 +72,14 @@
     gap: 24px;
 }
 
+// Sized by the column, not the window: the expanded layout's core column is
+// narrower than a medium window. Four across only when each field fits "1 hr 30 min".
 .times {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 
-    @include media.medium-up {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    @include media.expanded-up {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    @include media.large-up {
+    @container (min-inline-size: 560px) {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }

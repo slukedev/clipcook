@@ -51,7 +51,13 @@
     transform: translateY(calc(var(--drawer-snap-point-offset, 0px) + var(--drawer-swipe-movement-y, 0px)));
     transition: transform var(--md-sys-motion-spring-spatial-default-duration)
         var(--md-sys-motion-spring-spatial-default);
-    will-change: transform;
+
+    // Promoted only while it moves; a resting sheet keeps no extra layer.
+    &[data-swiping],
+    &[data-starting-style],
+    &[data-ending-style] {
+        will-change: transform;
+    }
 
     &[data-swiping] {
         transition-duration: 0ms;
@@ -90,12 +96,13 @@
         background-color: var(--md-sys-color-on-surface-variant);
         opacity: 0.4;
         transition:
-            inline-size var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+            scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
             opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
     }
 
+    // Grows 32 to 48dp while dragged, on the compositor.
     [data-swiping] &::before {
-        inline-size: 48px;
+        scale: 1.5 1;
         opacity: 0.8;
     }
 }

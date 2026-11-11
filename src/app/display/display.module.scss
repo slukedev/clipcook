@@ -10,27 +10,39 @@
     user-select: none;
     -webkit-touch-callout: none;
     touch-action: manipulation;
-    // Displays get 64dp touch targets and bigger state layers.
+    // Displays get 64dp touch targets.
     --md-display-target: 64px;
+    // Every screen lines its content up with the corner menu's edges.
+    --display-edge: clamp(20px, 3.5vw, 48px);
 }
 
 // Inset from the edges (Nest Hub keeps edge swipes for the system).
 .corner {
     position: fixed;
-    inset-block-start: max(20px, var(--safe-top));
-    inset-inline-end: max(20px, var(--safe-right));
+    inset-block-start: max(var(--display-edge), var(--safe-top));
+    inset-inline-end: max(var(--display-edge), var(--safe-right));
     z-index: 20;
 }
 
-.cornerButton {
+// Reaches into the icon button's size tokens: the design system stops at 56dp for M.
+.cornerButton[data-size] {
+    --_h: var(--md-display-target);
+    --_icon: 28px;
     opacity: 0.85;
 }
 
 .cornerMenu {
     font-size: 1.125rem;
-    min-inline-size: 260px;
+    min-inline-size: 280px;
 
+    // Portaled out of the display root, so the size is spelled out.
     [role="menuitem"] {
-        min-block-size: 56px;
+        min-block-size: 64px;
+        --md-icon-size: 24px;
     }
+}
+
+.dialogButton[data-size] {
+    --_h: 64px;
+    min-inline-size: 96px;
 }

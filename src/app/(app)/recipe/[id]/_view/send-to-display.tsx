@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { type ReactNode, useState, useTransition } from 'react'
 import { sendToDisplay } from '@/actions/displays'
+import { DisplayLabel, sentMessage, sortByPresence } from '@/components/kitchen/display-presence'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
 import { IconButton } from '@/components/ui/icon-button'
@@ -26,7 +27,7 @@ export function lastDisplay(displays: readonly DisplayOption[]): DisplayOption |
 
 /**
  * Puts this recipe on a paired kitchen display. No displays: explains and links to setup.
- * One: a single tap. Several: a menu, with the last one used marked.
+ * One: a single tap. Several: a menu with each screen's state, the ones that are on first.
  * `castSlot` is where the optional Google Cast button goes when Cast is configured.
  */
 export function SendToDisplay({
@@ -43,6 +44,8 @@ export function SendToDisplay({
     const snackbar = useSnackbar()
     const [pending, startTransition] = useTransition()
     const [explain, setExplain] = useState(false)
+    // Read when the menu opens, so "Active now" is true at the moment someone picks.
+    const [now, setNow] = useState(0)
     const showing = displays.some((d) => d.current?.recipeId === recipeId)
 
     const send = (display: DisplayOption) => {
@@ -58,7 +61,7 @@ export function SendToDisplay({
                 return
             }
             rememberDisplay(display.id)
-            snackbar(`Showing on ${display.name}`)
+            snackbar(sentMessage(display, Date.now()))
         })
     }
 
@@ -108,13 +111,13 @@ export function SendToDisplay({
     } else {
         const last = lastDisplay(displays)
         control = (
-            <Menu>
+            <Menu onOpenChange={(open) => open && setNow(Date.now())}>
                 <MenuTrigger render={<IconButton label="Send to display" icon={icon} />} />
                 <MenuContent align="end">
                     <MenuGroup label="Show on">
-                        {displays.map((d) => (
+                        {sortByPresence(displays).map((d) => (
                             <MenuItem key={d.id} icon={icons.tv} selected={d.id === last?.id} onClick={() => send(d)}>
-                                {d.name}
+                                <DisplayLabel display={d} now={now} />
                             </MenuItem>
                         ))}
                     </MenuGroup>

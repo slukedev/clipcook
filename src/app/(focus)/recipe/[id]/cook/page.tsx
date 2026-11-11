@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { displayOptions } from '@/app/(app)/recipe/[id]/_view/display-options'
 import { recipeIcons } from '@/app/(app)/recipe/[id]/_view/icons'
 import { getThemePreference } from '@/lib/theme/server'
 import { recipeColorCss } from '@/lib/cook/color'
 import { requireSession } from '@/server/auth'
-import { getRecipe, listDisplays } from '@/server/queries'
+import { getRecipe } from '@/server/queries'
 import { recipeIdSchema } from '@/server/schemas'
 import { CookMode } from './_cook/cook-mode'
 import '@/app/(app)/recipe/[id]/_view/view-transitions.css'
@@ -25,7 +26,7 @@ export default async function CookPage({ params }: Props) {
     const session = await requireSession()
     const [recipe, displays, preference] = await Promise.all([
         getRecipe(session.uid, parsed.data),
-        listDisplays(session.uid),
+        displayOptions(session.uid),
         getThemePreference(),
     ])
     if (!recipe) notFound()
@@ -45,7 +46,7 @@ export default async function CookPage({ params }: Props) {
                     ingredients: recipe.ingredients,
                     instructions: recipe.instructions,
                 }}
-                displays={displays.map((d) => ({ id: d.id, name: d.name, current: d.current }))}
+                displays={displays}
                 icons={{
                     close: icons.close,
                     list: icons.list,

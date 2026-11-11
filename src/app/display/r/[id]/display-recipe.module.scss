@@ -4,7 +4,7 @@
 
 // Two panes on landscape displays: what you need on the left, what you do on the right.
 .root {
-    --_gutter: clamp(20px, 3.5vw, 48px);
+    --_gutter: var(--display-edge);
     --_body: clamp(1.25rem, 0.875rem + 1.6vmin, 1.75rem);
     display: grid;
     grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.5fr);
@@ -158,11 +158,21 @@
     list-style: none;
 }
 
+// A subhead lines up with the checkboxes and sits centered in its own row; the extra
+// space above it is margin, so it groups with the rows it heads.
 .ingredientHeading {
-    padding: 14px 4px 4px;
+    display: flex;
+    align-items: center;
+    min-block-size: 40px;
+    margin-block-start: 12px;
+    padding-inline: 14px;
     font-size: 1rem;
     font-weight: 600;
     color: var(--md-sys-color-on-surface-variant);
+
+    &:first-child {
+        margin-block-start: 0;
+    }
 }
 
 .ingredient {
@@ -238,13 +248,12 @@
     overflow: hidden auto;
     overscroll-behavior: contain;
     padding: var(--_gutter);
-    padding-block-start: max(var(--_gutter), 32px);
 
     .paneTitle {
-        min-block-size: 56px;
+        min-block-size: var(--md-display-target);
         display: flex;
         align-items: center;
-        padding-inline-end: 88px;
+        padding-inline-end: calc(var(--md-display-target) + 16px);
     }
 }
 
@@ -271,6 +280,7 @@
     padding: 16px;
     border-radius: var(--md-sys-shape-corner-large);
     text-align: start;
+    min-block-size: var(--md-display-target);
     font-size: var(--_body);
     line-height: 1.45;
     color: var(--md-sys-color-on-surface);
@@ -290,26 +300,29 @@
     @include type.numeric;
 }
 
-// Step mode: one instruction, big, with the controls under the thumb.
+// Step mode: one instruction, big, with the controls under the thumb. Counter, progress,
+// text and buttons share one left and one right edge; only the counter's row steps
+// aside for the corner menu, which sits on the same top and right edges.
 .stage {
     display: flex;
     flex-direction: column;
     gap: clamp(12px, 2.4vmin, 24px);
     min-block-size: 0;
     padding: var(--_gutter);
-    padding-block-start: max(var(--_gutter), 28px);
     touch-action: pan-y;
 }
 
 .stageTop {
     display: grid;
-    gap: 12px;
-    padding-inline-end: 88px;
-    min-block-size: 56px;
-    align-content: center;
+    gap: 8px;
 }
 
 .counter {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    min-block-size: var(--md-display-target);
+    padding-inline-end: calc(var(--md-display-target) + 16px);
     font-size: clamp(1.125rem, 0.875rem + 1vmin, 1.5rem);
     font-weight: 600;
     color: var(--md-sys-color-primary);
@@ -371,6 +384,11 @@
     overflow-wrap: break-word;
 }
 
+// A duration and the punctuation after it wrap as one unit, so a period never starts a line.
+.timerRun {
+    white-space: nowrap;
+}
+
 .inlineTimer {
     @include state-layer.host(var(--md-sys-color-on-tertiary-container));
     @include focus-ring.ring;
@@ -386,6 +404,14 @@
     line-height: 1.2;
     vertical-align: baseline;
     --md-icon-size: 0.85em;
+
+    // 64dp to the touch without spreading the lines apart.
+    &::after {
+        content: "";
+        position: absolute;
+        inset-inline: -2px;
+        inset-block: min(0px, calc((100% - var(--md-display-target)) / 2));
+    }
 }
 
 .controls {
@@ -402,67 +428,7 @@
     margin-inline-start: auto;
 }
 
-.timers {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    list-style: none;
-}
-
-.timer {
-    display: flex;
-    align-items: center;
-    border-radius: var(--md-sys-shape-corner-full);
-    background-color: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
-    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
-        var(--md-sys-motion-spring-effects-default);
-
-    &[data-paused] {
-        background-color: var(--md-sys-color-surface-container-highest);
-        color: var(--md-sys-color-on-surface);
-    }
-
-    &[data-done] {
-        background-color: var(--md-sys-color-tertiary);
-        color: var(--md-sys-color-on-tertiary);
-        animation: ring 1s ease-in-out infinite alternate;
-    }
-}
-
-@keyframes ring {
-    to {
-        background-color: var(--md-sys-color-tertiary-container);
-        color: var(--md-sys-color-on-tertiary-container);
-    }
-}
-
-.timerMain {
-    @include state-layer.host;
-    @include focus-ring.ring;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-block-size: 64px;
-    padding-inline: 18px 8px;
-    border-radius: inherit;
-    font-size: 1.5rem;
-    font-weight: 600;
-    @include type.numeric;
-}
-
-.timerIcon {
-    display: grid;
-    --md-icon-size: 28px;
-}
-
-.timerClose {
-    @include state-layer.host;
-    @include focus-ring.ring;
-    display: grid;
-    place-items: center;
-    inline-size: 56px;
-    block-size: 64px;
-    border-radius: var(--md-sys-shape-corner-full);
-    --md-icon-size: 24px;
+// The text button's glyph lines up with the step text, not its padded container.
+.overviewButton[data-size] {
+    margin-inline-start: calc(-1 * var(--_pad));
 }

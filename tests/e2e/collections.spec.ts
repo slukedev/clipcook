@@ -1,5 +1,5 @@
-import { exportLibrary, recipeGrid } from './support/library'
 import { expect, test, unique } from './support/fixtures'
+import { exportLibrary, recipeGrid } from './support/library'
 
 test('create a collection, fill it from the picker, open it, remove a recipe, delete it', async ({
     page,
@@ -57,7 +57,10 @@ test('create a collection, fill it from the picker, open it, remove a recipe, de
     await page.getByRole('list', { name: 'Collections' }).getByRole('link', { name }).click()
     await page.getByRole('button', { name: 'More', exact: true }).click()
     await page.getByRole('menuitem', { name: 'Delete' }).click()
-    await page.getByRole('alertdialog', { name: `Delete ${name}?` }).getByRole('button', { name: 'Delete' }).click()
+    await page
+        .getByRole('alertdialog', { name: `Delete ${name}?` })
+        .getByRole('button', { name: 'Delete' })
+        .click()
     await expect(page).toHaveURL(/\/collections$/)
     await expect(page.getByRole('list', { name: 'Collections' }).getByRole('link', { name })).toHaveCount(0)
 

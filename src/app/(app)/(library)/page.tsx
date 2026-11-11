@@ -1,17 +1,17 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { requireSession } from '@/server/auth'
-import { listCollections, listRecipes, listTags } from '@/server/queries'
-import { libraryIcons } from './_library/icons'
-import { Library } from './_library/library'
-import { LIBRARY_COOKIE, parseLibraryPrefs } from './_library/library-data'
+import { listCollections, listRecipeCards, listTags } from '@/server/queries'
+import { libraryIcons } from '../_library/icons'
+import { Library } from '../_library/library'
+import { LIBRARY_COOKIE, parseLibraryPrefs } from '../_library/library-data'
 
 export const metadata: Metadata = { title: 'Library' }
 
 export default async function LibraryPage() {
     const { uid } = await requireSession()
     const [recipes, collections, tags, jar] = await Promise.all([
-        listRecipes(uid),
+        listRecipeCards(uid),
         listCollections(uid),
         listTags(uid),
         cookies(),

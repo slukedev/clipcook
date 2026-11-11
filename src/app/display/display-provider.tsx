@@ -4,18 +4,22 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createContext, type ReactNode, use, useEffect, useRef, useState } from 'react'
 import type { DisplayState } from '@/lib/domain/types'
 import { CornerMenu, type CornerMenuIcons } from './corner-menu'
+import { type DisplayTimers, type TimerIcons, TimersOverlay, useDisplayTimers } from './r/[id]/timers'
 
 interface DisplayContextValue {
     paired: boolean
     /** Latest state from the server; null until the first poll lands. */
     state: DisplayState | null
     unlink: () => Promise<void>
+    /** Kitchen timers, kept across screens so leaving a recipe never drops one. */
+    timers: DisplayTimers | null
 }
 
 const DisplayContext = createContext<DisplayContextValue>({
     paired: false,
     state: null,
     unlink: async () => {},
+    timers: null,
 })
 
 export const useDisplay = () => use(DisplayContext)
@@ -52,10 +56,11 @@ export function DisplayProvider({
     children,
 }: {
     paired: boolean
-    icons: CornerMenuIcons
+    icons: CornerMenuIcons & { timers: TimerIcons }
     children: ReactNode
 }) {
     const router = useRouter()
+    const timers = useDisplayTimers()
     const pathname = usePathname()
     const [state, setState] = useState<DisplayState | null>(null)
     const pathRef = useRef(pathname)
@@ -159,8 +164,9 @@ export function DisplayProvider({
     }
 
     return (
-        <DisplayContext value={{ paired, state, unlink }}>
+        <DisplayContext value={{ paired, state, unlink, timers }}>
             {children}
+            <TimersOverlay timers={timers} icons={icons.timers} />
             <CornerMenu icons={icons} paired={paired} onUnlink={unlink} />
         </DisplayContext>
     )

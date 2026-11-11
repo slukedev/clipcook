@@ -1,5 +1,6 @@
-import { LibrarySkeleton } from './_library/library-skeleton'
+import { RouteLoading } from './_shell/route-loading'
 
+/** Pages without a skeleton of their own get a neutral wait, never another page's layout. */
 export default function Loading() {
-    return <LibrarySkeleton />
+    return <RouteLoading />
 }

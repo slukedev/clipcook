@@ -22,7 +22,7 @@ The live gallery is `/dev/gallery` (development only). It has theme, contrast, m
 | Area | Where | Notes |
 |---|---|---|
 | Color | `src/styles/theme/color.css` (generated) | `--md-sys-color-*`, every M3 role including `*-dim` and fixed roles. Light, dark (`prefers-color-scheme` unless `data-theme`), and `data-contrast="medium" / "high"`. |
-| Type | `src/styles/theme/typescale.css`, `@use 'styles/mixins/typography' as type` | `@include type.role(title-large)`; `type.role(display-small, $emphasized: true)` adds weight and Google Sans Flex ROND. `@include type.numeric` or class `cc-tabular` for quantities and timers. |
+| Type | `src/styles/theme/typescale.css`, `@use 'styles/mixins/typography' as type` | `@include type.role(title-large)`; `type.role(display-small, $emphasized: true)` adds weight and Google Sans Flex ROND. `@include type.numeric` or class `cc-tabular` for quantities and timers. `@include type.subhead` for section subheads inside ingredient and step lists ("For the marinade"): title-small emphasized, primary, no inset. |
 | Shape | `src/styles/theme/shape.css` | `--md-sys-shape-corner-{none,extra-small,small,medium,large,large-increased,extra-large,extra-large-increased,extra-extra-large,full}` |
 | Motion | `src/styles/theme/motion.css` (generated), `src/lib/motion.ts` | `--md-sys-motion-spring-{spatial,effects}-{fast,default,slow}` plus `-duration`. They are `linear()` traces of the M3 springs. Expressive is the default; `<html data-motion="standard">` switches. Reduced motion zeroes the spatial durations and keeps the effects fades. `@include motion.springs((transform: spatial-fast, opacity: effects-fast))` |
 | Elevation | `--md-sys-elevation-level0..5` | Prefer surface-container roles; shadows are for floating things. |
@@ -134,7 +134,7 @@ const router = useViewTransitionRouter(); router.push('/grocery', 'fade')
 `SearchBar`: an inline filter field in the bar shape (`value`, `onValueChange`, `onSubmit`, `placeholder`, `leading`, `trailing`). `Search`: a bar that opens a search view, full screen below 840px and docked above. Takes the same props plus `children` (suggestions or results), `open`, `onOpenChange`.
 
 ### Chips `@/components/ui/chip`
-`AssistChip`, `SuggestionChip` (`icon`, `elevated`, button props), `FilterChip` (`selected` / `defaultSelected` / `onSelectedChange`, `icon`, `trailing`; a check grows in), `InputChip` (`avatar`, `icon`, `onRemove`, `removeLabel`, `selected`). `ChipSet` (`label`, `scroll` for one row with fading edges).
+`AssistChip`, `SuggestionChip` (`icon`, `elevated`, button props), `FilterChip` (`selected` / `defaultSelected` / `onSelectedChange`, `icon`, `trailing`; a check grows in), `InputChip` (`avatar`, `icon`, `onRemove`, `removeLabel`, `selected`). `ChipSet` (`label`, `scroll` for one row with fading edges, `bleed` with `scroll` to run the row into the page margin while the first chip stays on the content edge; the margin is `--md-sys-layout-margin` unless `--md-chip-set-bleed` is set). Every chip has a 48dp touch target.
 
 ### Card `@/components/ui/card`
 `variant`: elevated | filled | outlined. With `href` it is a link, with `onClick` a button (state layer, ripple, focus ring); otherwise `as`: div | article | section | li.
@@ -155,7 +155,7 @@ const router = useViewTransitionRouter(); router.push('/grocery', 'fade')
 `label` (required), `value` / `defaultValue` / `onValueChange` / `onValueCommitted`, `min`, `max`, `step`, `size` xs to xl, `icon` (inset; m and up), `format` (bubble and aria value text). Single value.
 
 ### TextField `@/components/ui/text-field`
-`label`, `variant`: filled | outlined, `supportingText`, `error`, `prefix`, `suffix`, `leadingIcon`, `trailingIcon`, `multiline` (`rows`, `maxRows`, auto-grow), `counter` (needs `maxLength`), `surfaceColor` (outlined label cutout on a non-surface background), plus input props.
+`label`, `variant`: filled | outlined, `supportingText`, `error`, `prefix`, `suffix`, `leadingIcon`, `trailingIcon`, `multiline` (`rows`, `maxRows`, auto-grow), `counter` (needs `maxLength`), `surfaceColor` (outlined label cutout on a non-surface background), plus input props. The label floats in CSS on focus and on any value, so `autoFocus` and browser autofill float it before hydration.
 
 ### NumberStepper `@/components/ui/number-stepper`
 `label`, `labelHidden`, `size`: s | m | l, `valueWidth`, plus Base UI NumberField props (`value`, `onValueChange`, `min`, `max`, `step`, `format`).

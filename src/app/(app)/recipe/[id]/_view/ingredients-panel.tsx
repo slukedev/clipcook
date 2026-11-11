@@ -1,11 +1,12 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConnectedButtonGroup, ConnectedButtonGroupItem } from '@/components/ui/button-group'
 import { NumberStepper } from '@/components/ui/number-stepper'
-import { ingredientSections } from '@/lib/cook/content'
+import { flatSteps, ingredientSections, mentionedIngredients } from '@/lib/cook/content'
 import { checkedIngredients, recipeScale, useRecipeState } from '@/lib/cook/recipe-state'
+import { useFocusedStep } from '@/lib/cook/step-focus'
 import { servingsNumber } from '@/lib/recipe/ingredients'
 import { GrocerySheet } from './grocery-sheet'
 import { IngredientChecklist } from './ingredient-checklist'
@@ -21,20 +22,49 @@ function round(n: number) {
     return Math.round(n * 100) / 100
 }
 
-/** Servings scaler, the ingredient checklist and "Add to list". */
+/**
+ * Servings scaler, the ingredient checklist and "Add to list". Beside the steps, it marks
+ * what the step being read uses and keeps those rows in view.
+ */
 export function IngredientsPanel({
     recipeId,
     ingredients,
+    instructions,
     servings,
     icons,
 }: {
     recipeId: string
     ingredients: string[]
+    instructions: string[]
     servings: string
     icons: { cart: ReactNode }
 }) {
     const scale = useRecipeState(recipeScale, recipeId)
     const checked = useRecipeState(checkedIngredients, recipeId)
+    const focused = useFocusedStep(recipeId)
+    const focusedText = focused === null ? null : flatSteps(instructions)[focused]?.text
+    const uses = focusedText ? mentionedIngredients(focusedText, ingredients) : []
+    const usesKey = uses.join()
+    const ref = useRef<HTMLElement>(null)
+
+    // Scroll the pane (never the page) just enough to show the first row the step uses.
+    useEffect(() => {
+        const section = ref.current
+        const scroller = section?.parentElement
+        if (!section || !scroller || !usesKey) return
+        if (scroller.scrollHeight <= scroller.clientHeight || getComputedStyle(scroller).overflowY === 'visible') return
+        const row = section.querySelector<HTMLElement>('[data-uses]')
+        if (!row) return
+        const box = scroller.getBoundingClientRect()
+        const rect = row.getBoundingClientRect()
+        const margin = 16
+        let delta = 0
+        if (rect.top < box.top + margin) delta = rect.top - box.top - margin
+        else if (rect.bottom > box.bottom - margin) delta = rect.bottom - box.bottom + margin
+        if (delta === 0) return
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        scroller.scrollBy({ top: delta, behavior: reduce ? 'auto' : 'smooth' })
+    }, [usesKey])
     const base = servingsNumber(servings)
     const sections = ingredientSections(ingredients, scale)
     const headingId = `ingredients-${recipeId}`
@@ -44,7 +74,7 @@ export function IngredientsPanel({
     if (count === 0) return null
 
     return (
-        <section className={styles.panel} aria-labelledby={headingId}>
+        <section ref={ref} className={styles.panel} aria-labelledby={headingId}>
             <div className={styles.head}>
                 <h2 id={headingId} className={styles.title}>
                     Ingredients
@@ -98,7 +128,7 @@ export function IngredientsPanel({
                     {base !== null ? `For ${round(base * scale)} servings` : `Scaled ${round(scale)}×`}
                 </p>
             )}
-            <IngredientChecklist recipeId={recipeId} sections={sections} />
+            <IngredientChecklist recipeId={recipeId} sections={sections} uses={uses} />
         </section>
     )
 }

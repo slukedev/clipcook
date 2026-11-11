@@ -13,12 +13,14 @@ import {
 import { markCooked } from '@/actions/recipes'
 import { sendToDisplay } from '@/actions/displays'
 import { rememberDisplay } from '@/app/(app)/recipe/[id]/_view/send-to-display'
+import { DisplayLabel, sentMessage, sortByPresence } from '@/components/kitchen/display-presence'
 import { IngredientChecklist } from '@/app/(app)/recipe/[id]/_view/ingredient-checklist'
 import { TimerChip } from '@/app/(app)/recipe/[id]/_view/timer-chip'
 import { TimerTray } from '@/app/(app)/recipe/[id]/_view/timer-tray'
 import type { DisplayOption } from '@/app/(app)/recipe/[id]/_view/types'
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
+import { cx } from '@/components/ui/cx'
 import { IconButton } from '@/components/ui/icon-button'
 import { Menu, MenuContent, MenuGroup, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '@/components/ui/menu'
 import { MorphShape, type ShapeName } from '@/components/ui/shape'
@@ -27,10 +29,11 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { vtName } from '@/components/ui/view-transition'
 import { flatSteps, ingredientSections, mentionedIngredients, stepShape } from '@/lib/cook/content'
 import { cookStep, doneSteps, recipeScale, useRecipeState } from '@/lib/cook/recipe-state'
-import { timerActions } from '@/lib/cook/timers'
+import { timerActions, useTimers } from '@/lib/cook/timers'
 import { useReducedMotion } from '@/lib/motion'
 import { findTimers } from '@/lib/recipe/timers'
 import styles from './cook-mode.module.scss'
+import { useFitText } from '@/lib/cook/use-fit-text'
 import { speak, useHandsFree, useSpeechSupported, type VoiceCommand } from './use-hands-free'
 import { useWakeLock } from './use-wake-lock'
 
@@ -53,19 +56,9 @@ type IconKey =
 
 type Enter = 'next' | 'prev' | 'none'
 
+/** Matches the stylesheet's expanded layout, where ingredients sit beside the step. */
 const WIDE = '(width >= 840px)'
-
-function useWide(): boolean {
-    return useSyncExternalStore(
-        (onChange) => {
-            const query = window.matchMedia(WIDE)
-            query.addEventListener('change', onChange)
-            return () => query.removeEventListener('change', onChange)
-        },
-        () => window.matchMedia(WIDE).matches,
-        () => false,
-    )
-}
+const isWide = () => window.matchMedia(WIDE).matches
 
 function useCanSpeak(): boolean {
     return useSyncExternalStore(
@@ -114,7 +107,6 @@ export function CookMode({
     const router = useRouter()
     const snackbar = useSnackbar()
     const reduce = useReducedMotion()
-    const wide = useWide()
     const speechSupported = useSpeechSupported()
     const canSpeak = useCanSpeak()
     useWakeLock()
@@ -130,6 +122,11 @@ export function CookMode({
     const mentioned = step ? mentionedIngredients(step.text, recipe.ingredients) : []
     const mentionedItems = sections.flatMap((s) => s.items).filter((item) => mentioned.includes(item.index))
     const stepTimers = step ? findTimers(step.text) : []
+    // A started timer leaves the step's chips and docks in the tray beside them.
+    const timers = useTimers()
+    const idleTimers = stepTimers.filter(
+        (t) => !timers.some((x) => x.recipeId === recipe.id && x.step === index + 1 && x.label === t.label),
+    )
     const hasIngredients = sections.some((s) => s.items.length > 0)
 
     const [enter, setEnter] = useState<Enter>('none')
@@ -137,9 +134,14 @@ export function CookMode({
     const [listening, setListening] = useState(false)
     const [syncTo, setSyncTo] = useState<string | null>(null)
     const [celebrate, setCelebrate] = useState<number | null>(null)
+    const [menuNow, setMenuNow] = useState(0)
 
     const stageRef = useRef<HTMLElement>(null)
     const cardRef = useRef<HTMLDivElement>(null)
+    const dockRef = useRef<HTMLDivElement>(null)
+    /** A timer started from the keyboard: focus follows it into the tray. */
+    const handoff = useRef<string | null>(null)
+    useFitText(stageRef, cardRef, `${index}:${scale}:${mentioned.join()}`)
     const drag = useRef<{
         id: number
         x: number
@@ -220,6 +222,21 @@ export function CookMode({
         stageRef.current?.focus({ preventScroll: true })
     }, [])
 
+    // Growing into the two-pane layout shows the ingredients beside the step; drop the sheet.
+    useEffect(() => {
+        const query = window.matchMedia(WIDE)
+        const onChange = () => query.matches && setSheetOpen(false)
+        query.addEventListener('change', onChange)
+        return () => query.removeEventListener('change', onChange)
+    }, [])
+
+    useEffect(() => {
+        const key = handoff.current
+        if (!key || !timers.some((t) => `${t.recipeId}:${t.step}:${t.label}` === key)) return
+        handoff.current = null
+        dockRef.current?.querySelector<HTMLElement>(`[data-timer="${CSS.escape(key)}"] button`)?.focus()
+    }, [timers])
+
     // Mirror every step on the chosen display, debounced so fast paging sends once.
     useEffect(() => {
         if (!syncTo) return
@@ -247,7 +264,7 @@ export function CookMode({
         else if (command === 'repeat') readStep()
         else if (command === 'stop') setListening(false)
         else if (command === 'ingredients') {
-            if (wide) document.getElementById(`cook-ingredients-${recipe.id}`)?.focus()
+            if (isWide()) document.getElementById(`cook-ingredients-${recipe.id}`)?.focus()
             else setSheetOpen(true)
         } else if (command === 'timer') {
             const first = stepTimers[0]
@@ -298,6 +315,7 @@ export function CookMode({
             }
             if (Math.abs(dx) < 10) return
             d.active = true
+            card.style.willChange = 'transform'
             try {
                 event.currentTarget.setPointerCapture(event.pointerId)
             } catch {
@@ -314,6 +332,7 @@ export function CookMode({
 
     const settle = (card: HTMLElement, from: number) => {
         card.style.transform = ''
+        card.style.willChange = ''
         if (reduce || from === 0) return
         card.animate([{ transform: `translateX(${from}px)` }, { transform: 'translateX(0)' }], {
             duration: 435,
@@ -356,6 +375,7 @@ export function CookMode({
         )
         out.onfinish = () => {
             card.style.transform = ''
+            card.style.willChange = ''
             if (dir < 0) next()
             else prev()
             out.cancel()
@@ -368,6 +388,13 @@ export function CookMode({
         if (d?.active && cardRef.current) settle(cardRef.current, 0)
     }
 
+    const follow = (display: DisplayOption | null) => {
+        setSyncTo(display?.id ?? null)
+        if (!display) return
+        rememberDisplay(display.id)
+        snackbar(sentMessage(display, Date.now()))
+    }
+
     const displayControl = () => {
         if (displays.length === 0) return null
         const icon = syncTo ? icons.castConnected : icons.cast
@@ -376,37 +403,42 @@ export function CookMode({
             return (
                 <Tooltip content={syncTo ? `Stop showing on ${only.name}` : `Show on ${only.name}`}>
                     <IconButton
+                        size="m"
+                        width="narrow"
                         label={`Show on ${only.name}`}
                         icon={icons.cast}
                         selectedIcon={icons.castConnected}
                         selected={syncTo !== null}
-                        onSelectedChange={(on) => {
-                            setSyncTo(on ? only.id : null)
-                            if (on) rememberDisplay(only.id)
-                        }}
+                        onSelectedChange={(on) => follow(on ? only : null)}
                     />
                 </Tooltip>
             )
         }
         return (
-            <Menu>
+            <Menu onOpenChange={(open) => open && setMenuNow(Date.now())}>
                 <MenuTrigger
-                    render={<IconButton label="Show on display" icon={icon} aria-pressed={syncTo !== null} />}
+                    render={
+                        <IconButton
+                            size="m"
+                            width="narrow"
+                            label="Show on display"
+                            icon={icon}
+                            aria-pressed={syncTo !== null}
+                        />
+                    }
                 />
                 <MenuContent align="end">
-                    <MenuGroup label="Show on display">
+                    <MenuGroup label="Follow along on">
                         <MenuRadioGroup
                             value={syncTo ?? 'off'}
-                            onValueChange={(value: string) => {
-                                const id = value === 'off' ? null : value
-                                setSyncTo(id)
-                                if (id) rememberDisplay(id)
-                            }}
+                            onValueChange={(value: string) =>
+                                follow(value === 'off' ? null : (displays.find((d) => d.id === value) ?? null))
+                            }
                         >
                             <MenuRadioItem value="off">Off</MenuRadioItem>
-                            {displays.map((d) => (
+                            {sortByPresence(displays).map((d) => (
                                 <MenuRadioItem key={d.id} value={d.id} icon={icons.tv}>
-                                    {d.name}
+                                    <DisplayLabel display={d} now={menuNow} />
                                 </MenuRadioItem>
                             ))}
                         </MenuRadioGroup>
@@ -427,9 +459,9 @@ export function CookMode({
 
     return (
         <ViewTransition name={vtName('cook', recipe.id)} share="cc-cook" default="none">
-            <div className={styles.root} data-recipe={recipe.id} data-wide={wide || undefined}>
+            <div className={styles.root} data-recipe={recipe.id}>
                 <header className={styles.bar}>
-                    <IconButton label="Close cook mode" icon={icons.close} onClick={exit} />
+                    <IconButton size="m" width="narrow" label="Close cook mode" icon={icons.close} onClick={exit} />
                     <div className={styles.heading}>
                         <h1 className={styles.recipeTitle}>{recipe.title}</h1>
                         {total > 0 && (
@@ -441,13 +473,21 @@ export function CookMode({
                     <div className={styles.actions}>
                         {canSpeak && step && (
                             <Tooltip content="Read aloud">
-                                <IconButton label="Read step aloud" icon={icons.volume} onClick={readStep} />
+                                <IconButton
+                                    size="m"
+                                    width="narrow"
+                                    label="Read step aloud"
+                                    icon={icons.volume}
+                                    onClick={readStep}
+                                />
                             </Tooltip>
                         )}
                         {speechSupported && (
                             <Tooltip content={listening ? 'Stop listening' : 'Hands-free'}>
                                 <span className={styles.micWrap} data-listening={listening || undefined}>
                                     <IconButton
+                                        size="m"
+                                        width="narrow"
                                         label="Hands-free"
                                         icon={icons.micOff}
                                         selectedIcon={icons.mic}
@@ -458,9 +498,16 @@ export function CookMode({
                             </Tooltip>
                         )}
                         {displayControl()}
-                        {!wide && hasIngredients && (
+                        {hasIngredients && (
                             <Tooltip content="Ingredients">
-                                <IconButton label="Ingredients" icon={icons.list} onClick={() => setSheetOpen(true)} />
+                                <IconButton
+                                    size="m"
+                                    width="narrow"
+                                    className={styles.compactOnly}
+                                    label="Ingredients"
+                                    icon={icons.list}
+                                    onClick={() => setSheetOpen(true)}
+                                />
                             </Tooltip>
                         )}
                     </div>
@@ -486,94 +533,103 @@ export function CookMode({
                     </div>
                 )}
 
-                <div className={styles.body}>
-                    <main
-                        ref={stageRef}
-                        className={styles.stage}
-                        tabIndex={-1}
-                        aria-label="Current step"
-                        onPointerDown={onPointerDown}
-                        onPointerMove={onPointerMove}
-                        onPointerUp={onPointerUp}
-                        onPointerCancel={onPointerCancel}
-                        onLostPointerCapture={onPointerCancel}
-                    >
-                        {step ? (
-                            <>
-                                <div className={styles.number} aria-hidden>
-                                    <MorphShape
-                                        className={styles.numberShape}
-                                        shape={stepShape(index)}
-                                        spring="spatial-default"
-                                    />
-                                    <span className={styles.numberText}>{index + 1}</span>
-                                </div>
-                                <div key={index} ref={cardRef} className={styles.card} data-enter={enter}>
-                                    {step.section && <p className={styles.section}>{step.section}</p>}
-                                    <p className={styles.stepText}>
-                                        <Emphasized text={step.text} />
-                                    </p>
-                                    {stepTimers.length > 0 && (
-                                        <div className={styles.timers}>
-                                            {stepTimers.map((t) => (
-                                                <TimerChip
-                                                    key={t.start}
-                                                    timer={t}
-                                                    size="large"
-                                                    icon={icons.timer}
-                                                    ctx={{
-                                                        recipeId: recipe.id,
-                                                        recipeTitle: recipe.title,
-                                                        step: index + 1,
-                                                    }}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                    {!wide && mentionedItems.length > 0 && (
-                                        <ul className={styles.uses} aria-label="Uses">
-                                            {mentionedItems.map((item) => (
-                                                <li key={item.index} className={styles.use}>
-                                                    {item.amount && (
-                                                        <span className={styles.useAmount}>{item.amount}</span>
-                                                    )}{' '}
-                                                    {item.rest}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            </>
-                        ) : (
-                            <p className={styles.stepText}>This recipe has no steps yet.</p>
-                        )}
-                    </main>
-
-                    {wide && hasIngredients && (
-                        <aside
-                            id={`cook-ingredients-${recipe.id}`}
-                            className={styles.side}
-                            aria-label="Ingredients"
-                            tabIndex={-1}
-                        >
-                            <h2 className={styles.sideTitle}>Ingredients</h2>
-                            {checklist}
-                        </aside>
+                <main
+                    ref={stageRef}
+                    className={styles.stage}
+                    tabIndex={-1}
+                    aria-label="Current step"
+                    onPointerDown={onPointerDown}
+                    onPointerMove={onPointerMove}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={onPointerCancel}
+                    onLostPointerCapture={onPointerCancel}
+                >
+                    {step ? (
+                        <div className={styles.content}>
+                            <div className={styles.number} aria-hidden>
+                                <MorphShape
+                                    className={styles.numberShape}
+                                    shape={stepShape(index)}
+                                    spring="spatial-default"
+                                />
+                                <span className={styles.numberText}>{index + 1}</span>
+                            </div>
+                            <div key={index} ref={cardRef} className={styles.card} data-enter={enter}>
+                                {step.section && <p className={styles.section}>{step.section}</p>}
+                                <p className={styles.stepText}>
+                                    <Emphasized text={step.text} />
+                                </p>
+                                {mentionedItems.length > 0 && (
+                                    <ul className={cx(styles.uses, styles.compactOnly)} aria-label="Uses">
+                                        {mentionedItems.map((item) => (
+                                            <li key={item.index} className={styles.use}>
+                                                {item.amount && (
+                                                    <span className={styles.useAmount}>{item.amount}</span>
+                                                )}{' '}
+                                                {item.rest}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className={styles.stepText}>This recipe has no steps yet.</p>
                     )}
-                </div>
+                </main>
 
-                <TimerTray
-                    recipeId={recipe.id}
-                    variant="cook"
-                    className={styles.tray}
-                    icons={{ timer: icons.timer, play: icons.play, pause: icons.pause }}
-                />
+                {hasIngredients && (
+                    <aside
+                        id={`cook-ingredients-${recipe.id}`}
+                        className={styles.side}
+                        aria-label="Ingredients"
+                        tabIndex={-1}
+                    >
+                        <h2 className={styles.sideTitle}>Ingredients</h2>
+                        {checklist}
+                    </aside>
+                )}
+
+                <div ref={dockRef} className={styles.dock}>
+                    {idleTimers.length > 0 && (
+                        <div
+                            className={styles.stepTimers}
+                            onClickCapture={(event) => {
+                                // detail 0: Enter or Space, so focus should follow the timer it started.
+                                const label = (event.target as HTMLElement).closest<HTMLElement>('[data-label]')?.dataset
+                                    .label
+                                if (event.detail === 0 && label) handoff.current = `${recipe.id}:${index + 1}:${label}`
+                            }}
+                        >
+                            {idleTimers.map((t) => (
+                                <span key={t.start} data-label={t.label} className={styles.stepTimer}>
+                                    <TimerChip
+                                        timer={t}
+                                        size="large"
+                                        icon={icons.timer}
+                                        ctx={{
+                                            recipeId: recipe.id,
+                                            recipeTitle: recipe.title,
+                                            step: index + 1,
+                                        }}
+                                    />
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                    <TimerTray
+                        recipeId={recipe.id}
+                        variant="cook"
+                        className={styles.tray}
+                        icons={{ timer: icons.timer, play: icons.play, pause: icons.pause }}
+                    />
+                </div>
 
                 <footer className={styles.controls}>
                     <Button
                         className={styles.prev}
                         variant="tonal"
-                        size={wide ? 'l' : 'm'}
+                        size="m"
                         icon={icons.back}
                         disabled={index === 0}
                         onClick={() => prev()}
@@ -582,7 +638,7 @@ export function CookMode({
                     </Button>
                     <Button
                         className={styles.next}
-                        size={wide ? 'l' : 'm'}
+                        size="m"
                         trailingIcon={last ? icons.check : icons.next}
                         disabled={total === 0}
                         onClick={() => next()}
@@ -591,7 +647,7 @@ export function CookMode({
                     </Button>
                 </footer>
 
-                {!wide && hasIngredients && (
+                {hasIngredients && (
                     <BottomSheet open={sheetOpen} onOpenChange={setSheetOpen}>
                         <BottomSheetContent title="Ingredients">{checklist}</BottomSheetContent>
                     </BottomSheet>

@@ -57,9 +57,10 @@ export function TextField({
     const controlRef = useRef<HTMLInputElement>(null)
     const initial = String(input.value ?? input.defaultValue ?? '')
     const [length, setLength] = useState(initial.length)
-    const [focused, setFocused] = useState(false)
     const filled = (input.value !== undefined ? String(input.value) : null)?.length ?? length
-    const floating = focused || filled > 0 || Boolean(prefix && placeholder)
+    // Focus floats the label in CSS (:focus-within), so a field focused before
+    // hydration (autoFocus) floats too. This covers values and a prefix.
+    const floating = filled > 0 || Boolean(prefix && placeholder)
 
     // Firefox and Safari lack field-sizing; grow the textarea by hand there.
     useEffect(() => {
@@ -103,16 +104,11 @@ export function TextField({
                         <Field.Control
                             ref={controlRef}
                             className={styles.input}
-                            placeholder={placeholder}
+                            // A blank placeholder lets CSS see autofilled and uncontrolled values (:placeholder-shown).
+                            placeholder={placeholder ?? (label ? ' ' : undefined)}
                             render={multiline ? <textarea rows={rows} /> : undefined}
-                            onFocus={(event) => {
-                                setFocused(true)
-                                onFocus?.(event as unknown as React.FocusEvent<HTMLInputElement>)
-                            }}
-                            onBlur={(event) => {
-                                setFocused(false)
-                                onBlur?.(event as unknown as React.FocusEvent<HTMLInputElement>)
-                            }}
+                            onFocus={onFocus as never}
+                            onBlur={onBlur as never}
                             onChange={(event) => {
                                 setLength(event.currentTarget.value.length)
                                 onChange?.(event as unknown as React.ChangeEvent<HTMLInputElement>)

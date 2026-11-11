@@ -9,6 +9,42 @@ export const CAST_TOKEN_TTL_MS = 2 * 60_000
 /** lastSeenAt is written at most this often, so polling stays a single read. */
 export const HEARTBEAT_INTERVAL_MS = 60_000
 
+/** A display that has not polled for this long is treated as off or asleep. */
+export const DISPLAY_OFFLINE_AFTER_MS = 3 * HEARTBEAT_INTERVAL_MS
+
+/**
+ * 'unlinked': the code was claimed but the display never collected its token, so it
+ * cannot show anything. 'offline': linked, but not seen for a few minutes. 'online':
+ * linked and seen recently, or just linked (lastSeenAt is written at most once a
+ * minute, after the response, so a fresh display may not have one yet).
+ */
+export type DisplayPresence = 'online' | 'offline' | 'unlinked'
+
+export function displayPresence(
+    record: Pick<DisplayRecord, 'tokenHash' | 'lastSeenAt'>,
+    now = Date.now(),
+): DisplayPresence {
+    if (!record.tokenHash) return 'unlinked'
+    if (record.lastSeenAt === null) return 'online'
+    return now - record.lastSeenAt > DISPLAY_OFFLINE_AFTER_MS ? 'offline' : 'online'
+}
+
+/**
+ * A name no other display of this cook uses (ignoring case): 'Kitchen' becomes
+ * 'Kitchen 2', then 'Kitchen 3', so every entry in the send menu is unambiguous.
+ */
+export function uniqueDisplayName(wanted: string, taken: Iterable<string>, max = LIMITS.displayName): string {
+    const used = new Set([...taken].map((n) => n.trim().toLowerCase()))
+    const name = wanted.trim().slice(0, max)
+    if (!used.has(name.toLowerCase())) return name
+    const base = name.replace(/\s+\d+$/, '') || name
+    for (let n = 2; ; n++) {
+        const suffix = ` ${n}`
+        const candidate = `${base.slice(0, max - suffix.length).trimEnd()}${suffix}`
+        if (!used.has(candidate.toLowerCase())) return candidate
+    }
+}
+
 export interface PairingStart {
     code: string
     pairingId: string
@@ -60,7 +96,10 @@ export async function claimDisplayCode(
     const record: DisplayRecord = {
         id: randomToken(12),
         uid,
-        name: name.trim().slice(0, LIMITS.displayName) || 'Kitchen display',
+        name: uniqueDisplayName(
+            name.trim() || 'Kitchen display',
+            existing.map((d) => d.name),
+        ),
         tokenHash: null,
         createdAt: now,
         lastSeenAt: null,
@@ -161,9 +200,12 @@ export async function clearDisplay(store: Store, uid: string, id: string): Promi
     )
 }
 
+/** Renames a display; a name another display already uses gets a number. Returns the saved record. */
 export async function renameDisplay(store: Store, uid: string, id: string, name: string): Promise<DisplayRecord> {
+    const others = (await store.listDisplays(uid)).filter((d) => d.id !== id).map((d) => d.name)
+    const unique = uniqueDisplayName(name, others)
     return store.updateDisplay(uid, id, (current) =>
-        current.name === name ? null : { name, version: current.version + 1 },
+        current.name === unique ? null : { name: unique, version: current.version + 1 },
     )
 }
 
@@ -210,7 +252,10 @@ export async function claimCastToken(
     const record: DisplayRecord = {
         id: randomToken(12),
         uid,
-        name: name?.trim().slice(0, LIMITS.displayName) || 'Chromecast',
+        name: uniqueDisplayName(
+            name?.trim() || 'Chromecast',
+            all.map((d) => d.name),
+        ),
         tokenHash,
         createdAt: now,
         lastSeenAt: now,

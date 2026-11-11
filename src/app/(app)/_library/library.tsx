@@ -21,7 +21,9 @@ import {
     MenuTrigger,
 } from '@/components/ui/menu'
 import { SearchBar } from '@/components/ui/search'
+import { LoadingIndicator } from '@/components/ui/loading-indicator'
 import { PageTransition } from '@/components/ui/view-transition'
+import { searchRecipes } from '@/actions/recipes'
 import { writeCookie } from '../_shell/preferences'
 import { useSessionUser } from '../_shell/session-context'
 import type { RecipeSummary, TagCount } from '@/lib/domain/types'
@@ -40,6 +42,8 @@ import {
     sortRecipes,
 } from './library-data'
 import { RecipeBrowser } from './recipe-browser'
+import { useRecentSearches } from './recent-searches'
+import { SearchSuggestions } from './search-suggestions'
 import { useLibraryRecipes } from './use-library-recipes'
 import styles from './library.module.scss'
 
@@ -70,20 +74,46 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
     const [activeTags, setActiveTags] = useState<string[]>(() => params.getAll('tag'))
     const [prefs, setPrefs] = useState(initialPrefs)
     const searchRef = useRef<HTMLDivElement>(null)
+    const [searchFocused, setSearchFocused] = useState(false)
+    const { recent, remember, forget } = useRecentSearches()
 
     const deferredQuery = useDeferredValue(query)
     const tokens = queryTokens(deferredQuery)
+    const searchKey = tokens.join(' ')
+    // Titles and tags match here; the server adds recipes whose ingredients match.
+    const [deep, setDeep] = useState<{ key: string; ids: ReadonlySet<string> }>({ key: '', ids: new Set() })
+    const deepPending = searchKey !== '' && deep.key !== searchKey
+
+    useEffect(() => {
+        if (!searchKey) return
+        let live = true
+        const timer = window.setTimeout(() => {
+            searchRecipes(searchKey)
+                .then((result) => {
+                    if (live) setDeep({ key: searchKey, ids: new Set(result.ok ? result.data : []) })
+                })
+                .catch(() => {
+                    if (live) setDeep({ key: searchKey, ids: new Set() })
+                })
+        }, 180)
+        return () => {
+            live = false
+            window.clearTimeout(timer)
+        }
+    }, [searchKey])
     const validScope =
         scope === 'all' || scope === 'fav' || collections.some((c) => `c:${c.id}` === scope) ? scope : 'all'
     const filtering = tokens.length > 0 || validScope !== 'all' || activeTags.length > 0
+    const onlyQuery = validScope === 'all' && activeTags.length === 0
 
     const filtered = searchable(recipes).filter((r) => {
         if (validScope === 'fav' && !r.favorite) return false
         if (validScope.startsWith('c:') && !r.collectionIds.includes(validScope.slice(2))) return false
         if (activeTags.length > 0 && !activeTags.every((t) => r.tags.includes(t))) return false
-        return matches(r, tokens)
+        return matches(r, tokens) || (deep.key === searchKey && deep.ids.has(r.id))
     })
     const visible = sortRecipes(filtered, prefs.sort)
+    const showTools = visible.length > 0 || deepPending
 
     // Filters live in the URL so Back from a recipe returns to the same view.
     useEffect(() => {
@@ -217,10 +247,30 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
                 <h1 className={styles.srOnly}>Library</h1>
                 <header className={styles.header}>
                     <div className={styles.searchRow}>
-                        <div ref={searchRef} className={styles.search}>
+                        {/* biome-ignore lint/a11y/noStaticElementInteractions: focus and Escape bubble up from the search field inside */}
+                        <div
+                            ref={searchRef}
+                            className={styles.search}
+                            onFocus={() => setSearchFocused(true)}
+                            onBlur={(event) => {
+                                if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+                                setSearchFocused(false)
+                                if (visible.length > 0) remember(query)
+                            }}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Escape' && searchFocused) setSearchFocused(false)
+                            }}
+                        >
                             <SearchBar
                                 value={query}
-                                onValueChange={setQuery}
+                                onValueChange={(value) => {
+                                    setQuery(value)
+                                    if (!value) setSearchFocused(true)
+                                }}
+                                onSubmit={(value) => {
+                                    remember(value)
+                                    searchRef.current?.querySelector('input')?.blur()
+                                }}
                                 placeholder="Search recipes"
                                 trailing={
                                     <>
@@ -233,13 +283,28 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
                                     </>
                                 }
                             />
+                            {searchFocused && !query && recent.length > 0 && (
+                                <SearchSuggestions
+                                    recent={recent}
+                                    icon={icons.history}
+                                    removeIcon={icons.close}
+                                    onPick={(picked) => {
+                                        setQuery(picked)
+                                        remember(picked)
+                                        searchRef.current?.querySelector('input')?.focus()
+                                    }}
+                                    onForget={forget}
+                                />
+                            )}
                         </div>
-                        <div className={styles.wideTools}>
-                            {sortMenu}
-                            {viewToggle}
-                        </div>
+                        {showTools && (
+                            <div className={styles.wideTools}>
+                                {sortMenu}
+                                {viewToggle}
+                            </div>
+                        )}
                     </div>
-                    <ChipSet scroll label="Filter recipes" className={styles.chips}>
+                    <ChipSet scroll bleed label="Filter recipes">
                         <FilterChip selected={validScope === 'all'} onSelectedChange={() => setScope('all')}>
                             All
                         </FilterChip>
@@ -293,15 +358,17 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
                             </Menu>
                         )}
                     </ChipSet>
-                    <div className={styles.toolRow}>
-                        <p className={styles.count} aria-live="polite">
-                            {filtering ? plural(visible.length) : ''}
-                        </p>
-                        <div className={styles.compactTools}>
-                            {sortMenu}
-                            {viewToggle}
+                    {showTools && (
+                        <div className={styles.toolRow}>
+                            <p className={styles.count} aria-live="polite">
+                                {filtering ? plural(visible.length) : ''}
+                            </p>
+                            <div className={styles.compactTools}>
+                                {sortMenu}
+                                {viewToggle}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </header>
 
                 {cooked.length > 0 && <JumpBackIn recipes={cooked} />}
@@ -321,6 +388,10 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
                             label="Recipes"
                         />
                     </section>
+                ) : deepPending ? (
+                    <div className={styles.searching} role="status" aria-label="Searching">
+                        <LoadingIndicator label="Searching" />
+                    </div>
                 ) : (
                     <EmptyState
                         className={styles.empty}
@@ -328,9 +399,10 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
                         icon={icons.searchOff}
                         title="No matches"
                         titleAs="h2"
+                        role="status"
                         action={
                             <Button variant="tonal" onClick={clearFilters}>
-                                Clear filters
+                                {onlyQuery ? 'Clear search' : 'Clear filters'}
                             </Button>
                         }
                     />

@@ -6,6 +6,7 @@ import { runAfter } from './after'
 import { getStore } from './db'
 import { toKitchenDisplay } from './displays'
 import { seedColorFromDataUrl } from './images'
+import { inlineImageUrl } from './inline-images'
 import { toRecipe } from './recipes'
 
 export { runAfter } from './after'
@@ -13,6 +14,16 @@ export { runAfter } from './after'
 /** Library summaries, newest first. Never includes full-size photos. */
 export const listRecipes = cache(async (uid: string): Promise<RecipeSummary[]> => {
     return (await getStore()).listRecipeSummaries(uid)
+})
+
+/**
+ * Summaries for the cook's own pages: inline thumbnails become cacheable image URLs,
+ * so a page ships a short URL per recipe instead of about 10 KB of base64.
+ */
+export const listRecipeCards = cache(async (uid: string): Promise<RecipeSummary[]> => {
+    return (await listRecipes(uid)).map((r) =>
+        r.thumbnail.startsWith('data:') ? { ...r, thumbnail: inlineImageUrl(r.id, 'thumb', r.thumbnail) } : r,
+    )
 })
 
 export const getRecipe = cache(async (uid: string, id: string): Promise<Recipe | null> => {
@@ -48,14 +59,14 @@ function toCollection(c: { id: string; name: string; createdAt: number }, recipe
 
 export const listCollections = cache(async (uid: string): Promise<Collection[]> => {
     const store = await getStore()
-    const [collections, recipes] = await Promise.all([store.listCollections(uid), listRecipes(uid)])
+    const [collections, recipes] = await Promise.all([store.listCollections(uid), listRecipeCards(uid)])
     return collections.map((c) => toCollection(c, recipes))
 })
 
 export const getCollection = cache(
     async (uid: string, id: string): Promise<{ collection: Collection; recipes: RecipeSummary[] } | null> => {
         const store = await getStore()
-        const [collection, recipes] = await Promise.all([store.getCollection(uid, id), listRecipes(uid)])
+        const [collection, recipes] = await Promise.all([store.getCollection(uid, id), listRecipeCards(uid)])
         if (!collection) return null
         return {
             collection: toCollection(collection, recipes),

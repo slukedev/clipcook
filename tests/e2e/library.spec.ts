@@ -1,5 +1,5 @@
-import { type ExportedRecipe, cardTitles, exportLibrary, recipeGrid, sorted } from './support/library'
 import { expect, test } from './support/fixtures'
+import { cardTitles, type ExportedRecipe, exportLibrary, recipeGrid, sorted } from './support/library'
 
 const fold = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
@@ -28,7 +28,7 @@ test('search narrows the cards to matching recipes and survives a reload', async
 
     await page.getByRole('searchbox', { name: 'Search recipes' }).fill('zzz no such dish')
     await expect(page.getByRole('heading', { name: 'No matches' })).toBeVisible()
-    await page.getByRole('button', { name: 'Clear filters' }).click()
+    await page.getByRole('button', { name: /^Clear (search|filters)$/ }).click()
     await expect(recipeGrid(page).getByRole('listitem')).toHaveCount(recipes.length)
 })
 
@@ -88,7 +88,9 @@ test('sorting A to Z orders the cards and is remembered', async ({ page }) => {
 test('deleting a recipe can be undone, and the undo sticks', async ({ page }) => {
     const title = 'Roasted Tomato Soup with Garlic Croutons'
     await page.goto('/')
-    const card = recipeGrid(page).getByRole('listitem').filter({ has: page.getByRole('link', { name: title }) })
+    const card = recipeGrid(page)
+        .getByRole('listitem')
+        .filter({ has: page.getByRole('link', { name: title }) })
     await expect(card).toHaveCount(1)
     const before = await recipeGrid(page).getByRole('listitem').count()
 

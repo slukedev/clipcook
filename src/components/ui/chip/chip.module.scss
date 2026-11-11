@@ -229,8 +229,8 @@
         scrollbar-width: none;
         padding-block: 8px;
         margin-block: -8px;
-        padding-inline: var(--md-chip-set-inset, 0px);
-        scroll-padding-inline: var(--md-chip-set-inset, 0px);
+        padding-inline: var(--_inset, 0px);
+        scroll-padding-inline: var(--_inset, 0px);
 
         &::-webkit-scrollbar {
             display: none;
@@ -239,6 +239,13 @@
         > * {
             scroll-snap-align: start;
         }
+    }
+
+    // One value drives the bleed and the inset, so the first chip always sits on
+    // the content edge whatever the margin is at this width.
+    &[data-bleed] {
+        --_inset: var(--md-chip-set-bleed, var(--md-sys-layout-margin));
+        margin-inline: calc(-1 * var(--_inset));
     }
 }
 

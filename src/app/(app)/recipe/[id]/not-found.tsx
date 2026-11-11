@@ -15,11 +15,7 @@ export default function RecipeNotFound() {
                 titleAs="h1"
                 description="It may have been deleted."
                 action={
-                    <Button
-                        icon={<Icon name="arrow_back" />}
-                        render={<Link href="/" />}
-                        nativeButton={false}
-                    >
+                    <Button icon={<Icon name="arrow_back" />} render={<Link href="/" />} nativeButton={false}>
                         Back to library
                     </Button>
                 }

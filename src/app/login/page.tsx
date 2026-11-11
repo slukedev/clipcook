@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { Shape } from '@/components/ui/shape'
 import { signInMethod } from '@/server/auth'
-import { LoginActions } from './login-actions'
 import styles from './login.module.scss'
+import { LoginActions } from './login-actions'
 
 export const metadata: Metadata = { title: 'Sign in' }
 

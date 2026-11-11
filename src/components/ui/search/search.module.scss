@@ -60,6 +60,8 @@
 }
 
 .input {
+    // The whole 56dp bar height is the field, not just the text line.
+    align-self: stretch;
     padding: 0;
     border: 0;
     background: none;
