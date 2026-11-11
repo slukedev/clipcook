@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Button, Card, EmptyState, Fab, Icon, SearchBar } from '@/components/ui'
 import { seedToHex } from '@/lib/theme/seed'
+import { MovedBanner } from './MovedBanner'
 import { useSessionUser } from './session-context'
 import styles from './home.module.scss'
 
@@ -73,6 +74,7 @@ export function HomeClient({ recipes }: { recipes: RecipeItem[] }) {
     return (
         <>
             <main className={styles.main}>
+                <MovedBanner />
                 <header className={styles.header}>
                     <div className={styles.headlineGroup}>
                         <h1 className={styles.headline}>{firstName ? `${firstName}’s recipes` : 'Your recipes'}</h1>
