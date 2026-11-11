@@ -4,7 +4,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { LocalStore } from '@/server/db/local'
 import { recipeFromData } from '@/server/db/normalize'
-import type { RecipeRecord } from '@/server/db/types'
+import type { DisplayRecord, RecipeRecord } from '@/server/db/types'
 import { StoreError } from '@/server/db/types'
 import { resolveBackend } from '@/server/db'
 
@@ -209,5 +209,58 @@ describe('resolveBackend', () => {
         expect(resolveBackend({ NODE_ENV: 'development' })).toBe('local')
         expect(() => resolveBackend({ NODE_ENV: 'production' })).toThrow(/No backend configured/)
         expect(() => resolveBackend({ CLIPCOOK_BACKEND: 'mongo' })).toThrow()
+    })
+})
+
+describe('LocalStore writes', () => {
+    const stampOf = async () => {
+        const { stat } = await import('node:fs/promises')
+        const st = await stat(path.join(dir, 'clipcook.json'))
+        return `${st.mtimeMs}:${st.size}:${st.ino}`
+    }
+
+    it('leaves the file alone when a pairing poll changes nothing, and saves when it claims', async () => {
+        const now = Date.now()
+        await store.createPairing({
+            id: 'p1',
+            code: 'ABC123',
+            pollTokenHash: 'poll',
+            createdAt: now,
+            expiresAt: now + 60_000,
+            claimedBy: null,
+        })
+        const before = await stampOf()
+        expect(await store.collectPairing('p1', 'poll', 'display', now)).toEqual({ status: 'pending' })
+        expect(await store.collectPairing('p1', 'wrong', 'display', now)).toEqual({ status: 'not_found' })
+        expect(await store.collectPairing('nope', 'poll', 'display', now)).toEqual({ status: 'not_found' })
+        expect(await store.consumeCastToken('missing', now)).toBeNull()
+        await store.touchDisplay('missing', now)
+        expect(await stampOf()).toBe(before)
+
+        const display: DisplayRecord = {
+            id: 'd1',
+            uid: 'alice',
+            name: 'Kitchen',
+            tokenHash: null,
+            createdAt: now,
+            lastSeenAt: null,
+            current: null,
+            version: 0,
+            castDeviceId: null,
+        }
+        expect(await store.claimPairing('p1', display, now)).toBe('ok')
+        const claimed = await stampOf()
+        expect(await store.collectPairing('p1', 'poll', 'display', now)).toEqual({ status: 'claimed', displayId: 'd1' })
+        expect(await stampOf()).not.toBe(claimed)
+        expect((await store.getDisplay('d1'))?.tokenHash).toBe('display')
+        expect(await store.getPairing('p1')).toBeNull()
+    })
+
+    it('still saves when only expired records were pruned', async () => {
+        await store.createCastToken({ id: 't1', uid: 'alice', expiresAt: Date.now() + 20 })
+        const before = await stampOf()
+        await new Promise((r) => setTimeout(r, 40))
+        expect(await store.consumeCastToken('missing', Date.now())).toBeNull()
+        expect(await stampOf()).not.toBe(before)
     })
 })
