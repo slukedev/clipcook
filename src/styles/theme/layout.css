@@ -12,6 +12,7 @@
     --md-sys-space-12: 48px;
     --md-sys-space-16: 64px;
 
+    /* Window margin: 16dp compact, 24dp medium and up. Page bodies and app bar titles share it. */
     --md-sys-layout-margin: 16px;
     --md-sys-layout-pane-spacer: 24px;
     --md-sys-layout-max-body: 75ch;

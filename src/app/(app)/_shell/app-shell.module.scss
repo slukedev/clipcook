@@ -4,6 +4,20 @@
 
 // Compact: content over a 64dp navigation bar. Medium and expanded: collapsed rail
 // (expands as a modal). Large and up: rail that expands in place.
+
+// What floating things (snackbars, toolbars, trays, the FAB) must clear at the bottom:
+// --cc-bottom-bar is the navigation bar alone, --cc-bottom-inset adds the safe area.
+:global(html):has(.shell) {
+    --cc-bottom-bar: 0px;
+    --cc-bottom-inset: calc(var(--cc-bottom-bar) + var(--safe-bottom));
+}
+
+:global(html):has(.bar) {
+    @include media.compact {
+        --cc-bottom-bar: 64px;
+    }
+}
+
 .shell {
     display: flex;
     min-block-size: 100dvh;
@@ -74,22 +88,11 @@
     }
 }
 
-// Expanded rail: the count moves to the end of the pill instead of over the label.
-:is(.railLarge, .railModal)[data-expanded] span:has(> [data-large]) {
-    position: static;
-}
-
-:is(.railLarge, .railModal)[data-expanded] [data-large] {
-    inset-block-start: 50%;
-    inset-inline: auto 16px;
-    translate: 0 -50%;
-}
-
 // FAB menu: 16dp from the end edge and 16dp above the navigation bar.
 .fab {
     position: fixed;
     inset-inline-end: calc(16px + var(--safe-right));
-    inset-block-end: calc(64px + 16px + var(--safe-bottom));
+    inset-block-end: calc(var(--cc-bottom-inset) + 16px);
     z-index: 20;
     transition:
         translate var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
@@ -101,15 +104,13 @@
 }
 
 // Snackbars sit above the bar, and above the FAB when it shows.
-:global(html):has(.bar) {
-    @include media.compact {
-        --md-snackbar-offset: 64px;
-    }
+:global(html):has(.shell) {
+    --md-snackbar-offset: var(--cc-bottom-bar);
 }
 
 :global(html):has(.fab) {
     @include media.compact {
-        --md-snackbar-offset: calc(64px + 56px + 16px);
+        --md-snackbar-offset: calc(var(--cc-bottom-bar) + 56px + 16px);
     }
 }
 
@@ -123,6 +124,8 @@
 // With an on-screen keyboard up, the bar and FAB would ride on top of it.
 @media (pointer: coarse) {
     :global(html):has(input:focus, textarea:focus, [contenteditable]:focus) {
+        --cc-bottom-bar: 0px;
+
         .bar,
         .fab {
             display: none;

@@ -19,7 +19,6 @@ export default function RecipeNotFound() {
                         icon={<Icon name="arrow_back" />}
                         render={<Link href="/" />}
                         nativeButton={false}
-                        role="link"
                     >
                         Back to library
                     </Button>

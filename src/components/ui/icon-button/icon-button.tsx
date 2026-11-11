@@ -5,6 +5,7 @@ import { Toggle } from '@base-ui/react/toggle'
 import type { ComponentProps, ReactNode } from 'react'
 import type { ButtonShape, ButtonSize } from '../button/button'
 import { cx } from '../cx'
+import { linkSemantics } from '../internal/link-semantics'
 import { Ripple } from '../ripple/ripple'
 import styles from './icon-button.module.scss'
 
@@ -84,7 +85,7 @@ export function IconButton(props: IconButtonProps) {
         )
     }
     return (
-        <BaseButton {...(rest as Omit<PlainProps, keyof CommonProps>)} {...shared}>
+        <BaseButton {...(rest as Omit<PlainProps, keyof CommonProps>)} {...shared} {...linkSemantics(rest.render, rest.role)}>
             <span data-touch-target aria-hidden />
             <Ripple />
             <span className={styles.icon}>{icon}</span>

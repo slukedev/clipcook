@@ -4,6 +4,7 @@ import { Button as BaseButton } from '@base-ui/react/button'
 import { Toggle } from '@base-ui/react/toggle'
 import type { ComponentProps, HTMLAttributes, ReactNode } from 'react'
 import { cx } from '../cx'
+import { linkSemantics } from '../internal/link-semantics'
 import { Glyph } from '../icon/glyph'
 import { Ripple } from '../ripple/ripple'
 import styles from './chip.module.scss'
@@ -26,6 +27,7 @@ export function AssistChip({ children, icon, elevated, className, ...rest }: Ass
             data-elevated={elevated || undefined}
             data-has-leading={icon ? '' : undefined}
             {...rest}
+            {...linkSemantics(rest.render, rest.role)}
         >
             <span data-touch-target aria-hidden />
             <Ripple />
@@ -43,6 +45,7 @@ export function SuggestionChip({ children, icon, elevated, className, ...rest }:
             data-elevated={elevated || undefined}
             data-has-leading={icon ? '' : undefined}
             {...rest}
+            {...linkSemantics(rest.render, rest.role)}
         >
             <span data-touch-target aria-hidden />
             <Ripple />

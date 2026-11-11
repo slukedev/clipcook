@@ -52,6 +52,11 @@
     min-inline-size: 0;
     padding-inline: 12px;
 
+    // Without a leading icon the title lines up with the page body (the row adds 4px).
+    &:first-child {
+        padding-inline-start: calc(var(--md-sys-layout-margin) - 4px);
+    }
+
     .root[data-centered] & {
         position: absolute;
         inset-inline: 64px;
@@ -90,7 +95,8 @@
     flex-direction: column;
     justify-content: flex-end;
     min-block-size: var(--_expanded);
-    padding-inline: max(16px, var(--safe-left)) max(16px, var(--safe-right));
+    padding-inline: max(var(--md-sys-layout-margin), var(--safe-left))
+        max(var(--md-sys-layout-margin), var(--safe-right));
     padding-block-end: 12px;
     background-color: var(--md-sys-color-surface);
     transform-origin: left bottom;

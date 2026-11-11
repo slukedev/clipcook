@@ -183,6 +183,10 @@
 
 .innerLabel {
     display: none;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     @include type.role(label-large);
     animation: md-rail-label-b var(--md-sys-motion-spring-effects-default-duration)
         var(--md-sys-motion-spring-effects-default);
@@ -206,6 +210,10 @@
     position: absolute;
     inset-block-start: -2px;
     inset-inline-start: calc(100% - 8px);
+}
+
+.trailingBadge {
+    margin-inline-start: auto;
 }
 
 // Two keyframe names so the fade replays each time the layout flips.

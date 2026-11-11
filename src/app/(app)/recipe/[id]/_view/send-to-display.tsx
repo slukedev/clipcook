@@ -82,7 +82,6 @@ export function SendToDisplay({
                                     variant="text"
                                     render={<Link href="/settings/displays" />}
                                     nativeButton={false}
-                                    role="link"
                                 >
                                     Set up a display
                                 </Button>

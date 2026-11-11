@@ -86,7 +86,6 @@ export function TopBar({
                 icon={back}
                 render={<Link href="/" transitionTypes={transitionTypesFor('back')} onClick={onBack} />}
                 nativeButton={false}
-                role="link"
             />
             <p className={styles.title} aria-hidden>
                 {title}

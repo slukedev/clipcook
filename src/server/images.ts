@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { randomUUID } from 'node:crypto'
-import { QuantizerCelebi, Score, argbFromRgb } from '@material/material-color-utilities'
+import { argbFromRgb, Hct, QuantizerCelebi, Score } from '@material/material-color-utilities'
 import sharp, { type Sharp } from 'sharp'
 import { adminBucket } from './firebase-admin'
 
@@ -158,9 +158,34 @@ export async function extractSeedColor(pipeline: Sharp): Promise<number> {
     for (let i = 0; i + 2 < data.length; i += info.channels) {
         pixels.push(argbFromRgb(data[i] as number, data[i + 1] as number, data[i + 2] as number))
     }
-    const ranked = Score.score(QuantizerCelebi.quantize(pixels, 128))
-    // Score always returns at least one color (falls back to Google blue).
-    return ranked[0] as number
+    return pickSeedColor(QuantizerCelebi.quantize(pixels, 128))
+}
+
+/** Below this, a TonalSpot or Content scheme reads as gray. */
+const MIN_SEED_CHROMA = 16
+const NONE = 0
+
+/**
+ * Score weighs how much of the photo a hue covers, so a dark pan or a gray
+ * plate can outrank the food on it (a shakshuka seeded slate gray). Take the
+ * best scored color that is chromatic enough to carry a scheme; only a photo
+ * with no such color falls back to its top color, and a fully gray one to its
+ * most common color rather than Score's stock blue.
+ */
+export function pickSeedColor(quantized: Map<number, number>): number {
+    const ranked = Score.score(quantized, { desired: 8, fallbackColorARGB: NONE })
+    const chromatic = ranked.find((argb) => argb !== NONE && Hct.fromInt(argb).chroma >= MIN_SEED_CHROMA)
+    if (chromatic !== undefined) return chromatic
+    if (ranked[0] !== undefined && ranked[0] !== NONE) return ranked[0]
+    let common = 0xff808080
+    let most = -1
+    for (const [argb, count] of quantized) {
+        if (count > most) {
+            most = count
+            common = argb
+        }
+    }
+    return common
 }
 
 /** Seed color from a legacy base64 data-URL image (backfill path). */
