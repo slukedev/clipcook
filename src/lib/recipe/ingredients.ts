@@ -114,7 +114,7 @@ const WORD_NUMBERS: Record<string, number> = {
 const NUM = String.raw`(?:\d+\s+\d+\/\d+|\d+-\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?|\.\d+)`
 const WORD = String.raw`(?:an?(?!\s+(?:few|couple|little|bit|good|generous|splash|drizzle)\b)|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|half)`
 const LEADING_QTY = new RegExp(
-    String.raw`^(?<qty>${NUM}|${WORD}(?=\s))(?:\s*(?:-|–|—|to|or)\s*(?<max>${NUM}))?(?=$|[\s(a-zA-Z])`,
+    String.raw`^(?<qty>${NUM}|${WORD}(?=\s))(?:\s*(?:-|–|\u2014|to|or)\s*(?<max>${NUM}))?(?=$|[\s(a-zA-Z])`,
     'i',
 )
 

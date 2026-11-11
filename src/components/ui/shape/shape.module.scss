@@ -1,0 +1,25 @@
+.shape,
+.container {
+    flex: none;
+    inline-size: var(--md-shape-size, 48px);
+    block-size: var(--md-shape-size, 48px);
+}
+
+.shape {
+    fill: currentcolor;
+    overflow: visible;
+}
+
+.container {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+
+    > img,
+    > picture,
+    > video {
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: cover;
+    }
+}

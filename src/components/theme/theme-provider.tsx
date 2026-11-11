@@ -1,68 +1,96 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { THEME_COOKIE, parseThemePreference, type ResolvedTheme, type ThemePreference } from '@/lib/theme/preference'
+import { createContext, use, useState, useSyncExternalStore } from 'react'
+import {
+    COOKIE_MAX_AGE,
+    CONTRAST_COOKIE,
+    type Contrast,
+    type ResolvedTheme,
+    THEME_COOKIE,
+    type ThemeMode,
+    type ThemePreference,
+} from '@/lib/theme/preference'
 
-interface ThemeContextValue {
-    preference: ThemePreference
-    setPreference: (preference: ThemePreference) => void
+interface ThemeContextValue extends ThemePreference {
+    /** What is on screen now, after resolving `system`. */
+    resolvedTheme: ResolvedTheme
+    setTheme: (theme: ThemeMode) => void
+    setContrast: (contrast: Contrast) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-function readCookiePreference(): ThemePreference {
-    const match = document.cookie.match(new RegExp(`(?:^|; )${THEME_COOKIE}=([^;]*)`))
-    return parseThemePreference(match?.[1])
+const DARK_QUERY = '(prefers-color-scheme: dark)'
+
+function subscribeSystem(onChange: () => void) {
+    const query = window.matchMedia(DARK_QUERY)
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
 }
 
-function systemTheme(): ResolvedTheme {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+function writeCookie(name: string, value: string) {
+    // biome-ignore lint/suspicious/noDocumentCookie: the Cookie Store API is async and not universal yet
+    document.cookie = `${name}=${value}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`
 }
 
-function applyTheme(theme: ResolvedTheme) {
-    document.documentElement.dataset.theme = theme
-    // Keep the browser chrome (address bar, title bar) matched to the surface.
-    const surface = getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-surface').trim()
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]:not([media])')
-    if (!meta) {
-        meta = document.createElement('meta')
-        meta.name = 'theme-color'
-        document.head.appendChild(meta)
+function syncThemeColor() {
+    const surface = getComputedStyle(document.body).getPropertyValue('--md-sys-color-surface').trim()
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+        if (surface) meta.content = surface
     }
-    if (surface) meta.content = surface
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    // The cookie is only readable on the client; SSR renders with 'system' and
-    // the pre-paint script in the root layout has already set data-theme, so
-    // nothing visual depends on this value until the user opens the toggle.
-    const [preference, setPreferenceState] = useState<ThemePreference>('system')
-
-    useEffect(() => {
-        setPreferenceState(readCookiePreference())
-    }, [])
-
-    // Track OS scheme changes while in system mode.
-    useEffect(() => {
-        if (preference !== 'system') return
-        const query = window.matchMedia('(prefers-color-scheme: dark)')
-        const onChange = () => applyTheme(systemTheme())
-        query.addEventListener('change', onChange)
-        return () => query.removeEventListener('change', onChange)
-    }, [preference])
-
-    const setPreference = useCallback((next: ThemePreference) => {
-        setPreferenceState(next)
-        // biome-ignore lint/suspicious/noDocumentCookie: Cookie Store API is async and not yet universal
-        document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
-        applyTheme(next === 'system' ? systemTheme() : next)
-    }, [])
-
-    return <ThemeContext.Provider value={{ preference, setPreference }}>{children}</ThemeContext.Provider>
+// Appearance changes crossfade instead of snapping every surface at once.
+function withTransition(update: () => void) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!document.startViewTransition || reduce) {
+        update()
+        syncThemeColor()
+        return
+    }
+    document.startViewTransition(update).finished.then(syncThemeColor, syncThemeColor)
 }
 
-export function useTheme(): ThemeContextValue {
-    const context = useContext(ThemeContext)
-    if (!context) throw new Error('useTheme must be used within ThemeProvider')
+function applyAttribute(name: 'theme' | 'contrast', value: string | undefined) {
+    const root = document.documentElement
+    if (value) root.dataset[name] = value
+    else delete root.dataset[name]
+}
+
+/** Seeded from the server's cookie read so SSR and hydration agree. */
+export function ThemeProvider({ initial, children }: { initial: ThemePreference; children: React.ReactNode }) {
+    const [preference, setPreference] = useState(initial)
+    const systemDark = useSyncExternalStore(
+        subscribeSystem,
+        () => window.matchMedia(DARK_QUERY).matches,
+        () => false,
+    )
+    const resolvedTheme: ResolvedTheme =
+        preference.theme === 'system' ? (systemDark ? 'dark' : 'light') : preference.theme
+
+    const value: ThemeContextValue = {
+        ...preference,
+        resolvedTheme,
+        setTheme(theme) {
+            writeCookie(THEME_COOKIE, theme)
+            withTransition(() => {
+                applyAttribute('theme', theme === 'system' ? undefined : theme)
+                setPreference((p) => ({ ...p, theme }))
+            })
+        },
+        setContrast(contrast) {
+            writeCookie(CONTRAST_COOKIE, contrast)
+            withTransition(() => {
+                applyAttribute('contrast', contrast === 'standard' ? undefined : contrast)
+                setPreference((p) => ({ ...p, contrast }))
+            })
+        },
+    }
+    return <ThemeContext value={value}>{children}</ThemeContext>
+}
+
+export function useThemePreference(): ThemeContextValue {
+    const context = use(ThemeContext)
+    if (!context) throw new Error('useThemePreference must be used inside <ThemeProvider>')
     return context
 }

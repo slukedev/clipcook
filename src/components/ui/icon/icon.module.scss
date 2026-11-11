@@ -1,4 +1,11 @@
 .icon {
-    flex-shrink: 0;
-    user-select: none;
+    flex: none;
+    inline-size: var(--md-icon-size, 24px);
+    block-size: var(--md-icon-size, 24px);
+    fill: currentcolor;
+}
+
+// Directional glyphs mirror in right-to-left layouts.
+:dir(rtl) .mirror {
+    scale: -1 1;
 }

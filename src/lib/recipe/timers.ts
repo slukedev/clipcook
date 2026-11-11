@@ -17,7 +17,7 @@ export interface StepTimer {
 
 const NUMBER = String.raw`(?:\d*\s?[${VULGAR_FRACTION_CHARS}]|\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty-five|forty|sixty|ninety|half(?:\s+an?)?)`
 const UNIT = String.raw`(?:hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)`
-const RANGE_SEP = String.raw`\s*(?:-|–|—|to|or)\s*`
+const RANGE_SEP = String.raw`\s*(?:-|–|\u2014|to|or)\s*`
 const PART = String.raw`${NUMBER}(?:${RANGE_SEP}${NUMBER})?[\s-]*${UNIT}\b(?:\s+and\s+a\s+half)?`
 const TIMER = new RegExp(
     String.raw`(?<![\w/.])(?:${PART})(?:(?:\s*,\s*|\s+and\s+|\s+)(?:${PART}))*`,
@@ -56,8 +56,8 @@ export function findTimers(text: string): StepTimer[] {
             const lo = amount(g.min ?? '')
             const hi = g.max ? amount(g.max) : lo
             const unit = g.unit ?? ''
-            // Bare 'h', 'm', 's' only count right after a digit ('5m', '30 s'), never after words.
-            if (unit.length === 1 && !/\d ?[hms]$/i.test(part[0].trim())) valid = false
+            // Bare 'h', 'm', 's' only count glued to a digit ('5m', '30s'), never after words.
+            if (unit.length === 1 && !/\d[hms]$/i.test(part[0].trim())) valid = false
             if (lo === null || hi === null) {
                 valid = false
                 continue

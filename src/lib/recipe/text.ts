@@ -11,7 +11,7 @@ const NAMED_ENTITIES: Record<string, string> = {
     emsp: ' ',
     thinsp: ' ',
     ndash: '–',
-    mdash: '—',
+    mdash: '\u2014',
     minus: '−',
     hellip: '…',
     lsquo: '‘',
@@ -142,7 +142,7 @@ const VULGAR: Record<string, string> = {
 }
 
 export const VULGAR_FRACTION_CHARS = Object.keys(VULGAR).join('')
-const VULGAR_RE = new RegExp(`(\\d)?\\s*([${VULGAR_FRACTION_CHARS}])`, 'g')
+const VULGAR_RE = new RegExp(`(?:(\\d)\\s*)?([${VULGAR_FRACTION_CHARS}])`, 'g')
 
 /** '1½' and '1 ½' become '1 1/2'; the fraction slash becomes '/'. Storage form is plain ASCII. */
 export function normalizeFractions(text: string): string {

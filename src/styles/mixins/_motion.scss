@@ -1,0 +1,18 @@
+@use 'sass:list';
+@use 'sass:map';
+
+// Transitions on the M3 spring tokens.
+//   @include motion.springs((border-radius: spatial-fast, background-color: effects-default));
+// Spatial springs move, resize or reshape; effects springs only touch color and opacity.
+
+@function spring($property, $token, $delay: 0ms) {
+    @return $property var(--md-sys-motion-spring-#{$token}-duration) var(--md-sys-motion-spring-#{$token}) $delay;
+}
+
+@mixin springs($map) {
+    $list: ();
+    @each $property, $token in $map {
+        $list: list.append($list, spring($property, $token), comma);
+    }
+    transition: $list;
+}
