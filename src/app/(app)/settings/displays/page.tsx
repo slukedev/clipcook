@@ -50,39 +50,41 @@ export default async function DisplaysPage() {
 
     return (
         <PageTransition>
-            <TopAppBar
-                variant="medium"
-                title="Kitchen Displays"
-                leading={
-                    <IconButton
-                        label="Settings"
-                        icon={<Icon name="arrow_back" />}
-                        render={<Link href="/settings" />}
-                        nativeButton={false}
-                    />
-                }
-            />
-            <div className={styles.body}>
-                <DisplaysList
-                    displays={displays}
-                    recipeTitles={recipeTitles}
-                    now={Date.now()}
-                    steps={steps}
-                    icons={{
-                        display: <Icon name="smart_display" />,
-                        add: <Icon name="add" />,
-                        more: <Icon name="more_vert" />,
-                        edit: <Icon name="edit" />,
-                        clear: <Icon name="cancel" />,
-                        remove: <Icon name="delete" />,
-                    }}
+            <div className={styles.screen}>
+                <TopAppBar
+                    variant="medium"
+                    title="Kitchen Displays"
+                    leading={
+                        <IconButton
+                            label="Settings"
+                            icon={<Icon name="arrow_back" />}
+                            render={<Link href="/settings" />}
+                            nativeButton={false}
+                        />
+                    }
                 />
-                <aside className={styles.sidePane} aria-labelledby="add-display-title">
-                    <h2 id="add-display-title" className={styles.sideTitle}>
-                        Add a Display
-                    </h2>
-                    {steps}
-                </aside>
+                <div className={styles.body}>
+                    <DisplaysList
+                        displays={displays}
+                        recipeTitles={recipeTitles}
+                        now={Date.now()}
+                        steps={steps}
+                        icons={{
+                            display: <Icon name="smart_display" />,
+                            add: <Icon name="add" />,
+                            more: <Icon name="more_vert" />,
+                            edit: <Icon name="edit" />,
+                            clear: <Icon name="cancel" />,
+                            remove: <Icon name="delete" />,
+                        }}
+                    />
+                    <aside className={styles.sidePane} aria-labelledby="add-display-title">
+                        <h2 id="add-display-title" className={styles.sideTitle}>
+                            Add a Display
+                        </h2>
+                        {steps}
+                    </aside>
+                </div>
             </div>
         </PageTransition>
     )

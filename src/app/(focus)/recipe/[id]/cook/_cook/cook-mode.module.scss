@@ -1,11 +1,18 @@
 @use "../../../../../../styles/mixins/typography" as type;
 @use "../../../../../../styles/mixins/media";
+@use "../../../../../../styles/mixins/page";
 
 // Cook mode: one step at a time, readable at arm's length, and always one screen tall.
 // Rows: bar, progress, the step, the timer dock, Back and Next. On expanded windows the
-// ingredients sit beside the step and the dock. The layout is pure CSS, so the server
+// ingredients run down the side, from the step to the bottom; the overview spans both
+// columns instead. On big screens it all sits in the wide page frame, so the close button
+// and the controls stay near what they act on. The layout is pure CSS, so the server
 // HTML is already the right one for the window.
 .root {
+    @include page.max(wide);
+    // The one inset every row shares, so bar, progress, step and controls start on one line.
+    --_edge: var(--md-sys-layout-margin);
+
     display: grid;
     grid-template:
         "bar" auto
@@ -26,13 +33,25 @@
     }
 
     @include media.expanded-up {
+        --_edge: clamp(24px, 3vw, 48px);
         grid-template:
             "bar bar" auto
             "progress progress" auto
             "stage side" minmax(0, 1fr)
             "dock side" auto
-            "controls controls" auto / minmax(0, 1fr) clamp(300px, 32vw, 420px);
+            "controls side" auto / minmax(0, 1fr) clamp(300px, 30vw, 440px);
         column-gap: 24px;
+        padding-inline: max(var(--safe-left), calc((100% - var(--cc-page-max)) / 2))
+            max(var(--safe-right), calc((100% - var(--cc-page-max)) / 2));
+
+        &[data-prepping] {
+            grid-template:
+                "bar" auto
+                "progress" auto
+                "stage" minmax(0, 1fr)
+                "dock" auto
+                "controls" auto / minmax(0, 1fr);
+        }
     }
 }
 
@@ -49,7 +68,8 @@
     align-items: center;
     gap: 4px;
     min-block-size: 64px;
-    padding-inline: 4px 8px;
+    // Icon buttons carry 12px of air around their glyphs; this lines the glyphs up with the edge.
+    padding-inline: max(4px, calc(var(--_edge) - 12px));
 }
 
 .heading {
@@ -110,7 +130,7 @@
     grid-area: progress;
     display: flex;
     gap: 4px;
-    padding: 4px var(--md-sys-layout-margin) 8px;
+    padding: 4px var(--_edge) 8px;
 }
 
 .segment {
@@ -138,7 +158,7 @@
     grid-area: stage;
     container: stage / size;
     min-block-size: 0;
-    padding: clamp(12px, 4cqb, 40px) var(--md-sys-layout-margin) 16px;
+    padding: clamp(12px, 4cqb, 40px) var(--_edge) 16px;
     overflow: hidden auto;
     overscroll-behavior: contain;
     outline: none;
@@ -147,7 +167,11 @@
     -webkit-user-select: none;
 
     @include media.expanded-up {
-        padding-inline: clamp(24px, 4vw, 80px) 0;
+        padding-inline-end: 0;
+
+        [data-prepping] > & {
+            padding-inline-end: var(--_edge);
+        }
     }
 }
 
@@ -157,8 +181,9 @@
     align-items: flex-start;
     gap: clamp(12px, 4cqb, 32px);
 
-    // A wide, short stage (a 1024x600 display, a phone on its side) puts the number beside the text.
-    @container stage (aspect-ratio > 1.3) {
+    // A wide, short stage (a 1024x600 display, a phone on its side) or a big one puts the
+    // number beside the text.
+    @container stage (aspect-ratio > 1.3) or (inline-size > 960px) {
         flex-direction: row;
         gap: clamp(20px, 3cqi, 40px);
     }
@@ -215,12 +240,26 @@
     }
 }
 
-// Before you start: time, tools and (compact) ingredients, read top to bottom like a page.
+// Before you start: time, tools and ingredients, read top to bottom like a page. On wide
+// windows the overview takes the whole frame: what to know on the left, and the ingredients
+// to gather on the right, in as many columns as fit.
 .prep {
     display: flex;
     flex-direction: column;
     gap: 24px;
     max-inline-size: 720px;
+
+    @include media.expanded-up {
+        display: grid;
+        grid-template:
+            "title title" auto
+            "facts ingredients" auto
+            "tools ingredients" auto
+            ". ingredients" 1fr / minmax(220px, 1fr) minmax(0, 2fr);
+        gap: 24px clamp(32px, 5vw, 72px);
+        max-inline-size: none;
+        min-block-size: 100%;
+    }
 
     &[data-enter="next"] {
         animation:
@@ -241,10 +280,17 @@
 
 .prepTitle {
     @include type.role(headline-large, $emphasized: true);
+    grid-area: title;
     text-wrap: balance;
+
+    @include media.large-up {
+        @include type.role(display-small, $emphasized: true);
+    }
 }
 
 .facts {
+    grid-area: facts;
+    align-self: start;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -275,9 +321,32 @@
     gap: 12px;
 }
 
+.prepSection {
+    grid-area: tools;
+}
+
 .prepIngredients {
+    grid-area: ingredients;
+    align-self: start;
+
+    // Columns read top to bottom, the way people gather down a list.
     @include media.expanded-up {
-        display: none;
+        ul[data-segmented] {
+            display: block;
+            columns: 2 280px;
+            column-gap: 12px;
+        }
+
+        li {
+            break-inside: avoid;
+            padding-block-end: 2px;
+        }
+
+        // A segmented list rounds only its two ends, which land mid-column once it wraps.
+        // Even corners keep each column reading as one group.
+        li:nth-child(n) > [class] {
+            border-radius: var(--md-sys-shape-corner-medium);
+        }
     }
 }
 
@@ -380,10 +449,10 @@
     flex-direction: column;
     gap: 16px;
     min-block-size: 0;
-    margin-block: 8px 16px;
+    margin-block: 8px max(16px, var(--safe-bottom));
     padding: 20px 16px;
     overflow-y: auto;
-    margin-inline-end: var(--md-sys-layout-margin);
+    margin-inline-end: var(--_edge);
     border-radius: var(--md-sys-shape-corner-extra-large);
     background-color: var(--md-sys-color-surface-container-low);
     outline: none;
@@ -392,6 +461,11 @@
 
     @include media.expanded-up {
         display: flex;
+    }
+
+    // The overview lays the ingredients out in full; the pane returns with step 1.
+    [data-prepping] > & {
+        display: none;
     }
 }
 
@@ -411,10 +485,10 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 4px var(--md-sys-layout-margin) 8px;
+    padding: 4px var(--_edge) 8px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scroll-padding-inline: var(--md-sys-layout-margin);
+    scroll-padding-inline: var(--_edge);
     scrollbar-width: none;
 
     &:empty {
@@ -422,7 +496,7 @@
     }
 
     @include media.expanded-up {
-        padding-inline-start: clamp(24px, 4vw, 80px);
+        padding-inline-end: 0;
     }
 }
 
@@ -444,7 +518,21 @@
     grid-area: controls;
     display: flex;
     gap: 12px;
-    padding: 8px var(--md-sys-layout-margin) max(16px, var(--safe-bottom));
+    padding: 8px var(--_edge) max(16px, var(--safe-bottom));
+
+    @include media.expanded-up {
+        padding-inline-end: 0;
+
+        [data-prepping] > & {
+            padding-inline-end: var(--_edge);
+        }
+    }
+
+    // Big windows: Back where the step starts, Next where it ends, each sized like a button
+    // rather than stretched across the frame. Start sits where Next will be.
+    @include media.large-up {
+        justify-content: space-between;
+    }
 }
 
 // Arm's-length targets where the window has the height for them: 56dp on short displays
@@ -461,10 +549,19 @@
 
 .prev {
     flex: 1;
+
+    @include media.large-up {
+        flex: 0 1 clamp(200px, 22%, 300px);
+    }
 }
 
 .next {
     flex: 2;
+
+    @include media.large-up {
+        flex: 0 1 clamp(280px, 40%, 480px);
+        margin-inline-start: auto;
+    }
 }
 
 .live {

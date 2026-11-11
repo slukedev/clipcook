@@ -25,6 +25,13 @@
         gap: 24px;
         padding: 24px;
     }
+
+    // Very wide windows: the pair stays one composition in the wide frame instead of the
+    // panel growing into a wall of tint with the sign-in adrift beside it.
+    @include media.extra-large-up {
+        max-inline-size: calc(var(--cc-page-wide) + 48px);
+        margin-inline: auto;
+    }
 }
 
 .art {
@@ -45,6 +52,11 @@
         border-radius: var(--md-sys-shape-corner-extra-extra-large);
         background-color: var(--md-sys-color-surface-container);
         overflow: hidden;
+    }
+
+    @include media.extra-large-up {
+        align-self: center;
+        max-block-size: 960px;
     }
 }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Icon } from '@/components/ui/icon'
 import { List, ListItem } from '@/components/ui/list'
+import { TopAppBar } from '@/components/ui/top-app-bar'
 import { PageTransition } from '@/components/ui/view-transition'
 import { requireSession } from '@/server/auth'
 import { listCollections, listDisplays, listRecipes } from '@/server/queries'
@@ -42,83 +43,86 @@ export default async function SettingsPage() {
 
     return (
         <PageTransition>
-            <div className={styles.page}>
-                <h1 className={styles.title}>Settings</h1>
-
-                <Section id="appearance" title="Appearance">
-                    <AppearanceSection
-                        icons={{
-                            theme: <Icon name="dark_mode" />,
-                            contrast: <Icon name="contrast" />,
-                            motion: <Icon name="animation" />,
-                        }}
-                    />
-                </Section>
-
-                <Section id="plan" title="Meal Plan">
-                    <PlanSection />
-                </Section>
-
-                <Section id="displays" title="Kitchen Displays">
-                    <List segmented label="Kitchen displays">
-                        <ListItem
-                            href="/settings/displays"
-                            leading={<Icon name="cast" />}
-                            headline="Displays"
-                            supporting={displays.length === 0 ? 'None linked' : displays.map((d) => d.name).join(', ')}
-                            trailing={chevron}
+            <div className={styles.screen}>
+                <TopAppBar variant="medium" title="Settings" />
+                <div className={styles.page}>
+                    <Section id="appearance" title="Appearance">
+                        <AppearanceSection
+                            icons={{
+                                theme: <Icon name="dark_mode" />,
+                                contrast: <Icon name="contrast" />,
+                                motion: <Icon name="animation" />,
+                            }}
                         />
-                    </List>
-                </Section>
+                    </Section>
 
-                <Section id="clipping" title="Clipping">
-                    <ClippingSection
-                        origin={origin}
-                        icons={{
-                            bookmarklet: <Icon name="bookmark_add" />,
-                            copy: <Icon name="content_copy" />,
-                            check: <Icon name="check" />,
-                            install: <Icon name="install_desktop" />,
-                            share: <Icon name="ios_share" />,
-                        }}
-                    />
-                </Section>
+                    <Section id="plan" title="Meal Plan">
+                        <PlanSection />
+                    </Section>
 
-                <Section id="data" title="Data">
-                    <DataSection
-                        recipes={recipes.length}
-                        collections={collections.length}
-                        icons={{ export: <Icon name="download" />, import: <Icon name="upload" /> }}
-                    />
-                </Section>
+                    <Section id="displays" title="Kitchen Displays">
+                        <List segmented label="Kitchen displays">
+                            <ListItem
+                                href="/settings/displays"
+                                leading={<Icon name="cast" />}
+                                headline="Displays"
+                                supporting={
+                                    displays.length === 0 ? 'None linked' : displays.map((d) => d.name).join(', ')
+                                }
+                                trailing={chevron}
+                            />
+                        </List>
+                    </Section>
 
-                <Section id="account" title="Account">
-                    <AccountSection icons={{ signOut: <Icon name="logout" /> }} />
-                </Section>
-
-                <Section id="about" title="About">
-                    <List segmented label="About">
-                        <ListItem leading={<Icon name="info" />} headline="Version" trailingText={pkg.version} />
-                        <ListItem
-                            href={LICENSE_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            leading={<Icon name="description" />}
-                            headline="License"
-                            supporting="GPL-3.0"
-                            trailing={external}
+                    <Section id="clipping" title="Clipping">
+                        <ClippingSection
+                            origin={origin}
+                            icons={{
+                                bookmarklet: <Icon name="bookmark_add" />,
+                                copy: <Icon name="content_copy" />,
+                                check: <Icon name="check" />,
+                                install: <Icon name="install_desktop" />,
+                                share: <Icon name="ios_share" />,
+                            }}
                         />
-                        <ListItem
-                            href={SOURCE_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            leading={<Icon name="code" />}
-                            headline="Source code"
-                            supporting="GitHub"
-                            trailing={external}
+                    </Section>
+
+                    <Section id="data" title="Data">
+                        <DataSection
+                            recipes={recipes.length}
+                            collections={collections.length}
+                            icons={{ export: <Icon name="download" />, import: <Icon name="upload" /> }}
                         />
-                    </List>
-                </Section>
+                    </Section>
+
+                    <Section id="account" title="Account">
+                        <AccountSection icons={{ signOut: <Icon name="logout" /> }} />
+                    </Section>
+
+                    <Section id="about" title="About">
+                        <List segmented label="About">
+                            <ListItem leading={<Icon name="info" />} headline="Version" trailingText={pkg.version} />
+                            <ListItem
+                                href={LICENSE_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                leading={<Icon name="description" />}
+                                headline="License"
+                                supporting="GPL-3.0"
+                                trailing={external}
+                            />
+                            <ListItem
+                                href={SOURCE_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                leading={<Icon name="code" />}
+                                headline="Source code"
+                                supporting="GitHub"
+                                trailing={external}
+                            />
+                        </List>
+                    </Section>
+                </div>
             </div>
         </PageTransition>
     )

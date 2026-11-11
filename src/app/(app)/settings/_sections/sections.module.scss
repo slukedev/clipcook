@@ -1,33 +1,24 @@
 @use "../../../../styles/mixins/typography" as type;
 @use "../../../../styles/mixins/media";
+@use "../../../../styles/mixins/page";
 @use "../../../../styles/mixins/state-layer";
 @use "../../../../styles/mixins/focus-ring";
 
+// Full width so the app bar's background spans the window; bar and sections share the narrow frame.
+.screen {
+    @include page.max(narrow);
+}
+
 .page {
+    @include page.inner;
     display: flex;
     flex-direction: column;
     gap: 28px;
-    inline-size: 100%;
-    max-inline-size: calc(760px + 2 * var(--md-sys-layout-margin));
-    margin-inline: auto;
-    padding: calc(16px + var(--safe-top)) var(--md-sys-layout-margin) calc(64px + 48px);
+    padding-block: var(--md-sys-space-4) calc(64px + 48px);
 
     @include media.medium-up {
         gap: 32px;
-        padding-block: calc(24px + var(--safe-top)) 64px;
-    }
-}
-
-.title {
-    @include type.role(headline-medium, $emphasized: true);
-
-    display: flex;
-    align-items: center;
-    min-block-size: 56px;
-    color: var(--md-sys-color-on-surface);
-
-    @include media.expanded-up {
-        @include type.role(headline-large, $emphasized: true);
+        padding-block-end: 64px;
     }
 }
 

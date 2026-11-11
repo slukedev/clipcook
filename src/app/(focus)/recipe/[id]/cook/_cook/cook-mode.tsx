@@ -156,6 +156,7 @@ export function CookMode({
     const cardRef = useRef<HTMLDivElement>(null)
     const noFit = useRef<HTMLDivElement>(null)
     const dockRef = useRef<HTMLDivElement>(null)
+    const sideRef = useRef<HTMLElement>(null)
     /** A timer started from the keyboard: focus follows it into the tray. */
     const handoff = useRef<string | null>(null)
     /** The display just chosen, so its first send can report whether the screen is on. */
@@ -261,6 +262,22 @@ export function CookMode({
         query.addEventListener('change', onChange)
         return () => query.removeEventListener('change', onChange)
     }, [])
+
+    // Keep this step's ingredients in view in the side pane when the list is longer than it.
+    const usedKey = mentioned.join()
+    useEffect(() => {
+        const side = sideRef.current
+        if (prepping || !usedKey || !side || side.scrollHeight <= side.clientHeight) return
+        const rows = side.querySelectorAll<HTMLElement>('[data-selected]')
+        const first = rows[0]
+        const lastRow = rows[rows.length - 1]
+        if (!first || !lastRow) return
+        const box = side.getBoundingClientRect()
+        const top = first.getBoundingClientRect().top - box.top
+        const bottom = lastRow.getBoundingClientRect().bottom - box.top
+        if (top >= 0 && bottom <= side.clientHeight) return
+        side.scrollTo({ top: side.scrollTop + top - 56, behavior: reduce ? 'auto' : 'smooth' })
+    }, [usedKey, prepping, reduce])
 
     useEffect(() => {
         const key = handoff.current
@@ -510,7 +527,12 @@ export function CookMode({
 
     return (
         <ViewTransition name={vtName('cook', recipe.id)} share="cc-cook" default="none">
-            <div className={styles.root} data-recipe={recipe.id} {...morphTarget('cook', recipe.id)}>
+            <div
+                className={styles.root}
+                data-recipe={recipe.id}
+                data-prepping={prepping || undefined}
+                {...morphTarget('cook', recipe.id)}
+            >
                 <header className={styles.bar}>
                     <IconButton size="m" width="narrow" label="Close cook mode" icon={icons.close} onClick={exit} />
                     <div className={styles.heading}>
@@ -651,6 +673,7 @@ export function CookMode({
 
                 {hasIngredients && (
                     <aside
+                        ref={sideRef}
                         id={`cook-ingredients-${recipe.id}`}
                         className={styles.side}
                         aria-label="Ingredients"

@@ -5,7 +5,7 @@ import styles from './displays.module.scss'
 
 function DisplaysPlaceholder() {
     return (
-        <div aria-busy="true">
+        <div className={styles.screen} aria-busy="true">
             <TopAppBar variant="medium" title="Kitchen Displays" />
             <div className={styles.body}>
                 <div className={styles.listPane}>

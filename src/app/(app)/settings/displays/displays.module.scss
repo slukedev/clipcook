@@ -1,13 +1,23 @@
 @use "../../../../styles/mixins/typography" as type;
 @use "../../../../styles/mixins/media";
+@use "../../../../styles/mixins/page";
+
+// Full width so the app bar's background spans the window; the bar and the body share the frame.
+// Linked displays get the medium frame for the list and the how-to side by side; with nothing
+// linked the setup card stands alone in the narrow one.
+.screen {
+    @include page.max(medium);
+
+    &:has(.setup) {
+        @include page.max(narrow);
+    }
+}
 
 .body {
+    @include page.inner;
     display: grid;
     gap: var(--md-sys-space-6);
-    inline-size: 100%;
-    max-inline-size: 1200px;
-    padding: var(--md-sys-space-2) max(16px, var(--safe-right)) calc(var(--md-sys-space-16) + var(--safe-bottom))
-        max(16px, var(--safe-left));
+    padding-block: var(--md-sys-space-2) calc(var(--md-sys-space-16) + var(--safe-bottom));
 
     // Expanded and up: the list and the how-to sit side by side; no dialog needed.
     @include media.expanded-up {
@@ -34,7 +44,6 @@
 .setup {
     display: grid;
     gap: var(--md-sys-space-5);
-    max-inline-size: 560px;
     padding: var(--md-sys-space-6) var(--md-sys-space-5);
     border-radius: var(--md-sys-shape-corner-extra-large);
     background-color: var(--md-sys-color-surface-container);
