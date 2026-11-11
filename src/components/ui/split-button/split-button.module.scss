@@ -1,0 +1,122 @@
+@use '../button/shared';
+
+.split {
+    display: inline-flex;
+    gap: 2px;
+
+    &[data-size='xs'] {
+        --_inner-rest: 4px;
+        --_inner-active: 8px;
+        --_lead-start: 12px;
+        --_lead-end: 10px;
+        --_trail: 13px;
+        --_trail-icon: 22px;
+    }
+    &[data-size='s'] {
+        --_inner-rest: 4px;
+        --_inner-active: 12px;
+        --_lead-start: 16px;
+        --_lead-end: 12px;
+        --_trail: 13px;
+        --_trail-icon: 22px;
+    }
+    &[data-size='m'] {
+        --_inner-rest: 4px;
+        --_inner-active: 12px;
+        --_lead-start: 24px;
+        --_lead-end: 24px;
+        --_trail: 15px;
+        --_trail-icon: 26px;
+    }
+    &[data-size='l'] {
+        --_inner-rest: 8px;
+        --_inner-active: 20px;
+        --_lead-start: 48px;
+        --_lead-end: 48px;
+        --_trail: 29px;
+        --_trail-icon: 38px;
+    }
+    &[data-size='xl'] {
+        --_inner-rest: 12px;
+        --_inner-active: 20px;
+        --_lead-start: 64px;
+        --_lead-end: 64px;
+        --_trail: 43px;
+        --_trail-icon: 50px;
+    }
+}
+
+.part {
+    @include shared.base;
+
+    --_inner: var(--_inner-rest);
+
+    @media (hover: hover) {
+        &:hover:not(:disabled, [data-disabled]) {
+            --_inner: var(--_inner-active);
+        }
+    }
+
+    &:active:not(:disabled, [data-disabled]),
+    &[data-ripple-pressed] {
+        --_inner: var(--_inner-active);
+    }
+}
+
+.split .leading {
+    padding-inline: var(--_lead-start) var(--_lead-end);
+    border-radius: var(--_round) var(--_inner) var(--_inner) var(--_round);
+}
+
+.split .trailing {
+    padding-inline: var(--_trail);
+    --md-icon-size: var(--_trail-icon);
+    border-radius: var(--_inner) var(--_round) var(--_round) var(--_inner);
+
+    // Open: the trailing half becomes its own circle and the chevron flips.
+    &[data-popup-open] {
+        --_inner: var(--_round);
+    }
+}
+
+:dir(rtl) .split .leading {
+    border-radius: var(--_inner) var(--_round) var(--_round) var(--_inner);
+}
+
+:dir(rtl) .split .trailing {
+    border-radius: var(--_round) var(--_inner) var(--_inner) var(--_round);
+}
+
+.chevron {
+    transition: rotate var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    [data-popup-open] > & {
+        rotate: 180deg;
+    }
+}
+
+.filled {
+    --_container: var(--md-sys-color-primary);
+    --_content: var(--md-sys-color-on-primary);
+}
+
+.tonal {
+    --_container: var(--md-sys-color-secondary-container);
+    --_content: var(--md-sys-color-on-secondary-container);
+}
+
+.outlined {
+    --_content: var(--md-sys-color-on-surface-variant);
+    --_outline-color: var(--md-sys-color-outline-variant);
+}
+
+.elevated {
+    --_container: var(--md-sys-color-surface-container-low);
+    --_content: var(--md-sys-color-primary);
+    --_shadow: var(--md-sys-elevation-level1);
+}
+
+.icon {
+    display: inline-grid;
+    place-items: center;
+}

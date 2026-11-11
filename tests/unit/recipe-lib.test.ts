@@ -9,7 +9,9 @@ import { findTimers } from '@/lib/recipe/timers'
 
 describe('text cleanup', () => {
     it('decodes named, numeric, hex, and double-encoded entities but leaves bare ampersands', () => {
-        expect(decodeEntities('Mac &amp; Cheese &#8211; Mom&#x2019;s &amp;#39;best&amp;#39;')).toBe("Mac & Cheese – Mom’s 'best'")
+        expect(decodeEntities('Mac &amp; Cheese &#8211; Mom&#x2019;s &amp;#39;best&amp;#39;')).toBe(
+            "Mac & Cheese – Mom’s 'best'",
+        )
         expect(decodeEntities('R&D and AT&T')).toBe('R&D and AT&T')
         expect(decodeEntities('&bogus; &#0; &#xFFFFFFF;')).toBe('&bogus; &#0; &#xFFFFFFF;')
     })
@@ -40,9 +42,19 @@ describe('parseIngredient', () => {
     })
 
     it('reads ranges with dash, en dash, and "to"', () => {
-        expect(parseIngredient('2-3 cloves garlic')).toMatchObject({ quantity: 2, quantityMax: 3, unit: 'clove', name: 'garlic' })
+        expect(parseIngredient('2-3 cloves garlic')).toMatchObject({
+            quantity: 2,
+            quantityMax: 3,
+            unit: 'clove',
+            name: 'garlic',
+        })
         expect(parseIngredient('2–3 tbsp butter')).toMatchObject({ quantity: 2, quantityMax: 3, unit: 'tbsp' })
-        expect(parseIngredient('4 to 6 chicken thighs')).toMatchObject({ quantity: 4, quantityMax: 6, unit: null, name: 'chicken thighs' })
+        expect(parseIngredient('4 to 6 chicken thighs')).toMatchObject({
+            quantity: 4,
+            quantityMax: 6,
+            unit: null,
+            name: 'chicken thighs',
+        })
     })
 
     it('treats "a pinch of" as one pinch and keeps "a few" unquantified', () => {
@@ -62,7 +74,11 @@ describe('parseIngredient', () => {
     })
 
     it('does not mistake temperatures or bare words for amounts', () => {
-        expect(parseIngredient('Salt and pepper to taste')).toMatchObject({ quantity: null, name: 'Salt and pepper', note: 'to taste' })
+        expect(parseIngredient('Salt and pepper to taste')).toMatchObject({
+            quantity: null,
+            name: 'Salt and pepper',
+            note: 'to taste',
+        })
         expect(parseIngredient('350°F oven').quantity).toBeNull()
         expect(parseIngredient('# For the sauce').isHeading).toBe(true)
     })
@@ -259,10 +275,14 @@ describe('grocery', () => {
     })
 
     it('merges compatible units and sums same-unit amounts', () => {
-        const items = addGroceryLines([], ['1 cup milk', '4 tbsp milk', '2 eggs', '1 large egg', 'salt to taste', 'Salt'], {
-            ...opts,
-            recipeId: 'r1',
-        })
+        const items = addGroceryLines(
+            [],
+            ['1 cup milk', '4 tbsp milk', '2 eggs', '1 large egg', 'salt to taste', 'Salt'],
+            {
+                ...opts,
+                recipeId: 'r1',
+            },
+        )
         const milk = items.find((i) => i.name === 'milk')
         expect(milk?.quantity).toBeCloseTo(1.25)
         expect(milk?.text).toBe('1¼ cups milk')

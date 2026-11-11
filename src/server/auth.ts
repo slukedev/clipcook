@@ -94,8 +94,10 @@ export const getSession = cache(async (): Promise<SessionUser | null> => {
     const jar = await cookies()
     const value = jar.get(SESSION_COOKIE)?.value
     if (!value) return null
+    // Outside the try: a missing backend configuration must fail loudly, not look signed out.
+    const mode = backend()
     try {
-        if (backend() === 'local') {
+        if (mode === 'local') {
             const claims = verifyLocalSession(await getLocalSecret(), value)
             return claims ? { uid: claims.uid, email: null, name: claims.name, picture: null } : null
         }
@@ -156,4 +158,9 @@ export async function destroySession(): Promise<void> {
     } catch {
         // nothing to revoke
     }
+}
+
+/** What the login page should offer: Google sign-in (Firebase) or the demo cook (local). */
+export function signInMethod(): 'google' | 'demo' {
+    return backend() === 'local' ? 'demo' : 'google'
 }

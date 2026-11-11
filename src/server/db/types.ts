@@ -117,7 +117,12 @@ export interface Store {
     /** Atomically marks the pairing claimed and creates the display. */
     claimPairing(pairingId: string, display: DisplayRecord, now: number): Promise<ClaimPairingResult>
     /** Atomically hands a claimed pairing's display its token hash and deletes the pairing. */
-    collectPairing(pairingId: string, pollTokenHash: string, displayTokenHash: string, now: number): Promise<CollectPairingResult>
+    collectPairing(
+        pairingId: string,
+        pollTokenHash: string,
+        displayTokenHash: string,
+        now: number,
+    ): Promise<CollectPairingResult>
 
     createClipDraft(record: ClipDraftRecord): Promise<void>
     getClipDraft(id: string, now: number): Promise<ClipDraftRecord | null>

@@ -1,0 +1,66 @@
+.skeleton {
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    block-size: 1em;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-small);
+    background-color: var(--md-sys-color-surface-container-high);
+
+    &[data-shape='text'] {
+        block-size: 0.8lh;
+        margin-block: 0.1lh;
+        border-radius: var(--md-sys-shape-corner-extra-small);
+    }
+    &[data-shape='circle'] {
+        border-radius: 50%;
+        aspect-ratio: 1;
+        block-size: auto;
+    }
+    &[data-shape='pill'] {
+        border-radius: 9999px;
+    }
+    &[data-shape='medium'] {
+        border-radius: var(--md-sys-shape-corner-medium);
+    }
+    &[data-shape='large'] {
+        border-radius: var(--md-sys-shape-corner-large);
+    }
+    &[data-shape='extra-large'] {
+        border-radius: var(--md-sys-shape-corner-extra-large);
+    }
+
+    // A soft band sweeps across on the compositor.
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            90deg,
+            transparent 20%,
+            color-mix(in srgb, var(--md-sys-color-surface-container-highest) 80%, transparent) 50%,
+            transparent 80%
+        );
+        transform: translateX(-100%);
+        animation: md-skeleton-shimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+}
+
+.lines {
+    display: flex;
+    flex-direction: column;
+    inline-size: 100%;
+}
+
+@keyframes md-skeleton-shimmer {
+    60%,
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton::after {
+        display: none;
+    }
+}

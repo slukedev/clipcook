@@ -1,0 +1,114 @@
+@use '../button/shared';
+
+.group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_between, 12px);
+
+    &[data-size='m'],
+    &[data-size='l'],
+    &[data-size='xl'] {
+        --_between: 8px;
+    }
+}
+
+// Each slot owns its flex-basis so the press squish can spring without touching
+// the button's own transitions.
+.slot {
+    display: flex;
+    flex: 0 0 auto;
+    transition: flex-basis var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    > * {
+        inline-size: 100%;
+        flex: 1 1 auto;
+    }
+}
+
+// Connected: 2dp gaps, full outer corners, small inner corners that tighten on
+// press and open up to fully round when selected.
+.connected {
+    display: inline-flex;
+    gap: 2px;
+
+    &[data-fill] {
+        display: flex;
+
+        > .item {
+            flex: 1 1 0;
+        }
+    }
+}
+
+.connected .item {
+    @include shared.base;
+
+    --_inner: var(--md-sys-shape-corner-small);
+    --_outer: var(--_round);
+    --_container: var(--md-sys-color-surface-container);
+    --_content: var(--md-sys-color-on-surface-variant);
+
+    border-radius: var(--_inner);
+    transition:
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &:first-child {
+        border-start-start-radius: var(--_outer);
+        border-end-start-radius: var(--_outer);
+    }
+
+    &:last-child {
+        border-start-end-radius: var(--_outer);
+        border-end-end-radius: var(--_outer);
+    }
+
+    &[data-pressed] {
+        --_inner: var(--_round);
+        --_container: var(--md-sys-color-secondary-container);
+        --_content: var(--md-sys-color-on-secondary-container);
+    }
+
+    &:active:not([data-disabled]),
+    &[data-ripple-pressed] {
+        --_inner: var(--md-sys-shape-corner-extra-small);
+    }
+}
+
+.connected[data-variant='filled'] .item[data-pressed] {
+    --_container: var(--md-sys-color-primary);
+    --_content: var(--md-sys-color-on-primary);
+}
+
+.connected[data-variant='outlined'] .item {
+    --_container: transparent;
+    --_outline-color: var(--md-sys-color-outline-variant);
+
+    &[data-pressed] {
+        --_container: var(--md-sys-color-inverse-surface);
+        --_content: var(--md-sys-color-inverse-on-surface);
+        --_outline-color: transparent;
+    }
+}
+
+.check {
+    display: inline-grid;
+    place-items: center;
+    overflow: hidden;
+    inline-size: 0;
+    opacity: 0;
+    transition:
+        inline-size var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    .item[data-pressed] & {
+        inline-size: var(--_icon);
+        opacity: 1;
+    }
+}
+
+.icon {
+    display: inline-grid;
+    place-items: center;
+}

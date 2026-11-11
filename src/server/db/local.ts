@@ -29,7 +29,16 @@ interface LocalData {
 }
 
 function emptyData(): LocalData {
-    return { version: 1, recipes: {}, collections: {}, grocery: {}, displays: {}, pairings: {}, drafts: {}, castTokens: {} }
+    return {
+        version: 1,
+        recipes: {},
+        collections: {},
+        grocery: {},
+        displays: {},
+        pairings: {},
+        drafts: {},
+        castTokens: {},
+    }
 }
 
 const clone = <T>(value: T): T => structuredClone(value)
@@ -215,7 +224,8 @@ export class LocalStore implements Store {
             if (!current || current.uid !== uid) throw new StoreError('NOT_FOUND')
             delete d.collections[id]
             for (const r of Object.values(d.recipes)) {
-                if (r.uid === uid && r.collectionIds.includes(id)) r.collectionIds = r.collectionIds.filter((c) => c !== id)
+                if (r.uid === uid && r.collectionIds.includes(id))
+                    r.collectionIds = r.collectionIds.filter((c) => c !== id)
             }
         })
     }
@@ -255,7 +265,11 @@ export class LocalStore implements Store {
     // ---- displays
 
     listDisplays(uid: string): Promise<DisplayRecord[]> {
-        return this.read((d) => Object.values(d.displays).filter((x) => x.uid === uid).sort(byNewest))
+        return this.read((d) =>
+            Object.values(d.displays)
+                .filter((x) => x.uid === uid)
+                .sort(byNewest),
+        )
     }
 
     getDisplay(id: string): Promise<DisplayRecord | null> {
@@ -263,7 +277,9 @@ export class LocalStore implements Store {
     }
 
     findCastDisplay(uid: string, castDeviceId: string): Promise<DisplayRecord | null> {
-        return this.read((d) => Object.values(d.displays).find((x) => x.uid === uid && x.castDeviceId === castDeviceId) ?? null)
+        return this.read(
+            (d) => Object.values(d.displays).find((x) => x.uid === uid && x.castDeviceId === castDeviceId) ?? null,
+        )
     }
 
     createDisplay(record: DisplayRecord): Promise<void> {

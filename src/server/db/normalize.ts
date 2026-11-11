@@ -123,5 +123,7 @@ export function displayContentFrom(value: unknown): DisplayContent | null {
 
 export function groceryItemsFrom(value: unknown): GroceryItem[] {
     if (!Array.isArray(value)) return []
-    return value.filter((v): v is GroceryItem => Boolean(v) && typeof v === 'object' && typeof (v as Data).id === 'string')
+    return value.filter(
+        (v): v is GroceryItem => Boolean(v) && typeof v === 'object' && typeof (v as Data).id === 'string',
+    )
 }

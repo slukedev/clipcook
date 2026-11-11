@@ -1,0 +1,210 @@
+@use '../../../styles/mixins/typography' as type;
+
+// Top app bars: small 64; medium flexible 112 (136 with subtitle); large flexible
+// 120 (152). The 64dp row pins; the expanded title scrolls away beneath it and the
+// row title fades in. Scroll-driven animations where supported, JS otherwise.
+
+.root {
+    display: contents;
+}
+
+.row {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-block-size: calc(64px + var(--safe-top));
+    padding-block-start: var(--safe-top);
+    padding-inline: max(4px, var(--safe-left)) max(4px, var(--safe-right));
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    --md-icon-size: 24px;
+    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
+
+    &[data-scrolled] {
+        background-color: var(--md-sys-color-surface-container);
+    }
+}
+
+.leading,
+.trailing {
+    display: flex;
+    align-items: center;
+    flex: none;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.leading {
+    color: var(--md-sys-color-on-surface);
+}
+
+.trailing {
+    margin-inline-start: auto;
+}
+
+.rowTitle {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-inline-size: 0;
+    padding-inline: 12px;
+
+    .root[data-centered] & {
+        position: absolute;
+        inset-inline: 64px;
+        align-items: center;
+        text-align: center;
+        pointer-events: none;
+    }
+
+    .root:not([data-variant='small']) & {
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    .root:not([data-variant='small']) .row[data-collapsed] & {
+        opacity: 1;
+    }
+}
+
+.smallTitle {
+    @include type.role(title-large);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.smallSubtitle {
+    @include type.role(label-medium);
+    color: var(--md-sys-color-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.expanded {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-block-size: var(--_expanded);
+    padding-inline: max(16px, var(--safe-left)) max(16px, var(--safe-right));
+    padding-block-end: 12px;
+    background-color: var(--md-sys-color-surface);
+    transform-origin: left bottom;
+
+    .root[data-variant='medium'] & {
+        --_expanded: 48px;
+    }
+
+    .root[data-variant='medium'][data-subtitle] & {
+        --_expanded: 72px;
+    }
+
+    .root[data-variant='large'] & {
+        --_expanded: 56px;
+    }
+
+    .root[data-variant='large'][data-subtitle] & {
+        --_expanded: 88px;
+    }
+
+    .root[data-centered] & {
+        align-items: center;
+        text-align: center;
+        transform-origin: center bottom;
+    }
+}
+
+:dir(rtl) .expanded {
+    transform-origin: right bottom;
+}
+
+.title {
+    .root[data-variant='medium'] & {
+        @include type.role(headline-medium, $emphasized: true);
+    }
+
+    .root[data-variant='large'] & {
+        @include type.role(display-small, $emphasized: true);
+    }
+}
+
+.subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+
+    .root[data-variant='medium'] & {
+        @include type.role(label-large);
+    }
+
+    .root[data-variant='large'] & {
+        @include type.role(title-medium);
+    }
+}
+
+// Scroll-driven version: runs on the compositor, tracks the finger exactly.
+@supports (animation-timeline: scroll()) {
+    .row {
+        animation: md-bar-scrolled linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 0 4px;
+        transition: none;
+    }
+
+    .root:not([data-variant='small']) .row {
+        animation-range: calc(var(--_expanded-px, 56px) - 8px) var(--_expanded-px, 56px);
+    }
+
+    .root[data-variant='medium'] {
+        --_expanded-px: 48px;
+    }
+
+    .root[data-variant='medium'][data-subtitle] {
+        --_expanded-px: 72px;
+    }
+
+    .root[data-variant='large'] {
+        --_expanded-px: 56px;
+    }
+
+    .root[data-variant='large'][data-subtitle] {
+        --_expanded-px: 88px;
+    }
+
+    .root:not([data-variant='small']) .rowTitle {
+        animation: md-bar-title-in linear both;
+        animation-timeline: scroll(root block);
+        animation-range: calc(var(--_expanded-px) * 0.6) var(--_expanded-px);
+        transition: none;
+    }
+
+    .expanded > * {
+        animation: md-bar-title-out linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 0 var(--_expanded-px);
+    }
+}
+
+@keyframes md-bar-scrolled {
+    to {
+        background-color: var(--md-sys-color-surface-container);
+    }
+}
+
+@keyframes md-bar-title-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes md-bar-title-out {
+    to {
+        opacity: 0;
+        scale: 0.92;
+    }
+}

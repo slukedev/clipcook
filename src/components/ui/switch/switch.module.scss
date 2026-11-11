@@ -1,0 +1,144 @@
+
+
+// Track 52x32. Thumb 16 off, 24 on or with icons, 28 while pressed; drawn as one
+// 28dp circle scaled so the change runs on the compositor.
+.root {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    inline-size: 52px;
+    block-size: 32px;
+    margin: 8px 4px;
+    border-radius: 9999px;
+    background-color: var(--md-sys-color-surface-container-highest);
+    box-shadow: inset 0 0 0 2px var(--md-sys-color-outline);
+    cursor: pointer;
+    outline: none;
+    transition:
+        background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        box-shadow var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: -8px -4px;
+    }
+
+    &[data-checked] {
+        background-color: var(--md-sys-color-primary);
+        box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
+    }
+
+    &:focus-visible {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: var(--md-focus-ring-offset);
+    }
+
+    &[data-disabled] {
+        cursor: default;
+        opacity: var(--md-sys-state-disabled-content-opacity);
+    }
+}
+
+.thumb {
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-start: 2px;
+    display: grid;
+    place-items: center;
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: 50%;
+    background-color: var(--md-sys-color-outline);
+    color: var(--md-sys-color-surface-container-highest);
+    scale: calc(16 / 28);
+    --md-icon-size: 18.7px;
+    transition:
+        translate var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    // State layer: a 40dp halo around the thumb.
+    &::before {
+        content: '';
+        position: absolute;
+        inset: calc((28px - 40px) / 2);
+        border-radius: 50%;
+        background-color: currentcolor;
+        opacity: 0;
+        scale: calc(28 / 16);
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    &[data-checked] {
+        translate: 20px 0;
+        scale: calc(24 / 28);
+        background-color: var(--md-sys-color-on-primary);
+        color: var(--md-sys-color-on-primary-container);
+
+        &::before {
+            scale: calc(28 / 24);
+            background-color: var(--md-sys-color-primary);
+        }
+    }
+
+    [data-icons] > & {
+        scale: calc(24 / 28);
+
+        &::before {
+            scale: calc(28 / 24);
+        }
+    }
+
+    .root:active:not([data-disabled]) > & {
+        scale: 1;
+
+        &::before {
+            scale: 1;
+        }
+    }
+
+    @media (hover: hover) {
+        .root:hover:not([data-disabled]) > &::before {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+
+        .root:hover:not([data-disabled]) > &:not([data-checked]) {
+            background-color: var(--md-sys-color-on-surface-variant);
+        }
+    }
+
+    .root:focus-visible > &::before {
+        opacity: var(--md-sys-state-focus-state-layer-opacity);
+    }
+
+    .root:active:not([data-disabled]) > &::before {
+        opacity: var(--md-sys-state-pressed-state-layer-opacity);
+    }
+
+    > svg {
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+}
+
+:dir(rtl) .thumb[data-checked] {
+    translate: -20px 0;
+}
+
+.on,
+.off {
+    grid-area: 1 / 1;
+}
+
+.on {
+    opacity: 0;
+
+    [data-checked] > & {
+        opacity: 1;
+    }
+}
+
+[data-checked] > .off {
+    opacity: 0;
+}

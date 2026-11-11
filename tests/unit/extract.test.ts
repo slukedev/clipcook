@@ -5,7 +5,10 @@ import { cleanTags, extractRecipe } from '@/server/clip/extract'
 const fixture = (name: string) => readFileSync(new URL(`../fixtures/clip/${name}`, import.meta.url), 'utf8')
 
 describe('JSON-LD', () => {
-    const recipe = extractRecipe(fixture('jsonld-graph.html'), 'https://pepperandpot.example/weeknight-chili/?utm_source=x')
+    const recipe = extractRecipe(
+        fixture('jsonld-graph.html'),
+        'https://pepperandpot.example/weeknight-chili/?utm_source=x',
+    )
 
     it('finds a Recipe with an @type array inside @graph, skipping other blocks', () => {
         expect(recipe?.method).toBe('jsonld')
@@ -45,7 +48,15 @@ describe('JSON-LD', () => {
     it('uses the canonical URL and og:site_name, and drops junk tags', () => {
         expect(recipe?.sourceUrl).toBe('https://www.pepperandpot.example/weeknight-chili/')
         expect(recipe?.sourceName).toBe('Pepper & Pot')
-        expect(recipe?.tags).toEqual(['main course', 'dinner', 'american', 'chili', 'weeknight', 'beef chili', '30-minute meals'])
+        expect(recipe?.tags).toEqual([
+            'main course',
+            'dinner',
+            'american',
+            'chili',
+            'weeknight',
+            'beef chili',
+            '30-minute meals',
+        ])
     })
 
     it('handles a top-level array, mainEntity, @type URL form, HTML instructions, and a legacy ingredients string', () => {
@@ -77,8 +88,13 @@ describe('JSON-LD', () => {
     })
 
     it('ignores a canonical that points at another site', () => {
-        const html = fixture('jsonld-array.html').replace('<head>', '<head><link rel="canonical" href="https://evil.example/x">')
-        expect(extractRecipe(html, 'https://sunny.example/lemon-bars')?.sourceUrl).toBe('https://sunny.example/lemon-bars')
+        const html = fixture('jsonld-array.html').replace(
+            '<head>',
+            '<head><link rel="canonical" href="https://evil.example/x">',
+        )
+        expect(extractRecipe(html, 'https://sunny.example/lemon-bars')?.sourceUrl).toBe(
+            'https://sunny.example/lemon-bars',
+        )
     })
 
     it('splits one paragraph of inline-numbered steps', () => {
@@ -211,9 +227,25 @@ describe('heuristic fallback', () => {
 describe('cleanTags', () => {
     it('lowercases, dedupes, drops junk and the site name, caps at 8', () => {
         expect(
-            cleanTags(['Dinner', 'dinner ', 'Recipe', 'SiteName', '12345', 'https://x.com', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'], [
-                'sitename',
-            ]),
+            cleanTags(
+                [
+                    'Dinner',
+                    'dinner ',
+                    'Recipe',
+                    'SiteName',
+                    '12345',
+                    'https://x.com',
+                    'a',
+                    'b',
+                    'c',
+                    'd',
+                    'e',
+                    'f',
+                    'g',
+                    'h',
+                ],
+                ['sitename'],
+            ),
         ).toEqual(['dinner', 'a', 'b', 'c', 'd', 'e', 'f', 'g'])
     })
 })

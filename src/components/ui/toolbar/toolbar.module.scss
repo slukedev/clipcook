@@ -1,0 +1,98 @@
+// Floating toolbar: 64dp, full shape, 8dp padding, 4dp between items, 16dp from
+// the edge, paired FAB 8dp away. Docked toolbar: 64dp, square, full width.
+
+.wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition:
+        translate var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    &[data-orientation='vertical'] {
+        flex-direction: column;
+    }
+
+    &[data-fixed] {
+        position: fixed;
+        z-index: 20;
+        inset-block-end: calc(16px + var(--safe-bottom));
+        inset-inline: 0;
+        justify-content: center;
+        margin-inline: auto;
+        inline-size: fit-content;
+        max-inline-size: calc(100vw - 32px);
+    }
+
+    &[data-hidden] {
+        translate: 0 calc(100% + 16px + var(--safe-bottom));
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--md-sys-color-on-surface-variant);
+    background-color: var(--md-sys-color-surface-container);
+
+    &[data-color='vibrant'] {
+        background-color: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+    }
+}
+
+.floating {
+    block-size: 64px;
+    padding: 8px;
+    border-radius: 9999px;
+    box-shadow: var(--md-sys-elevation-level3);
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &[data-orientation='vertical'] {
+        flex-direction: column;
+        block-size: auto;
+        inline-size: 64px;
+    }
+}
+
+.docked {
+    justify-content: space-between;
+    inline-size: 100%;
+    min-block-size: calc(64px + var(--safe-bottom));
+    padding-inline: 16px;
+    padding-block-end: var(--safe-bottom);
+}
+
+// Items take the toolbar's content color; a selected item is a surface pill (vibrant)
+// or the usual secondary container (standard).
+.toolbar [data-toolbar-item] {
+    --_content: currentcolor;
+}
+
+.toolbar[data-color='standard'] [data-toolbar-item][data-pressed] {
+    --_container: var(--md-sys-color-secondary-container);
+    --_content: var(--md-sys-color-on-secondary-container);
+}
+
+.toolbar[data-color='vibrant'] [data-toolbar-item][data-pressed] {
+    --_container: var(--md-sys-color-surface-container);
+    --_content: var(--md-sys-color-on-surface);
+}
+
+.separator {
+    align-self: stretch;
+    inline-size: 1px;
+    margin-block: 12px;
+    background-color: var(--md-sys-color-outline-variant);
+
+    [data-orientation='vertical'] & {
+        inline-size: auto;
+        block-size: 1px;
+        margin-block: 0;
+        margin-inline: 12px;
+    }
+}

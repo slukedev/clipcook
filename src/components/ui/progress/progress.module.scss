@@ -1,0 +1,53 @@
+.linear {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 40px;
+    block-size: 4px;
+    overflow: visible;
+
+    &[data-wavy] {
+        block-size: 10px;
+    }
+
+    svg {
+        display: block;
+        overflow: visible;
+    }
+}
+
+:dir(rtl) .linear svg {
+    scale: -1 1;
+}
+
+.circular {
+    display: inline-block;
+    flex: none;
+    inline-size: var(--md-progress-size, 40px);
+    block-size: var(--md-progress-size, 40px);
+
+    svg {
+        inline-size: 100%;
+        block-size: 100%;
+        overflow: visible;
+    }
+}
+
+.active,
+.track {
+    fill: none;
+    stroke-width: 4px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.active {
+    stroke: var(--md-sys-color-primary);
+}
+
+.track {
+    stroke: var(--md-sys-color-secondary-container);
+}
+
+.stop {
+    fill: var(--md-sys-color-primary);
+}

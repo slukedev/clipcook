@@ -1,0 +1,74 @@
+@use '../../../styles/mixins/state-layer';
+@use '../../../styles/mixins/focus-ring';
+
+// Cards: medium (12dp) corners. Elevated sits on surfaceContainerLow at level 1,
+// filled on surfaceContainerHighest, outlined on surface with outlineVariant.
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    border-radius: var(--md-sys-shape-corner-medium);
+    color: var(--md-sys-color-on-surface);
+    background-color: var(--_container);
+    box-shadow: var(--_shadow, none);
+    overflow: hidden;
+    text-decoration: none;
+    transition: box-shadow var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+}
+
+.elevated {
+    --_container: var(--md-sys-color-surface-container-low);
+    --_shadow: var(--md-sys-elevation-level1);
+}
+
+.filled {
+    --_container: var(--md-sys-color-surface-container-highest);
+}
+
+.outlined {
+    --_container: var(--md-sys-color-surface);
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border: 1px solid var(--md-sys-color-outline-variant);
+        border-radius: inherit;
+        pointer-events: none;
+    }
+}
+
+.interactive {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+    @include focus-ring.ring;
+
+    cursor: pointer;
+    text-align: start;
+
+    // State layer and ripple paint over media, under nothing else.
+    &::before {
+        z-index: 1;
+    }
+
+    > [data-ripple-surface] {
+        z-index: 1;
+    }
+
+    @media (hover: hover) {
+        &.elevated:hover {
+            --_shadow: var(--md-sys-elevation-level2);
+        }
+
+        &.filled:hover,
+        &.outlined:hover {
+            --_shadow: var(--md-sys-elevation-level1);
+        }
+    }
+
+    &[data-disabled] {
+        pointer-events: none;
+        opacity: var(--md-sys-state-disabled-content-opacity);
+    }
+}

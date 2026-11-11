@@ -6,7 +6,8 @@ import { cleanText, collapseWhitespace } from './text'
 
 type Section = 'intro' | 'ingredients' | 'instructions' | 'notes'
 
-const INGREDIENT_HEADER = /^(?:ingredients?|ingredient list|what you(?:'|’)?ll need|you(?:'|’)?ll need|you will need|shopping list)\s*:?$/i
+const INGREDIENT_HEADER =
+    /^(?:ingredients?|ingredient list|what you(?:'|’)?ll need|you(?:'|’)?ll need|you will need|shopping list)\s*:?$/i
 const INSTRUCTION_HEADER =
     /^(?:instructions?|directions?|method|preparation|prep(?:aration)? steps|steps?|how to make(?: it)?|procedure|to make)\s*:?$/i
 const NOTES_HEADER = /^(?:notes?|tips?|cook(?:'|’)?s notes?|recipe notes?|variations?)\s*:?$/i
@@ -183,7 +184,9 @@ export function parseRecipeText(input: string): ImportedRecipe {
     }
 
     const clean = (lines: string[]) =>
-        lines.map((l) => (l.startsWith('# ') ? `# ${cleanText(l.slice(2))}` : cleanText(l))).filter((l) => l && l !== '#')
+        lines
+            .map((l) => (l.startsWith('# ') ? `# ${cleanText(l.slice(2))}` : cleanText(l)))
+            .filter((l) => l && l !== '#')
     const ing = clean(ingredients)
     const ins = clean(instructions)
     if (description.length) out.description = cleanText(description.join(' '))

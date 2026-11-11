@@ -1,223 +1,217 @@
 import 'server-only'
 
-import { cache } from 'react'
-import { adminDb } from './firebase-admin'
+import type { Recipe, RecipeSummary } from '@/lib/domain/types'
+import { LIMITS } from '@/lib/domain/types'
+import { deriveTotalMinutes } from '@/lib/recipe/time'
+import { normalizeTags } from './db/normalize'
+import type { RecipeRecord, Store } from './db/types'
+import { StoreError } from './db/types'
 import {
+    copyRecipeImages,
     deleteRecipeImages,
     processInlineRecipeImage,
     processRecipeImage,
-    seedColorFromDataUrl,
     storageAvailable,
     storeRecipeImages,
 } from './images'
-import type { RecipeFields } from './schemas'
+import type { PhotoChange, RecipeInput } from './schemas'
 
-const COLLECTION = 'allRecipes'
+type PhotoFields = Pick<RecipeRecord, 'image' | 'thumbnail' | 'seedColor' | 'imagePath' | 'thumbnailPath'>
 
-export interface RecipeSummary {
-    id: string
-    title: string
-    /** Storage URL for new docs, base64 data URL for legacy docs, '' if none. */
-    thumbnail: string
-    seedColor: number | null
+const NO_PHOTO: PhotoFields = { image: '', thumbnail: '', seedColor: null, imagePath: null, thumbnailPath: null }
+
+async function photoBytes(photo: Extract<PhotoChange, { kind: 'file' | 'dataUrl' }>): Promise<Buffer> {
+    return photo.kind === 'file'
+        ? Buffer.from(await photo.file.arrayBuffer())
+        : Buffer.from(photo.dataUrl.slice(photo.dataUrl.indexOf(',') + 1), 'base64')
 }
 
-export interface Recipe extends RecipeFields {
-    id: string
-    uid: string
-    notes: string
-    /** Display image: Storage URL for new docs, base64 data URL for legacy. */
-    image: string
-    thumbnail: string
-    seedColor: number | null
-    /** True when the photo lives in Firebase Storage (new shape). */
-    hasStorageImages: boolean
-}
-
-/** The photo a save operation should end up with. */
-export type PhotoSource = { kind: 'file'; file: File } | { kind: 'dataUrl'; dataUrl: string } | { kind: 'keep' }
-
-function col() {
-    return adminDb().collection(COLLECTION)
-}
-
-export const listRecipesForUser = cache(async (uid: string): Promise<RecipeSummary[]> => {
-    // Project only what the list renders. Never select the legacy `image`
-    // field here — it can be ~900 KB of base64 per doc.
-    const snapshot = await col().where('uid', '==', uid).select('title', 'thumbnail', 'thumbnailUrl', 'seedColor').get()
-    const results: RecipeSummary[] = []
-    snapshot.forEach((doc) => {
-        const data = doc.data()
-        results.push({
-            id: doc.id,
-            title: typeof data.title === 'string' ? data.title : '',
-            thumbnail:
-                typeof data.thumbnailUrl === 'string' && data.thumbnailUrl
-                    ? data.thumbnailUrl
-                    : typeof data.thumbnail === 'string'
-                      ? data.thumbnail
-                      : '',
-            seedColor: typeof data.seedColor === 'number' ? data.seedColor : null,
-        })
-    })
-    results.sort((a, b) => a.title.localeCompare(b.title))
-    return results
-})
-
-export const getRecipeForUser = cache(async (uid: string, recipeId: string): Promise<Recipe | null> => {
-    const doc = await col().doc(recipeId).get()
-    if (!doc.exists) return null
-    const data = doc.data()
-    if (!data || data.uid !== uid) return null
-
-    const hasStorageImages = typeof data.imageUrl === 'string' && data.imageUrl.length > 0
-    const recipe: Recipe = {
-        id: doc.id,
-        uid: data.uid,
-        image: hasStorageImages ? data.imageUrl : String(data.image ?? ''),
-        thumbnail:
-            typeof data.thumbnailUrl === 'string' && data.thumbnailUrl
-                ? data.thumbnailUrl
-                : String(data.thumbnail ?? ''),
-        seedColor: typeof data.seedColor === 'number' ? data.seedColor : null,
-        hasStorageImages,
-        title: String(data.title ?? ''),
-        description: String(data.description ?? ''),
-        servings: data.servings ?? '',
-        prepTime: String(data.prepTime ?? ''),
-        cookTime: String(data.cookTime ?? ''),
-        totalTime: String(data.totalTime ?? ''),
-        notes: String(data.notes ?? ''),
-        ingredients: Array.isArray(data.ingredients) ? data.ingredients.map(String) : [],
-        instructions: Array.isArray(data.instructions) ? data.instructions.map(String) : [],
-    }
-
-    // Legacy docs without a seed color: extract it inline (a 64px sample —
-    // milliseconds) so dynamic theming works on the very first view, then
-    // persist it without blocking the response. Failures fall back to the
-    // baseline theme.
-    if (recipe.seedColor === null && recipe.image.startsWith('data:')) {
-        try {
-            recipe.seedColor = await seedColorFromDataUrl(recipe.image)
-            const seedColor = recipe.seedColor
-            void col()
-                .doc(doc.id)
-                .update({ seedColor })
-                .catch(() => undefined)
-        } catch {
-            // Best-effort only.
-        }
-    }
-
-    return recipe
-})
-
-async function preparePhotoFields(
+/**
+ * Runs the photo pipeline. Firebase projects with a Storage bucket get WebP files
+ * in Storage; everything else (Spark plan, local backend) stores inline data URLs.
+ * Returns null when the photo should stay as it is.
+ */
+export async function preparePhoto(
+    store: Store,
     uid: string,
     recipeId: string,
-    photo: Exclude<PhotoSource, { kind: 'keep' }>,
-): Promise<Record<string, unknown>> {
-    const buffer =
-        photo.kind === 'file'
-            ? Buffer.from(await photo.file.arrayBuffer())
-            : Buffer.from(photo.dataUrl.slice(photo.dataUrl.indexOf(',') + 1), 'base64')
-
-    if (await storageAvailable()) {
-        const processed = await processRecipeImage(buffer)
+    photo: PhotoChange,
+): Promise<PhotoFields | null> {
+    if (photo.kind === 'keep') return null
+    if (photo.kind === 'remove') return NO_PHOTO
+    const bytes = await photoBytes(photo)
+    if (store.backend === 'firebase' && (await storageAvailable())) {
+        const processed = await processRecipeImage(bytes)
         const stored = await storeRecipeImages(uid, recipeId, processed)
         return {
-            ...stored,
+            image: stored.imageUrl,
+            thumbnail: stored.thumbnailUrl,
             seedColor: processed.seedColor,
-            // Clear the legacy inline fields — the photo now lives in Storage.
-            image: '',
-            thumbnail: '',
+            imagePath: stored.imagePath,
+            thumbnailPath: stored.thumbnailPath,
         }
     }
+    const inline = await processInlineRecipeImage(bytes)
+    return { ...inline, imagePath: null, thumbnailPath: null }
+}
 
-    // No Storage bucket on this project (Spark plan): keep the photo inline,
-    // but server-processed (WebP + seed color) and capped for the 1 MiB doc.
-    const inline = await processInlineRecipeImage(buffer)
+/** Keeps only collection ids the user owns. */
+async function ownedCollectionIds(store: Store, uid: string, ids: readonly string[]): Promise<string[]> {
+    if (ids.length === 0) return []
+    const owned = new Set((await store.listCollections(uid)).map((c) => c.id))
+    return [...new Set(ids)].filter((id) => owned.has(id))
+}
+
+function textFields(input: RecipeInput) {
     return {
-        image: inline.image,
-        thumbnail: inline.thumbnail,
-        seedColor: inline.seedColor,
-        imagePath: null,
-        thumbnailPath: null,
-        imageUrl: null,
-        thumbnailUrl: null,
+        title: input.title,
+        description: input.description,
+        servings: input.servings,
+        prepTime: input.prepTime,
+        cookTime: input.cookTime,
+        totalTime: input.totalTime,
+        totalMinutes: deriveTotalMinutes(input),
+        ingredients: input.ingredients,
+        instructions: input.instructions,
+        notes: input.notes,
+        tags: normalizeTags(input.tags),
+        sourceUrl: input.sourceUrl,
+        sourceName: input.sourceName,
     }
 }
 
-export async function createRecipeForUser(uid: string, fields: RecipeFields, photo: PhotoSource): Promise<string> {
-    if (photo.kind === 'keep') throw new Error('PHOTO_REQUIRED')
-    const ref = col().doc()
-    const photoFields = await preparePhotoFields(uid, ref.id, photo)
-    const now = Date.now()
-    await ref.set({ ...fields, ...photoFields, uid, createdAt: now, updatedAt: now })
-    return ref.id
-}
-
-export async function updateRecipeForUser(
+export async function createRecipe(
+    store: Store,
     uid: string,
-    recipeId: string,
-    fields: RecipeFields,
-    photo: PhotoSource,
-): Promise<void> {
-    const ref = col().doc(recipeId)
-
-    // Process outside the transaction (sharp + Storage upload are slow);
-    // ownership is still enforced before any doc write, and an upload for a
-    // doc the user doesn't own is unreachable (the path embeds their uid).
-    let photoFields: Record<string, unknown> | null = null
-    if (photo.kind !== 'keep') {
-        const snap = await ref.get()
-        const existing = snap.data()
-        if (!snap.exists || !existing || existing.uid !== uid) throw new Error('NOT_FOUND')
-        photoFields = await preparePhotoFields(uid, recipeId, photo)
+    input: RecipeInput,
+    photo: PhotoChange,
+    now = Date.now(),
+): Promise<RecipeRecord> {
+    const id = store.newId()
+    const [photoFields, collectionIds] = await Promise.all([
+        preparePhoto(store, uid, id, photo),
+        ownedCollectionIds(store, uid, input.collectionIds),
+    ])
+    const record: RecipeRecord = {
+        id,
+        uid,
+        ...textFields(input),
+        ...(photoFields ?? NO_PHOTO),
+        collectionIds,
+        favorite: input.favorite,
+        cookCount: 0,
+        lastCookedAt: null,
+        createdAt: now,
+        updatedAt: now,
     }
-
-    await adminDb().runTransaction(async (tx) => {
-        const snap = await tx.get(ref)
-        if (!snap.exists) throw new Error('NOT_FOUND')
-        const existing = snap.data()
-        if (!existing || existing.uid !== uid) throw new Error('FORBIDDEN')
-        tx.set(
-            ref,
-            {
-                ...fields,
-                // Keep the current photo fields when the photo didn't change.
-                ...(photoFields ?? {
-                    image: existing.image ?? '',
-                    thumbnail: existing.thumbnail ?? '',
-                    imagePath: existing.imagePath ?? null,
-                    thumbnailPath: existing.thumbnailPath ?? null,
-                    imageUrl: existing.imageUrl ?? null,
-                    thumbnailUrl: existing.thumbnailUrl ?? null,
-                    seedColor: existing.seedColor ?? null,
-                }),
-                uid,
-                createdAt: existing.createdAt ?? Date.now(),
-                updatedAt: Date.now(),
-            },
-            { merge: false },
-        )
-    })
+    await store.createRecipe(record)
+    return record
 }
 
-export async function deleteRecipeForUser(uid: string, recipeId: string): Promise<void> {
-    const ref = col().doc(recipeId)
-    await adminDb().runTransaction(async (tx) => {
-        const snap = await tx.get(ref)
-        if (!snap.exists) throw new Error('NOT_FOUND')
-        const existing = snap.data()
-        if (!existing || existing.uid !== uid) throw new Error('FORBIDDEN')
-        tx.delete(ref)
-    })
-    // Best-effort: an orphaned object costs pennies; a failed delete after the
-    // doc is gone must not surface as an error.
+export async function updateRecipe(
+    store: Store,
+    uid: string,
+    id: string,
+    input: RecipeInput,
+    photo: PhotoChange,
+    now = Date.now(),
+): Promise<{ record: RecipeRecord; removedStorage: boolean }> {
+    // Check ownership before the slow photo work; the transaction re-checks it.
+    const existing = await store.getRecipe(uid, id)
+    if (!existing) throw new StoreError('NOT_FOUND')
+    const [photoFields, collectionIds] = await Promise.all([
+        preparePhoto(store, uid, id, photo),
+        ownedCollectionIds(store, uid, input.collectionIds),
+    ])
+    const record = await store.updateRecipe(uid, id, () => ({
+        ...textFields(input),
+        ...(photoFields ?? {}),
+        collectionIds,
+        favorite: input.favorite,
+        updatedAt: now,
+    }))
+    return { record, removedStorage: photo.kind === 'remove' && existing.imagePath !== null }
+}
+
+export async function deleteRecipe(store: Store, uid: string, id: string): Promise<RecipeRecord> {
+    return store.deleteRecipe(uid, id)
+}
+
+/** Best-effort Storage cleanup; an orphaned object costs pennies, a failed delete must not surface. */
+export async function cleanupRecipeImages(uid: string, id: string): Promise<void> {
     try {
-        await deleteRecipeImages(uid, recipeId)
+        await deleteRecipeImages(uid, id)
     } catch {
         // ignore
     }
 }
+
+export async function duplicateRecipe(store: Store, uid: string, id: string, now = Date.now()): Promise<RecipeRecord> {
+    const source = await store.getRecipe(uid, id)
+    if (!source) throw new StoreError('NOT_FOUND')
+    const newId = store.newId()
+    let photo: PhotoFields = {
+        image: source.image,
+        thumbnail: source.thumbnail,
+        seedColor: source.seedColor,
+        imagePath: null,
+        thumbnailPath: null,
+    }
+    if (source.imagePath && source.thumbnailPath) {
+        try {
+            const copied = await copyRecipeImages(
+                uid,
+                { imagePath: source.imagePath, thumbnailPath: source.thumbnailPath },
+                newId,
+            )
+            photo = {
+                image: copied.imageUrl,
+                thumbnail: copied.thumbnailUrl,
+                seedColor: source.seedColor,
+                imagePath: copied.imagePath,
+                thumbnailPath: copied.thumbnailPath,
+            }
+        } catch {
+            photo = NO_PHOTO
+        }
+    }
+    const record: RecipeRecord = {
+        ...source,
+        ...photo,
+        id: newId,
+        title: `${source.title} (copy)`.slice(0, LIMITS.title),
+        favorite: false,
+        cookCount: 0,
+        lastCookedAt: null,
+        createdAt: now,
+        updatedAt: now,
+    }
+    await store.createRecipe(record)
+    return record
+}
+
+/** Strips storage bookkeeping before a record crosses into client code. */
+export function toRecipe(record: RecipeRecord): Recipe {
+    const { uid: _uid, imagePath: _imagePath, thumbnailPath: _thumbnailPath, ...recipe } = record
+    return recipe
+}
+
+// ---------- compatibility for pages that predate src/server/queries.ts ----------
+
+/** @deprecated Use listRecipes from '@/server/queries'. */
+export async function listRecipesForUser(uid: string): Promise<RecipeSummary[]> {
+    const { listRecipes } = await import('./queries')
+    return listRecipes(uid)
+}
+
+/** @deprecated Use getRecipe from '@/server/queries'. */
+export async function getRecipeForUser(
+    uid: string,
+    id: string,
+): Promise<(Recipe & { hasStorageImages: boolean }) | null> {
+    const { getRecipe } = await import('./queries')
+    const recipe = await getRecipe(uid, id)
+    return recipe ? { ...recipe, hasStorageImages: recipe.image.startsWith('https://') } : null
+}
+
+export type { Recipe, RecipeSummary }

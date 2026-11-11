@@ -1,27 +1,38 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'clipcook_session'
-const PUBLIC_PATHS = ['/login']
-// The component gallery only exists in dev builds (its page 404s in prod).
-if (process.env.NODE_ENV === 'development') PUBLIC_PATHS.push('/dev')
+
+/**
+ * Pages that render without a user session. Kitchen displays authenticate with
+ * their own cookie, and every /api route checks auth itself (and must answer
+ * with a status code, never a login redirect).
+ */
+const PUBLIC_PREFIXES = ['/login', '/display', '/api']
+if (process.env.NODE_ENV === 'development') PUBLIC_PREFIXES.push('/dev')
+
+function isPublic(pathname: string): boolean {
+    return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
 
 /**
  * Content-Security-Policy, currently REPORT-ONLY: watch the console/reports
  * in production for a while, then flip `CSP_REPORT_ONLY` to false to enforce.
  * The nonce covers Next's inline scripts plus the pre-paint theme script;
- * 'strict-dynamic' lets nonced scripts load Firebase's auth helpers.
+ * 'strict-dynamic' lets nonced scripts load Firebase's auth helpers. QR codes
+ * are inline SVG markup, so they need no extra allowance.
  */
 const CSP_REPORT_ONLY = true
 
 function buildCsp(nonce: string): string {
     const dev = process.env.NODE_ENV === 'development'
+    const cast = process.env.NEXT_PUBLIC_CAST_APP_ID ? ' https://www.gstatic.com' : ''
     return [
         `default-src 'self'`,
-        `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://apis.google.com${dev ? " 'unsafe-eval'" : ''}`,
+        `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://apis.google.com${cast}${dev ? " 'unsafe-eval'" : ''}`,
         `style-src 'self' 'unsafe-inline'`,
         `img-src 'self' data: blob: https://firebasestorage.googleapis.com https://lh3.googleusercontent.com`,
         `font-src 'self'`,
-        `connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com`,
+        `connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com${cast}`,
         `frame-src https://accounts.google.com https://*.firebaseapp.com`,
         `object-src 'none'`,
         `base-uri 'self'`,
@@ -31,24 +42,33 @@ function buildCsp(nonce: string): string {
 }
 
 export function proxy(req: NextRequest) {
-    const { pathname } = req.nextUrl
+    const { pathname, search } = req.nextUrl
     const hasSession = Boolean(req.cookies.get(COOKIE_NAME)?.value)
-    const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 
-    if (!hasSession && !isPublic) {
+    if (!hasSession && !isPublic(pathname)) {
         const url = req.nextUrl.clone()
         url.pathname = '/login'
-        url.searchParams.set('next', pathname)
+        // Keep the query too: /clip?url=..., /link?code=... must survive sign-in.
+        url.search = ''
+        url.searchParams.set('next', `${pathname}${search}`)
         return NextResponse.redirect(url)
     }
 
     const isLogin = pathname === '/login' || pathname.startsWith('/login/')
     if (hasSession && isLogin) {
+        const next = req.nextUrl.searchParams.get('next')
         const url = req.nextUrl.clone()
-        url.pathname = '/'
         url.search = ''
+        url.pathname = '/'
+        if (next?.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') && !next.startsWith('/login')) {
+            const target = new URL(next, req.nextUrl.origin)
+            url.pathname = target.pathname
+            url.search = target.search
+        }
         return NextResponse.redirect(url)
     }
+
+    if (pathname.startsWith('/api/')) return NextResponse.next()
 
     // Nonce travels on the request so Next tags its inline scripts with it.
     const nonce = btoa(crypto.randomUUID())
@@ -64,6 +84,6 @@ export function proxy(req: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|manifest.json|icon-.*\\.png|apple-touch-icon\\.png|logo\\.webp|sw\\.js).*)',
+        '/((?!_next/static|_next/image|favicon.ico|manifest.json|manifest.webmanifest|icon-.*\\.png|apple-touch-icon\\.png|logo\\.webp|sw\\.js).*)',
     ],
 }

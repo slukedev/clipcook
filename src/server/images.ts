@@ -213,3 +213,17 @@ export async function storeRecipeImages(
 export async function deleteRecipeImages(uid: string, recipeId: string): Promise<void> {
     await adminBucket().deleteFiles({ prefix: `users/${uid}/recipes/${recipeId}/` })
 }
+
+/** Copies a recipe's stored renditions to another recipe id (used by duplicate). */
+export async function copyRecipeImages(
+    uid: string,
+    from: { imagePath: string; thumbnailPath: string },
+    toRecipeId: string,
+): Promise<StoredRecipeImage> {
+    const bucket = adminBucket()
+    const [[image], [thumbnail]] = await Promise.all([
+        bucket.file(from.imagePath).download(),
+        bucket.file(from.thumbnailPath).download(),
+    ])
+    return storeRecipeImages(uid, toRecipeId, { image, thumbnail })
+}
