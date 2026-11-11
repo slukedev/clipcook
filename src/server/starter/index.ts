@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import type { RecipeRecord, Store } from '../db/types'
 import { createRecipe } from '../recipes'
 import { drawDish } from './dishes'
@@ -17,9 +19,18 @@ export const STARTER_RECIPES = STARTER_KEYS.map((key) => {
     return recipe
 })
 
-/** The drawn photo goes straight into the upload pipeline, which rasterizes SVG itself. */
-function photoDataUrl(dish: Parameters<typeof drawDish>[0], seed: string): string {
-    return `data:image/svg+xml;base64,${Buffer.from(drawDish(dish, seed)).toString('base64')}`
+/**
+ * Pre-rendered with `npm run generate:starter-photos`, because rasterizing the drawings
+ * takes seconds per photo. Missing files fall back to the drawing.
+ */
+async function photoDataUrl(dish: Parameters<typeof drawDish>[0], key: string): Promise<string> {
+    try {
+        // Traced into the server bundle by outputFileTracingIncludes in next.config.js.
+        const file = path.join(/*turbopackIgnore: true*/ process.cwd(), 'src/server/starter/photos', `${key}.webp`)
+        return `data:image/webp;base64,${(await readFile(file)).toString('base64')}`
+    } catch {
+        return `data:image/svg+xml;base64,${Buffer.from(drawDish(dish, key)).toString('base64')}`
+    }
 }
 
 /**
@@ -31,7 +42,7 @@ export async function addStarterRecipes(store: Store, uid: string, now = Date.no
     const missing = STARTER_RECIPES.filter((r) => !existing.has(r.title.toLowerCase()))
     return Promise.all(
         missing.map(async (r, i) => {
-            const photo = r.dish ? photoDataUrl(r.dish, r.key) : null
+            const photo = r.dish ? await photoDataUrl(r.dish, r.key) : null
             return createRecipe(
                 store,
                 uid,
