@@ -4,12 +4,14 @@ import { argbFromHex } from '@material/material-color-utilities'
 export type Seed = number | string
 
 /**
- * Brand seed: paprika. Picked from ten tomato to saffron candidates rendered with
- * TonalSpot 2025 in light and dark. Redder seeds drift pink in the surfaces and
- * oranger ones turn the tertiary green; this one keeps a warm terracotta primary
- * and a saffron tertiary.
+ * Brand seed: paprika. Picked from tomato to saffron candidates rendered in light
+ * and dark. Plain TonalSpot caps primary chroma near 32, which turns any red-orange
+ * seed into cocoa brown; Vibrant fixes that but brings a purple tertiary and
+ * blood-red dark surfaces. So the chrome is TonalSpot 2025 (calm warm neutrals,
+ * saffron tertiary) with the primary palette held at chroma 60.
  */
 export const BRAND_SEED = '#C2502A'
+export const BRAND_PRIMARY_CHROMA = 60
 
 export function parseSeed(seed: Seed): number {
     if (typeof seed === 'number') return seed >>> 0
