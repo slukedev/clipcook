@@ -36,9 +36,12 @@ interface Icons {
 export function LinkForm({
     initialCode,
     taken,
+    address,
     icons,
 }: {
     initialCode: string
+    /** Where a display shows its code, for someone who arrives here first. */
+    address: string
     /** Names already on this account's displays. */
     taken: readonly string[]
     icons: Icons
@@ -175,6 +178,11 @@ export function LinkForm({
                                 </>
                             )}
                         </p>
+                        {!error && (
+                            <p className={styles.hint}>
+                                On the display, open <strong translate="no">{address}</strong>
+                            </p>
+                        )}
                     </div>
 
                     <div className={styles.nameField}>
