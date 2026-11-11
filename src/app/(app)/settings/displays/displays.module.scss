@@ -1,0 +1,259 @@
+@use "../../../../styles/mixins/typography" as type;
+@use "../../../../styles/mixins/media";
+
+.body {
+    display: grid;
+    gap: var(--md-sys-space-6);
+    inline-size: 100%;
+    max-inline-size: 1200px;
+    padding: var(--md-sys-space-2) max(16px, var(--safe-right)) calc(var(--md-sys-space-16) + var(--safe-bottom))
+        max(16px, var(--safe-left));
+
+    // Expanded and up: the list and the how-to sit side by side; no dialog needed.
+    @include media.expanded-up {
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+        align-items: start;
+        gap: var(--md-sys-layout-pane-spacer);
+    }
+}
+
+.listPane {
+    display: grid;
+    gap: var(--md-sys-space-4);
+    align-content: start;
+}
+
+.listHeader {
+    display: flex;
+
+    @include media.expanded-up {
+        display: none;
+    }
+}
+
+.empty {
+    padding-block: var(--md-sys-space-10);
+}
+
+// Segmented list: 2dp gaps, 16dp outer corners.
+.list {
+    display: grid;
+    gap: 2px;
+    list-style: none;
+}
+
+.display {
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-4);
+    min-block-size: 88px;
+    padding: var(--md-sys-space-3) var(--md-sys-space-2) var(--md-sys-space-3) var(--md-sys-space-4);
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    background-color: var(--md-sys-color-surface-container-low);
+
+    &:first-child {
+        border-start-start-radius: var(--md-sys-shape-corner-large);
+        border-start-end-radius: var(--md-sys-shape-corner-large);
+    }
+
+    &:last-child {
+        border-end-start-radius: var(--md-sys-shape-corner-large);
+        border-end-end-radius: var(--md-sys-shape-corner-large);
+    }
+}
+
+.displayArt {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 56px;
+    block-size: 56px;
+    color: var(--md-sys-color-surface-container-highest);
+    transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[data-active] {
+        color: var(--md-sys-color-tertiary-container);
+    }
+}
+
+.displayShape {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+}
+
+.displayIcon {
+    z-index: 1;
+    display: grid;
+    color: var(--md-sys-color-on-surface-variant);
+    --md-icon-size: 28px;
+
+    .displayArt[data-active] & {
+        color: var(--md-sys-color-on-tertiary-container);
+    }
+}
+
+.displayText {
+    display: grid;
+    flex: 1;
+    gap: 2px;
+    min-inline-size: 0;
+}
+
+.displayName {
+    @include type.role(title-medium);
+    color: var(--md-sys-color-on-surface);
+    overflow-wrap: anywhere;
+}
+
+.displayMeta {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--md-sys-space-2);
+    @include type.role(body-medium);
+    color: var(--md-sys-color-on-surface-variant);
+
+    [data-active] {
+        color: var(--md-sys-color-tertiary);
+        font-weight: 500;
+    }
+}
+
+.showing {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+
+    &::before {
+        content: "·";
+        margin-inline-end: var(--md-sys-space-2);
+    }
+}
+
+.sidePane {
+    display: none;
+
+    @include media.expanded-up {
+        position: sticky;
+        inset-block-start: calc(72px + var(--safe-top));
+        display: grid;
+        gap: var(--md-sys-space-5);
+        padding: var(--md-sys-space-6);
+        border-radius: var(--md-sys-shape-corner-extra-large);
+        background-color: var(--md-sys-color-surface-container);
+    }
+}
+
+.sideTitle {
+    @include type.role(title-large);
+    color: var(--md-sys-color-on-surface);
+}
+
+// How-to content, shared by the side pane and the dialog.
+.steps {
+    display: grid;
+    gap: var(--md-sys-space-6);
+    color: var(--md-sys-color-on-surface-variant);
+    @include type.role(body-large);
+}
+
+.stepList {
+    display: grid;
+    gap: var(--md-sys-space-5);
+    list-style: none;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--md-sys-space-4);
+}
+
+.stepBadge {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 40px;
+    block-size: 40px;
+    color: var(--md-sys-color-primary-container);
+    @include type.role(title-medium, $emphasized: true);
+
+    > span {
+        z-index: 1;
+        color: var(--md-sys-color-on-primary-container);
+    }
+}
+
+.stepShape {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+}
+
+.stepBody {
+    display: grid;
+    gap: var(--md-sys-space-2);
+    justify-items: start;
+    min-inline-size: 0;
+    padding-block-start: var(--md-sys-space-2);
+    color: var(--md-sys-color-on-surface);
+}
+
+.address {
+    @include type.role(title-large, $emphasized: true);
+    color: var(--md-sys-color-primary);
+    overflow-wrap: anywhere;
+    -webkit-user-select: all;
+    user-select: all;
+}
+
+.stepAction {
+    margin-block-start: var(--md-sys-space-1);
+}
+
+.hints {
+    display: grid;
+    gap: var(--md-sys-space-3);
+    padding: var(--md-sys-space-4);
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface-container-high);
+    list-style: none;
+    @include type.role(body-medium);
+}
+
+.hint {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--md-sys-space-3);
+
+    strong {
+        display: block;
+        @include type.role(title-small);
+        color: var(--md-sys-color-on-surface);
+    }
+}
+
+.hintIcon {
+    display: grid;
+    flex: none;
+    color: var(--md-sys-color-on-surface-variant);
+    --md-icon-size: 20px;
+}
+
+.skeletonList {
+    display: grid;
+    gap: 2px;
+
+    > :first-child {
+        border-start-start-radius: var(--md-sys-shape-corner-large);
+        border-start-end-radius: var(--md-sys-shape-corner-large);
+    }
+
+    > :last-child {
+        border-end-start-radius: var(--md-sys-shape-corner-large);
+        border-end-end-radius: var(--md-sys-shape-corner-large);
+    }
+}
