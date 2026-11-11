@@ -29,12 +29,14 @@ import { useSnackbar } from '@/components/ui/snackbar'
 import { Tooltip } from '@/components/ui/tooltip'
 import { goBackWithMorph, morphTarget, vtName } from '@/components/ui/view-transition'
 import { flatSteps, ingredientSections, mentionedIngredients, stepShape } from '@/lib/cook/content'
-import { cookStep, doneSteps, recipeScale, useRecipeState } from '@/lib/cook/recipe-state'
+import { findEquipment } from '@/lib/cook/equipment'
+import { cookStarted, cookStep, doneSteps, recipeScale, useRecipeState } from '@/lib/cook/recipe-state'
 import { timerActions, useTimers } from '@/lib/cook/timers'
 import { useFitText } from '@/lib/cook/use-fit-text'
 import { useReducedMotion } from '@/lib/motion'
 import { findTimers } from '@/lib/recipe/timers'
 import styles from './cook-mode.module.scss'
+import { PrepOverview } from './prep-overview'
 import { speak, useHandsFree, useSpeechSupported, type VoiceCommand } from './use-hands-free'
 import { useWakeLock } from './use-wake-lock'
 
@@ -54,6 +56,7 @@ type IconKey =
     | 'check'
     | 'volume'
     | 'restart'
+    | 'schedule'
 
 type Enter = 'next' | 'prev' | 'none'
 
@@ -101,7 +104,16 @@ export function CookMode({
     displays,
     icons,
 }: {
-    recipe: { id: string; title: string; servings: string; ingredients: string[]; instructions: string[] }
+    recipe: {
+        id: string
+        title: string
+        servings: string
+        ingredients: string[]
+        instructions: string[]
+        totalMinutes: number | null
+        /** Display label for the total time, '' when unknown. */
+        totalTime: string
+    }
     displays: DisplayOption[]
     icons: Record<IconKey, ReactNode>
 }) {
@@ -118,6 +130,9 @@ export function CookMode({
     const index = Math.min(stored, Math.max(0, total - 1))
     const step = steps[index]
     const last = index === total - 1
+    // A fresh cook opens on what to gather; a refresh or a return mid-recipe resumes the step.
+    const started = useRecipeState(cookStarted, recipe.id)
+    const prepping = total > 0 && !started && stored === 0
     const scale = useRecipeState(recipeScale, recipe.id)
     const sections = ingredientSections(recipe.ingredients, scale)
     const mentioned = step ? mentionedIngredients(step.text, recipe.ingredients) : []
@@ -139,12 +154,14 @@ export function CookMode({
 
     const stageRef = useRef<HTMLElement>(null)
     const cardRef = useRef<HTMLDivElement>(null)
+    const noFit = useRef<HTMLDivElement>(null)
     const dockRef = useRef<HTMLDivElement>(null)
     /** A timer started from the keyboard: focus follows it into the tray. */
     const handoff = useRef<string | null>(null)
     /** The display just chosen, so its first send can report whether the screen is on. */
     const announce = useRef<string | null>(null)
-    useFitText(stageRef, cardRef, `${index}:${scale}:${mentioned.join()}`)
+    // The overview scrolls like a page; only a step's text is fitted to the stage.
+    useFitText(stageRef, prepping ? noFit : cardRef, `${prepping}:${index}:${scale}:${mentioned.join()}`)
     const drag = useRef<{
         id: number
         x: number
@@ -175,8 +192,19 @@ export function CookMode({
         })
     }
 
-    const next = (how: Enter = 'next') => (last ? finish() : go(index + 1, how))
-    const prev = (how: Enter = 'prev') => go(index - 1, how)
+    const start = (how: Enter) => {
+        setEnter(reduce && how !== 'none' ? 'none' : how)
+        cookStarted.set(recipe.id, true)
+    }
+
+    const next = (how: Enter = 'next') => (prepping ? start(how) : last ? finish() : go(index + 1, how))
+    const prev = (how: Enter = 'prev') => {
+        if (prepping || celebrate !== null) return
+        if (index > 0) return go(index - 1, how)
+        // Back from step 1 returns to the overview.
+        setEnter(reduce && how !== 'none' ? 'none' : how)
+        cookStarted.set(recipe.id, false)
+    }
 
     // The celebration: a quick run of shapes that settles into a check, then back to the recipe.
     useEffect(() => {
@@ -186,6 +214,7 @@ export function CookMode({
                 () => {
                     // Next time starts from the top.
                     cookStep.forget(recipe.id)
+                    cookStarted.forget(recipe.id)
                     doneSteps.forget(recipe.id)
                     exit()
                 },
@@ -303,7 +332,7 @@ export function CookMode({
     // Swipe with the finger, page on distance or velocity, resist past the ends.
     const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
         if (event.pointerType === 'mouse' || !event.isPrimary || celebrate !== null) return
-        if ((event.target as HTMLElement).closest('button, a, [role="checkbox"]')) return
+        if ((event.target as HTMLElement).closest('button, a, label, [role="checkbox"]')) return
         drag.current = {
             id: event.pointerId,
             x: event.clientX,
@@ -339,7 +368,7 @@ export function CookMode({
         d.samples.push([event.timeStamp, event.clientX])
         if (d.samples.length > 6) d.samples.shift()
         const width = event.currentTarget.clientWidth
-        const blocked = (dx > 0 && index === 0) || (dx < 0 && last)
+        const blocked = (dx > 0 && prepping) || (dx < 0 && last)
         card.style.transform = `translateX(${blocked ? rubberBand(dx, width) : dx}px)`
     }
 
@@ -364,8 +393,8 @@ export function CookMode({
         if (!d || event.pointerId !== d.id || !card) return
         const width = event.currentTarget.clientWidth
         if (!d.active) {
-            // A tap on the outer thirds pages, like a book.
-            if (event.timeStamp - d.t < 350) {
+            // A tap on the outer thirds pages, like a book. The overview is read, not paged.
+            if (!prepping && event.timeStamp - d.t < 350) {
                 const rect = event.currentTarget.getBoundingClientRect()
                 const x = (event.clientX - rect.left) / rect.width
                 if (x < 1 / 3) prev()
@@ -376,8 +405,8 @@ export function CookMode({
         const [t0, x0] = d.samples[0] ?? [d.t, d.x]
         const velocity = (event.clientX - x0) / Math.max(1, event.timeStamp - t0)
         const dir = Math.abs(velocity) > 0.4 ? Math.sign(velocity) : Math.abs(d.dx) > width * 0.22 ? Math.sign(d.dx) : 0
-        const blocked = dir === 0 || (dir > 0 && index === 0) || (dir < 0 && last)
-        const current = (d.dx > 0 && index === 0) || (d.dx < 0 && last) ? rubberBand(d.dx, width) : d.dx
+        const blocked = dir === 0 || (dir > 0 && prepping) || (dir < 0 && last)
+        const current = (d.dx > 0 && prepping) || (d.dx < 0 && last) ? rubberBand(d.dx, width) : d.dx
         if (blocked) {
             settle(card, current)
             return
@@ -474,7 +503,7 @@ export function CookMode({
         <IngredientChecklist
             recipeId={recipe.id}
             sections={sections}
-            highlight={mentioned}
+            highlight={prepping ? undefined : mentioned}
             className={styles.checklist}
         />
     )
@@ -488,12 +517,16 @@ export function CookMode({
                         <h1 className={styles.recipeTitle}>{recipe.title}</h1>
                         {total > 0 && (
                             <p className={styles.counter}>
-                                Step {index + 1} of {total}
+                                {prepping
+                                    ? total === 1
+                                        ? '1 step'
+                                        : `${total} steps`
+                                    : `Step ${index + 1} of ${total}`}
                             </p>
                         )}
                     </div>
                     <div className={styles.actions}>
-                        {canSpeak && step && (
+                        {canSpeak && step && !prepping && (
                             <Tooltip content="Read aloud">
                                 <IconButton
                                     size="m"
@@ -542,14 +575,22 @@ export function CookMode({
                         aria-label="Progress"
                         aria-valuemin={1}
                         aria-valuemax={total}
-                        aria-valuenow={index + 1}
-                        aria-valuetext={`Step ${index + 1} of ${total}`}
+                        aria-valuenow={prepping ? 0 : index + 1}
+                        aria-valuetext={prepping ? 'Not started' : `Step ${index + 1} of ${total}`}
                     >
                         {steps.map((s) => (
                             <span
                                 key={s.index}
                                 className={styles.segment}
-                                data-state={s.index < index ? 'done' : s.index === index ? 'current' : undefined}
+                                data-state={
+                                    prepping
+                                        ? undefined
+                                        : s.index < index
+                                          ? 'done'
+                                          : s.index === index
+                                            ? 'current'
+                                            : undefined
+                                }
                             />
                         ))}
                     </div>
@@ -559,14 +600,24 @@ export function CookMode({
                     ref={stageRef}
                     className={styles.stage}
                     tabIndex={-1}
-                    aria-label="Current step"
+                    aria-label={prepping ? 'Before you start' : 'Current step'}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
                     onPointerCancel={onPointerCancel}
                     onLostPointerCapture={onPointerCancel}
                 >
-                    {step ? (
+                    {prepping ? (
+                        <PrepOverview
+                            ref={cardRef}
+                            enter={enter}
+                            totalMinutes={recipe.totalMinutes}
+                            totalTime={recipe.totalTime}
+                            equipment={findEquipment(recipe.instructions)}
+                            ingredients={hasIngredients ? checklist : null}
+                            icons={{ timer: icons.timer, schedule: icons.schedule }}
+                        />
+                    ) : step ? (
                         <div className={styles.content}>
                             <div className={styles.number} aria-hidden>
                                 <MorphShape
@@ -611,7 +662,7 @@ export function CookMode({
                 )}
 
                 <div ref={dockRef} className={styles.dock}>
-                    {idleTimers.length > 0 && (
+                    {!prepping && idleTimers.length > 0 && (
                         <div
                             className={styles.stepTimers}
                             onClickCapture={(event) => {
@@ -646,24 +697,26 @@ export function CookMode({
                 </div>
 
                 <footer className={styles.controls}>
-                    <Button
-                        className={styles.prev}
-                        variant="tonal"
-                        size="m"
-                        icon={icons.back}
-                        disabled={index === 0}
-                        onClick={() => prev()}
-                    >
-                        Back
-                    </Button>
+                    {!prepping && (
+                        <Button
+                            className={styles.prev}
+                            variant="tonal"
+                            size="m"
+                            icon={icons.back}
+                            disabled={total === 0}
+                            onClick={() => prev()}
+                        >
+                            Back
+                        </Button>
+                    )}
                     <Button
                         className={styles.next}
                         size="m"
-                        trailingIcon={last ? icons.check : icons.next}
+                        trailingIcon={last && !prepping ? icons.check : icons.next}
                         disabled={total === 0}
                         onClick={() => next()}
                     >
-                        {last ? 'Done' : 'Next'}
+                        {prepping ? 'Start' : last ? 'Done' : 'Next'}
                     </Button>
                 </footer>
 
@@ -676,9 +729,11 @@ export function CookMode({
                 <p className={styles.live} aria-live="polite">
                     {celebrate !== null
                         ? 'Marked as cooked.'
-                        : step
-                          ? `Step ${index + 1} of ${total}. ${step.text}`
-                          : ''}
+                        : prepping
+                          ? `Before you start. ${total === 1 ? '1 step' : `${total} steps`}.`
+                          : step
+                            ? `Step ${index + 1} of ${total}. ${step.text}`
+                            : ''}
                 </p>
 
                 {celebrate !== null && (

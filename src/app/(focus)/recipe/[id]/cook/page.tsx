@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { displayOptions } from '@/app/(app)/recipe/[id]/_view/display-options'
 import { recipeIcons } from '@/app/(app)/recipe/[id]/_view/icons'
+import { Icon } from '@/components/ui/icon'
 import { recipeColorCss } from '@/lib/cook/color'
+import { deriveTotalMinutes, formatMinutes } from '@/lib/recipe/time'
 import { getThemePreference } from '@/lib/theme/server'
 import { requireSession } from '@/server/auth'
 import { getRecipe } from '@/server/queries'
@@ -44,13 +46,16 @@ export default async function CookPage({ params }: Props) {
                     servings: recipe.servings,
                     ingredients: recipe.ingredients,
                     instructions: recipe.instructions,
+                    totalMinutes: recipe.totalMinutes ?? deriveTotalMinutes(recipe),
+                    totalTime: recipe.totalMinutes ? formatMinutes(recipe.totalMinutes) : recipe.totalTime,
                 }}
                 displays={displays}
                 icons={{
                     close: icons.close,
                     list: icons.list,
-                    mic: icons.mic,
-                    micOff: icons.micOff,
+                    // Hands-free is a toggle: an outlined mic while off, a filled one while listening.
+                    mic: <Icon name="mic" filled />,
+                    micOff: icons.mic,
                     cast: icons.cast,
                     castConnected: icons.castConnected,
                     tv: icons.tv,
@@ -62,6 +67,7 @@ export default async function CookPage({ params }: Props) {
                     check: icons.check,
                     volume: icons.volume,
                     restart: icons.restart,
+                    schedule: <Icon name="schedule" />,
                 }}
             />
         </>
