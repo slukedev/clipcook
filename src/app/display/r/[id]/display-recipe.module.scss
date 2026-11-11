@@ -1,0 +1,468 @@
+@use "../../../../styles/mixins/typography" as type;
+@use "../../../../styles/mixins/state-layer";
+@use "../../../../styles/mixins/focus-ring";
+
+// Two panes on landscape displays: what you need on the left, what you do on the right.
+.root {
+    --_gutter: clamp(20px, 3.5vw, 48px);
+    --_body: clamp(1.25rem, 0.875rem + 1.6vmin, 1.75rem);
+    display: grid;
+    grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.5fr);
+    block-size: 100dvh;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    transition: background-color var(--md-sys-motion-spring-effects-slow-duration)
+        var(--md-sys-motion-spring-effects-slow);
+
+    &[data-mode="step"] {
+        grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.8fr);
+    }
+
+    // Touch screens: thin, quiet scrollbars that still show there is more.
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+    }
+
+    @media (orientation: portrait) {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        block-size: auto;
+        min-block-size: 100dvh;
+
+        &[data-mode="step"] {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) auto;
+            block-size: 100dvh;
+
+            .side {
+                order: 2;
+                max-block-size: 40dvh;
+            }
+        }
+    }
+}
+
+.side {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 2.4vmin, 24px);
+    min-block-size: 0;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    padding: var(--_gutter);
+    background-color: var(--md-sys-color-surface-container-low);
+
+    > * {
+        flex: none;
+    }
+}
+
+.photo {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-surface-container-highest);
+
+    img {
+        position: absolute;
+        inset: 0;
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: cover;
+    }
+}
+
+.title {
+    font-size: clamp(1.75rem, 1rem + 3vmin, 2.75rem);
+    line-height: 1.15;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    font-variation-settings:
+        "ROND" 60,
+        "GRAD" var(--md-sys-typescale-grade, 0);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+}
+
+.meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    list-style: none;
+    font-size: clamp(1.0625rem, 0.875rem + 0.8vmin, 1.375rem);
+    color: var(--md-sys-color-on-surface-variant);
+    --md-icon-size: 24px;
+
+    li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+
+.start {
+    align-self: flex-start;
+}
+
+.compactHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-inline-end: 0;
+}
+
+.thumb {
+    position: relative;
+    flex: none;
+    inline-size: 64px;
+    block-size: 64px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-large);
+
+    img {
+        position: absolute;
+        inset: 0;
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: cover;
+    }
+}
+
+.compactTitle {
+    font-size: clamp(1.25rem, 0.875rem + 1.4vmin, 1.625rem);
+    line-height: 1.2;
+    font-weight: 500;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.paneTitle {
+    font-size: clamp(1.125rem, 0.875rem + 1vmin, 1.5rem);
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--md-sys-color-primary);
+}
+
+.ingredients {
+    display: grid;
+    gap: 8px;
+}
+
+.ingredientList {
+    display: grid;
+    gap: 2px;
+    list-style: none;
+}
+
+.ingredientHeading {
+    padding: 14px 4px 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.ingredient {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+    @include focus-ring.inward("&:has(:focus-visible)");
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    inline-size: 100%;
+    min-block-size: 64px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    text-align: start;
+    font-size: clamp(1.125rem, 0.875rem + 1vmin, 1.5rem);
+    line-height: 1.3;
+}
+
+.ingredientInput {
+    position: absolute;
+    opacity: 0;
+    inline-size: 1px;
+    block-size: 1px;
+    pointer-events: none;
+}
+
+.ingredientBox {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: var(--md-sys-shape-corner-small);
+    outline: 2px solid var(--md-sys-color-on-surface-variant);
+    outline-offset: -2px;
+    color: transparent;
+    --md-icon-size: 22px;
+    transition:
+        background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    .ingredient:has(:checked) & {
+        border-radius: var(--md-sys-shape-corner-medium);
+        background-color: var(--md-sys-color-primary);
+        outline-color: var(--md-sys-color-primary);
+        color: var(--md-sys-color-on-primary);
+    }
+}
+
+.ingredientText {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    text-decoration-line: line-through;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    transition:
+        color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        text-decoration-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
+
+    .ingredient:has(:checked) & {
+        color: var(--md-sys-color-on-surface-variant);
+        text-decoration-color: currentcolor;
+    }
+}
+
+// Overview: every step, each one a way into step mode.
+.stepsPane {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    min-block-size: 0;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    padding: var(--_gutter);
+    padding-block-start: max(var(--_gutter), 32px);
+
+    .paneTitle {
+        min-block-size: 56px;
+        display: flex;
+        align-items: center;
+        padding-inline-end: 88px;
+    }
+}
+
+.stepList {
+    display: grid;
+    gap: 4px;
+    list-style: none;
+}
+
+.stepSection {
+    padding: 16px 8px 6px;
+    font-size: clamp(1rem, 0.875rem + 0.6vmin, 1.25rem);
+    font-weight: 600;
+    color: var(--md-sys-color-tertiary);
+}
+
+.stepRow {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+    @include focus-ring.inward;
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    inline-size: 100%;
+    padding: 16px;
+    border-radius: var(--md-sys-shape-corner-large);
+    text-align: start;
+    font-size: var(--_body);
+    line-height: 1.45;
+    color: var(--md-sys-color-on-surface);
+}
+
+.stepNumber {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 44px;
+    block-size: 44px;
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    font-size: 1.25rem;
+    font-weight: 600;
+    @include type.numeric;
+}
+
+// Step mode: one instruction, big, with the controls under the thumb.
+.stage {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 2.4vmin, 24px);
+    min-block-size: 0;
+    padding: var(--_gutter);
+    padding-block-start: max(var(--_gutter), 28px);
+    touch-action: pan-y;
+}
+
+.stageTop {
+    display: grid;
+    gap: 12px;
+    padding-inline-end: 88px;
+    min-block-size: 56px;
+    align-content: center;
+}
+
+.counter {
+    font-size: clamp(1.125rem, 0.875rem + 1vmin, 1.5rem);
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+    @include type.numeric;
+
+    span {
+        font-weight: 400;
+        color: var(--md-sys-color-on-surface-variant);
+    }
+}
+
+.progress {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+
+    li {
+        flex: 1;
+        block-size: 6px;
+        border-radius: 3px;
+        background-color: var(--md-sys-color-surface-container-highest);
+        transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
+
+        &[data-done] {
+            background-color: var(--md-sys-color-primary-container);
+        }
+
+        &[data-current] {
+            background-color: var(--md-sys-color-primary);
+        }
+    }
+}
+
+.stepViewport {
+    position: relative;
+    flex: 1 1 0;
+    min-block-size: 0;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+}
+
+.stepBody {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+
+    .stepSection {
+        padding: 0;
+    }
+}
+
+.stepText {
+    font-size: clamp(1.75rem, 0.875rem + 3.6vmin, 3.25rem);
+    line-height: 1.35;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+}
+
+.inlineTimer {
+    @include state-layer.host(var(--md-sys-color-on-tertiary-container));
+    @include focus-ring.ring;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2em;
+    padding: 0.02em 0.32em 0.02em 0.22em;
+    margin-inline: 0.04em;
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+    font: inherit;
+    line-height: 1.2;
+    vertical-align: baseline;
+    --md-icon-size: 0.85em;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.navButtons {
+    display: flex;
+    gap: 12px;
+    margin-inline-start: auto;
+}
+
+.timers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    list-style: none;
+}
+
+.timer {
+    display: flex;
+    align-items: center;
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
+
+    &[data-paused] {
+        background-color: var(--md-sys-color-surface-container-highest);
+        color: var(--md-sys-color-on-surface);
+    }
+
+    &[data-done] {
+        background-color: var(--md-sys-color-tertiary);
+        color: var(--md-sys-color-on-tertiary);
+        animation: ring 1s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes ring {
+    to {
+        background-color: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+    }
+}
+
+.timerMain {
+    @include state-layer.host;
+    @include focus-ring.ring;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: 64px;
+    padding-inline: 18px 8px;
+    border-radius: inherit;
+    font-size: 1.5rem;
+    font-weight: 600;
+    @include type.numeric;
+}
+
+.timerIcon {
+    display: grid;
+    --md-icon-size: 28px;
+}
+
+.timerClose {
+    @include state-layer.host;
+    @include focus-ring.ring;
+    display: grid;
+    place-items: center;
+    inline-size: 56px;
+    block-size: 64px;
+    border-radius: var(--md-sys-shape-corner-full);
+    --md-icon-size: 24px;
+}
