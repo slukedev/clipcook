@@ -25,7 +25,7 @@ export const metadata: Metadata = {
         default: 'ClipCook',
         template: '%s · ClipCook',
     },
-    description: 'Clip recipes from anywhere, keep them, and cook from them.',
+    description: 'Save recipes from any website and cook them step by step.',
     applicationName: 'ClipCook',
     icons: {
         icon: '/favicon.ico',

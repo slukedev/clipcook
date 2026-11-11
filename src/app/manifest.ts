@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
         id: '/',
         name: 'ClipCook',
         short_name: 'ClipCook',
-        description: 'Clip recipes from anywhere, keep them, and cook from them.',
+        description: 'Save recipes from any website and cook them step by step.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
