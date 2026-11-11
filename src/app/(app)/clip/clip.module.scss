@@ -1,10 +1,18 @@
 @use "../../../styles/mixins/typography" as type;
 @use "../../../styles/mixins/media";
+@use "../../../styles/mixins/page";
 
+// The entry is a small centered form: narrow frame, centered title. The pending step
+// previews the review, so it takes the review's medium frame.
 .page {
+    @include page.max(narrow);
     min-block-size: 100dvh;
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
+}
+
+.pagePending {
+    @include page.max(medium);
 }
 
 /* Entry */
@@ -14,10 +22,8 @@
     flex-direction: column;
     align-items: stretch;
     gap: 20px;
-    inline-size: 100%;
-    max-inline-size: 640px;
-    margin-inline: auto;
-    padding: 8px var(--md-sys-layout-margin) calc(96px + var(--safe-bottom));
+    @include page.inner;
+    padding-block: 8px calc(96px + var(--safe-bottom));
 
     @include media.expanded-up {
         padding-block-start: clamp(16px, 8vh, 96px);
@@ -130,10 +136,8 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    inline-size: 100%;
-    max-inline-size: 1400px;
-    margin-inline: auto;
-    padding: 8px var(--md-sys-layout-margin) calc(96px + var(--safe-bottom));
+    @include page.inner;
+    padding-block: 8px calc(96px + var(--safe-bottom));
 }
 
 .pendingForm {

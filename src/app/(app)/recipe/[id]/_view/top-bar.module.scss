@@ -12,7 +12,9 @@
     gap: 4px;
     min-block-size: calc(64px + var(--safe-top));
     padding-block-start: var(--safe-top);
-    padding-inline: max(4px, var(--safe-left)) max(4px, var(--safe-right));
+    // Same inset as the shared TopAppBar: back and actions sit on the page frame's edges.
+    --_inset: max(4px, (100% - var(--cc-page-max, 100%)) / 2 - var(--md-sys-layout-margin) + 4px);
+    padding-inline: max(var(--_inset), var(--safe-left)) max(var(--_inset), var(--safe-right));
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
     transition: background-color var(--md-sys-motion-spring-effects-default-duration)
@@ -64,6 +66,12 @@
             --_container: color-mix(in srgb, var(--md-sys-color-surface-container-high) 88%, transparent);
             --_content: var(--md-sys-color-on-surface);
         }
+    }
+}
+
+@container recipe (width >= 1800px) {
+    .bar {
+        --cc-page-max: calc(var(--cc-page-medium) + 160px);
     }
 }
 

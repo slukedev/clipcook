@@ -7,7 +7,12 @@
     gap: 12px;
     min-block-size: calc(64px + var(--safe-top));
     padding-block-start: var(--safe-top);
-    padding-inline: 8px 12px;
+    --_inset: max(8px, (100% - var(--cc-page-max, 100%)) / 2 - var(--md-sys-layout-margin) + 8px);
+    padding-inline: var(--_inset);
+
+    @container recipe (width >= 1800px) {
+        --cc-page-max: calc(var(--cc-page-medium) + 160px);
+    }
 }
 
 .spacer {

@@ -305,7 +305,7 @@ function Pending({
     }
 
     return (
-        <div className={styles.page}>
+        <div className={`${styles.page} ${styles.pagePending}`}>
             <TopAppBar
                 title="Clip a Recipe"
                 leading={<IconButton label="Close" icon={icons.close} onClick={onExit} />}
@@ -567,6 +567,7 @@ function Entry({
         <div className={styles.page}>
             <TopAppBar
                 title="Clip a Recipe"
+                centered
                 leading={<IconButton label="Close" icon={icons.close} onClick={onExit} />}
             />
             <form ref={formRef} className={styles.entry} onSubmit={onSubmit} noValidate data-mode={mode}>

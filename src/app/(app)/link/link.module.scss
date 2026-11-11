@@ -1,5 +1,11 @@
 @use "../../../styles/mixins/typography" as type;
 @use "../../../styles/mixins/media";
+@use "../../../styles/mixins/page";
+
+// A small centered flow: the bar takes the narrow frame and centers its title over the form.
+.page {
+    @include page.max(narrow);
+}
 
 .main {
     display: grid;

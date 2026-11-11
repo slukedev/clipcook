@@ -1,5 +1,6 @@
 @use "../../../../../styles/mixins/typography" as type;
 @use "../../../../../styles/mixins/focus-ring";
+@use "../../../../../styles/mixins/page";
 
 // Layout follows the space the page actually gets (the shell's rail takes some), so it
 // runs on container queries named `recipe`:
@@ -7,9 +8,12 @@
 //   600+    one column, photo beside the summary
 //   780+    photo | summary on top, then ingredients (sticky, beside the steps) | steps,
 //           so the first screen always shows what you need and what you do
-//   1100+   wider gutters; 1400+ more air, never longer lines
+//   1100+   wider gutters
+//   1800+   a slightly larger frame and type for big monitors across the kitchen
+// From 780 up the panes sit in the medium page frame, and the bar reads the same frame.
 
 .root {
+    @include page.max(medium);
     container: recipe / inline-size;
     min-block-size: 100dvh;
     background-color: var(--md-sys-color-surface);
@@ -266,7 +270,7 @@
         align-items: start;
         column-gap: var(--md-sys-layout-pane-spacer);
         row-gap: 32px;
-        padding-inline: var(--_margin);
+        @include page.inner;
         padding-block-start: 8px;
     }
 
@@ -288,6 +292,12 @@
     .summary {
         grid-area: summary;
         padding-inline: 0;
+    }
+
+    // A primary action, not a banner: wide enough to find at a glance, no wider.
+    .cook {
+        align-self: flex-start;
+        min-inline-size: min(100%, 280px);
     }
 
     .title {
@@ -317,10 +327,8 @@
 
 @container recipe (width >= 1100px) {
     .layout {
-        --_side: minmax(340px, 400px);
-        grid-template-columns: var(--_side) minmax(0, 76ch);
-        column-gap: 48px;
-        padding-inline: 32px;
+        --_side: clamp(340px, 34%, 440px);
+        column-gap: clamp(40px, 5cqi, 72px);
     }
 
     .title {
@@ -328,12 +336,19 @@
     }
 }
 
-@container recipe (width >= 1400px) {
+@container recipe (width >= 1800px) {
     .layout {
-        --_side: 420px;
-        justify-content: center;
-        column-gap: 72px;
-        padding-inline: 48px;
+        --cc-page-max: calc(var(--cc-page-medium) + 160px);
+        --_side: 480px;
+        column-gap: 80px;
+    }
+
+    .title {
+        @include type.role(display-medium, $emphasized: true);
+    }
+
+    .description {
+        font-size: 1.125rem;
     }
 }
 

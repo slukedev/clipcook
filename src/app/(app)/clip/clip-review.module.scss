@@ -1,8 +1,10 @@
 @use "../../../styles/mixins/typography" as type;
 @use "../../../styles/mixins/media";
+@use "../../../styles/mixins/page";
 @use "../../../styles/mixins/focus-ring";
 
 .review {
+    @include page.max(medium);
     min-block-size: 100dvh;
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
@@ -14,7 +16,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-inline-end: 8px;
+    // Save's edge on the content edge (the bar row sits 4px inside the margin).
+    padding-inline-end: calc(var(--md-sys-layout-margin) - 4px);
 }
 
 // Under 380px the edit action keeps its icon and its accessible name only.
@@ -37,10 +40,8 @@
         "steps"
         "notes";
     gap: 32px;
-    inline-size: 100%;
-    max-inline-size: 1400px;
-    margin-inline: auto;
-    padding: 8px var(--md-sys-layout-margin) calc(96px + var(--safe-bottom));
+    @include page.inner;
+    padding-block: 8px calc(96px + var(--safe-bottom));
 
     @include media.expanded-up {
         grid-template-areas:
@@ -55,6 +56,21 @@
 
     @include media.large-up {
         column-gap: 64px;
+    }
+
+    // No notices: drop their row so its gap does not push the review down.
+    &:has(> .notices:empty) {
+        grid-template-areas:
+            "lead"
+            "steps"
+            "notes";
+
+        @include media.expanded-up {
+            grid-template-areas:
+                "lead steps"
+                "lead notes";
+            grid-template-rows: auto 1fr;
+        }
     }
 }
 
@@ -119,11 +135,11 @@
     border-radius: var(--md-sys-shape-corner-extra-large);
 }
 
+// Full column width at any size; a capped aspect ratio would shrink it sideways instead.
 .noPhoto {
     display: grid;
     place-items: center;
-    aspect-ratio: 5 / 2;
-    max-block-size: 200px;
+    block-size: clamp(140px, 16vw, 200px);
     background-color: var(--md-sys-color-primary-container);
 }
 

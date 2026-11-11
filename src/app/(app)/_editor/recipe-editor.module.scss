@@ -1,7 +1,9 @@
 @use "../../../styles/mixins/typography" as type;
 @use "../../../styles/mixins/media";
+@use "../../../styles/mixins/page";
 
 .editor {
+    @include page.max(medium);
     min-block-size: 100dvh;
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
@@ -13,8 +15,9 @@
     display: block;
 }
 
+// The bar's row sits 4px inside the window margin; this puts Save's edge on the content edge.
 .save {
-    margin-inline: 4px 8px;
+    margin-inline: 4px calc(var(--md-sys-layout-margin) - 4px);
 }
 
 // Compact: one column, core details first, then the lists, then the extras.
@@ -26,10 +29,8 @@
         "lists"
         "extra";
     gap: 32px;
-    inline-size: 100%;
-    max-inline-size: 1400px;
-    margin-inline: auto;
-    padding: 8px var(--md-sys-layout-margin) calc(96px + var(--safe-bottom));
+    @include page.inner;
+    padding-block: 8px calc(96px + var(--safe-bottom));
 
     @include media.expanded-up {
         grid-template-areas:

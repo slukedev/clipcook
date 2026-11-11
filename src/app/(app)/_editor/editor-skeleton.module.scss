@@ -5,7 +5,9 @@
     align-items: center;
     gap: 16px;
     min-block-size: calc(64px + var(--safe-top));
-    padding: var(--safe-top) 12px 0 8px;
+    // Matches the TopAppBar row inset inside the page frame.
+    --_inset: max(4px, (100% - var(--cc-page-max, 100%)) / 2 - var(--md-sys-layout-margin) + 4px);
+    padding: var(--safe-top) calc(var(--_inset) + var(--md-sys-layout-margin) - 4px) 0 calc(var(--_inset) + 4px);
 }
 
 .heading {

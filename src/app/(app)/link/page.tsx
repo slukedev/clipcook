@@ -9,6 +9,7 @@ import { listDisplays } from '@/server/queries'
 import { requestOrigin } from '../settings/_sections/origin'
 import { CODE_LENGTH, normalizeCode } from './code'
 import { LinkForm } from './link-form'
+import styles from './link.module.scss'
 
 export const metadata: Metadata = { title: 'Link a Display' }
 
@@ -18,28 +19,31 @@ export default async function LinkPage({ searchParams }: { searchParams: Promise
     const initialCode = normalizeCode(Array.isArray(code) ? (code[0] ?? '') : (code ?? '')).slice(0, CODE_LENGTH)
     return (
         <PageTransition>
-            <TopAppBar
-                title="Link a Display"
-                leading={
-                    <IconButton
-                        label="Kitchen displays"
-                        icon={<Icon name="arrow_back" />}
-                        render={<Link href="/settings/displays" />}
-                        nativeButton={false}
-                    />
-                }
-            />
-            <LinkForm
-                initialCode={initialCode}
-                taken={taken}
-                address={`${new URL(origin).host}/display`}
-                icons={{
-                    display: <Icon name="smart_display" />,
-                    done: <Icon name="check" />,
-                    send: <Icon name="send" />,
-                    error: <Icon name="error" />,
-                }}
-            />
+            <div className={styles.page}>
+                <TopAppBar
+                    title="Link a Display"
+                    centered
+                    leading={
+                        <IconButton
+                            label="Kitchen displays"
+                            icon={<Icon name="arrow_back" />}
+                            render={<Link href="/settings/displays" />}
+                            nativeButton={false}
+                        />
+                    }
+                />
+                <LinkForm
+                    initialCode={initialCode}
+                    taken={taken}
+                    address={`${new URL(origin).host}/display`}
+                    icons={{
+                        display: <Icon name="smart_display" />,
+                        done: <Icon name="check" />,
+                        send: <Icon name="send" />,
+                        error: <Icon name="error" />,
+                    }}
+                />
+            </div>
         </PageTransition>
     )
 }

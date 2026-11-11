@@ -101,6 +101,13 @@
     }
 }
 
+// Big monitors are read from the stove, a step back from the screen.
+@container recipe (width >= 1800px) {
+    .text {
+        font-size: 1.1875rem;
+    }
+}
+
 @media print {
     .head > :not(.title) {
         display: none;
