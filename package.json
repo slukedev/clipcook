@@ -50,7 +50,7 @@
         "babel-plugin-react-compiler": "^1.0.0",
         "esbuild": "^0.28.2",
         "serwist": "^9.5.13",
-        "typescript": "~6.0.3",
+        "typescript": "~7.0.2",
         "vitest": "^5.1.0"
     },
     "overrides": {
