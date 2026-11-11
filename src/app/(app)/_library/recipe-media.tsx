@@ -35,7 +35,7 @@ export function RecipeMedia({
                 alt=""
                 className={cx(styles.photo, className)}
                 loading={priority ? 'eager' : 'lazy'}
-                decoding="async"
+                decoding={priority ? 'sync' : 'async'}
                 fetchPriority={priority ? 'high' : undefined}
             />
         )

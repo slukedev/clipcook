@@ -1,11 +1,12 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import { TopAppBar } from '@/components/ui/top-app-bar'
+import { PageTransition } from '@/components/ui/view-transition'
 import styles from './displays.module.scss'
 
-export default function DisplaysLoading() {
+function DisplaysPlaceholder() {
     return (
         <div aria-busy="true">
-            <TopAppBar variant="medium" title="Kitchen displays" />
+            <TopAppBar variant="medium" title="Kitchen Displays" />
             <div className={styles.body}>
                 <div className={styles.listPane}>
                     <div className={styles.listHeader}>
@@ -21,5 +22,14 @@ export default function DisplaysLoading() {
                 </div>
             </div>
         </div>
+    )
+}
+
+/** Enters with the navigation's motion and crossfades into the page when it arrives. */
+export default function Loading() {
+    return (
+        <PageTransition>
+            <DisplaysPlaceholder />
+        </PageTransition>
     )
 }

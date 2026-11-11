@@ -8,7 +8,7 @@ export default function CollectionNotFound() {
         <StatusScreen
             shape="clover8"
             icon={<Icon name="collections_bookmark" />}
-            title="Collection not found"
+            title="Collection Not Found"
             action={
                 <Button variant="tonal" render={<Link href="/collections" />} nativeButton={false}>
                     Collections

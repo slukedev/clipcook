@@ -3,8 +3,8 @@ import { groupGroceries } from '@/lib/recipe/grocery'
 
 export const CATEGORY_LABELS: Record<GroceryCategory, string> = {
     produce: 'Produce',
-    'meat-seafood': 'Meat and seafood',
-    'dairy-eggs': 'Dairy and eggs',
+    'meat-seafood': 'Meat and Seafood',
+    'dairy-eggs': 'Dairy and Eggs',
     bakery: 'Bakery',
     pantry: 'Pantry',
     spices: 'Spices',

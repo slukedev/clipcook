@@ -180,7 +180,7 @@ export function RecipeActions({
             )}
             <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
                 <AlertDialogContent
-                    headline="Delete recipe?"
+                    headline="Delete Recipe?"
                     actions={
                         <>
                             <AlertDialogClose render={<Button variant="text" />}>Cancel</AlertDialogClose>

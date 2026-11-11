@@ -28,7 +28,7 @@ test('search narrows the cards to matching recipes and survives a reload', async
     expect(sorted(await cardTitles(page))).toEqual(expected)
 
     await page.getByRole('searchbox', { name: 'Search recipes' }).fill('zzz no such dish')
-    await expect(page.getByRole('heading', { name: 'No matches' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'No Matches' })).toBeVisible()
     await page.getByRole('button', { name: /^Clear (search|filters)$/ }).click()
     await expect(recipeGrid(page).getByRole('listitem')).toHaveCount(recipes.length)
 })

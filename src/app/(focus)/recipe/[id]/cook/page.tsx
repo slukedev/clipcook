@@ -8,7 +8,6 @@ import { requireSession } from '@/server/auth'
 import { getRecipe } from '@/server/queries'
 import { recipeIdSchema } from '@/server/schemas'
 import { CookMode } from './_cook/cook-mode'
-import '@/app/(app)/recipe/[id]/_view/view-transitions.css'
 
 type Props = { params: Promise<{ id: string }> }
 

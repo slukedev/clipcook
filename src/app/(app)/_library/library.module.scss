@@ -1,6 +1,13 @@
 @use "../../../styles/mixins/typography" as type;
 @use "../../../styles/mixins/media";
 
+// Wraps everything below the header so filter changes can crossfade it as one piece.
+.results {
+    display: flex;
+    flex-direction: column;
+    gap: inherit;
+}
+
 .page {
     display: flex;
     flex-direction: column;

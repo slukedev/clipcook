@@ -73,7 +73,7 @@ function NameForm({ target, onClose, onCreated }: { target: NameDialogTarget } &
 
     return (
         <DialogContent
-            headline={target.mode === 'create' ? 'New collection' : 'Rename collection'}
+            headline={target.mode === 'create' ? 'New Collection' : 'Rename Collection'}
             actions={
                 <>
                     <DialogClose render={<Button variant="text" />}>Cancel</DialogClose>
@@ -132,7 +132,7 @@ export function DeleteCollectionDialog({ target, onClose, onDeleted }: DeleteDia
     return (
         <AlertDialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
             <AlertDialogContent
-                headline={`Delete ${shown?.name ?? 'collection'}?`}
+                headline={`Delete ${shown?.name ?? 'Collection'}?`}
                 actions={
                     <>
                         <AlertDialogClose render={<Button variant="text" />}>Cancel</AlertDialogClose>

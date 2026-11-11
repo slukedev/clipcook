@@ -69,7 +69,7 @@ export function GrocerySheet({
             <AdaptiveSheet
                 open={open}
                 onOpenChange={(next) => !pending && setOpen(next)}
-                title="Add to grocery list"
+                title="Add to Grocery List"
                 actions={
                     <>
                         <Button variant="text" onClick={() => setOpen(false)} disabled={pending}>

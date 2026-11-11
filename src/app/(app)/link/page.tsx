@@ -9,7 +9,7 @@ import { listDisplays } from '@/server/queries'
 import { CODE_LENGTH, normalizeCode } from './code'
 import { LinkForm } from './link-form'
 
-export const metadata: Metadata = { title: 'Link a display' }
+export const metadata: Metadata = { title: 'Link a Display' }
 
 export default async function LinkPage({ searchParams }: { searchParams: Promise<{ code?: string | string[] }> }) {
     const [{ code }, session] = await Promise.all([searchParams, requireSession()])
@@ -18,7 +18,7 @@ export default async function LinkPage({ searchParams }: { searchParams: Promise
     return (
         <PageTransition>
             <TopAppBar
-                title="Link a display"
+                title="Link a Display"
                 leading={
                     <IconButton
                         label="Kitchen displays"

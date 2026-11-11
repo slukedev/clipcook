@@ -3,7 +3,7 @@ import { expect, test, unique } from './support/fixtures'
 test('write a recipe at /new, then edit it, with the unsaved-changes guard on Close', async ({ page }, testInfo) => {
     const title = unique(testInfo, 'Charred Corn Salad')
     await page.goto('/new')
-    const form = page.getByRole('form', { name: 'New recipe' })
+    const form = page.getByRole('form', { name: 'New Recipe' })
     await form.getByRole('textbox', { name: 'Title' }).fill(title)
     await form.getByRole('textbox', { name: 'Servings' }).fill('4')
 
@@ -66,7 +66,7 @@ test('write a recipe at /new, then edit it, with the unsaved-changes guard on Cl
     await editor.getByRole('textbox', { name: 'Title' }).fill(`${title} with Chili`)
 
     await editor.getByRole('button', { name: 'Close' }).click()
-    const guard = page.getByRole('alertdialog', { name: 'Discard changes?' })
+    const guard = page.getByRole('alertdialog', { name: 'Discard Changes?' })
     await expect(guard).toBeVisible()
     await guard.getByRole('button', { name: 'Keep editing' }).click()
     await expect(guard).toBeHidden()

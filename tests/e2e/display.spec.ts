@@ -37,20 +37,20 @@ test('pair a kitchen display, send a recipe, follow cook mode, then unlink it', 
     watchConsole(display, consoleProblems, [/status of 401 \(Unauthorized\)/])
     try {
         await display.goto('/display')
-        await expect(display.getByRole('heading', { level: 1, name: 'Link this display' })).toBeVisible()
+        await expect(display.getByRole('heading', { level: 1, name: 'Link This Display' })).toBeVisible()
         const spoken = await display.getByText(/^Code( [A-Z0-9])+$/).textContent()
         const code = (spoken ?? '').replace(/^Code /, '').replaceAll(' ', '')
         expect(code).toMatch(/^[A-Z0-9]{6}$/)
 
         await page.goto('/link')
-        await expect(page.getByRole('heading', { level: 1, name: 'Link a display' })).toBeVisible()
+        await expect(page.getByRole('heading', { level: 1, name: 'Link a Display' })).toBeVisible()
         await page.getByRole('textbox', { name: 'Code on the display' }).fill(code)
         await page.getByRole('textbox', { name: 'Name' }).fill(name)
         await page.getByRole('button', { name: 'Link display' }).click()
         await expect(page.getByRole('heading', { name: `${name} is ready` })).toBeVisible()
 
         // The display notices the claim on its next poll and leaves pairing.
-        await expect(display.getByRole('heading', { level: 1, name: 'Link this display' })).toBeHidden({
+        await expect(display.getByRole('heading', { level: 1, name: 'Link This Display' })).toBeHidden({
             timeout: 15_000,
         })
 
@@ -94,7 +94,7 @@ test('pair a kitchen display, send a recipe, follow cook mode, then unlink it', 
         await expect(confirm).toBeHidden()
         await expect(page.getByRole('heading', { name })).toHaveCount(0)
 
-        await expect(display.getByRole('heading', { level: 1, name: 'Link this display' })).toBeVisible({
+        await expect(display.getByRole('heading', { level: 1, name: 'Link This Display' })).toBeVisible({
             timeout: 15_000,
         })
         await expect(display).toHaveURL(/\/display$/)

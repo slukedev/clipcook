@@ -6,7 +6,7 @@ import { editorIcons } from '../_editor/icons'
 import { RecipeEditor } from '../_editor/recipe-editor'
 import { emptyValues } from '../_editor/values'
 
-export const metadata: Metadata = { title: 'New recipe' }
+export const metadata: Metadata = { title: 'New Recipe' }
 
 export default async function NewRecipePage() {
     const session = await requireSession()
@@ -14,7 +14,7 @@ export default async function NewRecipePage() {
     return (
         <PageTransition>
             <RecipeEditor
-                heading="New recipe"
+                heading="New Recipe"
                 initial={emptyValues()}
                 initialPhoto={{ kind: 'none' }}
                 tags={tags}

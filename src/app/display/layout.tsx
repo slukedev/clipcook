@@ -7,7 +7,7 @@ import styles from './display.module.scss'
 import { DisplayProvider } from './display-provider'
 
 export const metadata: Metadata = {
-    title: 'Kitchen display',
+    title: 'Kitchen Display',
     robots: { index: false, follow: false },
     appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'ClipCook' },
 }

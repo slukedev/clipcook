@@ -7,7 +7,7 @@ const PANCAKES = 'Lemon Blueberry Buttermilk Pancakes'
 /** Whole-number quantity of an unchecked grocery item, 0 when the list does not have it. */
 async function groceryQuantity(page: Page, name: string): Promise<number> {
     await page.goto('/grocery')
-    await expect(page.getByRole('heading', { level: 1, name: 'Grocery list' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Grocery List' })).toBeVisible()
     const item = page
         .getByRole('main')
         .getByRole('checkbox', { name: new RegExp(`^\\d+ cups? ${name}$`), checked: false })
@@ -19,7 +19,7 @@ async function groceryQuantity(page: Page, name: string): Promise<number> {
 
 async function addFlourAndButtermilk(page: Page) {
     await page.getByRole('region', { name: 'Ingredients' }).getByRole('button', { name: 'Add to list' }).click()
-    const sheet = page.getByRole('dialog', { name: 'Add to grocery list' })
+    const sheet = page.getByRole('dialog', { name: 'Add to Grocery List' })
     await sheet.getByRole('checkbox', { name: 'Select all' }).uncheck()
     await sheet.getByRole('checkbox', { name: '4 cups all-purpose flour' }).check()
     await sheet.getByRole('checkbox', { name: '4 cups buttermilk' }).check()
@@ -113,9 +113,9 @@ test('adding scaled ingredients to the grocery list merges and groups them by ai
 
     await page.goto('/grocery')
     const pantry = page.getByRole('region', { name: 'Pantry' })
-    const dairy = page.getByRole('region', { name: 'Dairy and eggs' })
+    const dairy = page.getByRole('region', { name: 'Dairy and Eggs' })
     await expect(pantry.getByRole('checkbox', { name: `${flourBefore + 8} cups all-purpose flour` })).toBeVisible()
     await expect(dairy.getByRole('checkbox', { name: `${buttermilkBefore + 8} cups buttermilk` })).toBeVisible()
     await expect(page.getByRole('main').getByRole('checkbox', { name: /all-purpose flour$/ })).toHaveCount(1)
-    await expect(page.getByRole('region', { name: 'From recipes' }).getByRole('link', { name: PANCAKES })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'From Recipes' }).getByRole('link', { name: PANCAKES })).toBeVisible()
 })

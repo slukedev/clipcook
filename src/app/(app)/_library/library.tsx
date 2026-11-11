@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useDeferredValue, useEffect, useRef, useState } from 'react'
+import { startTransition, useDeferredValue, useEffect, useRef, useState, ViewTransition } from 'react'
 import { searchRecipes } from '@/actions/recipes'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -166,14 +166,20 @@ export function Library({
         writeCookie(LIBRARY_COOKIE, serializeLibraryPrefs(merged))
     }
 
+    // Filter, tag, sort and layout changes swap the results with a quick crossfade (the
+    // keyed <ViewTransition> below); typing in search stays instant.
+    const refilter = (update: () => void) => startTransition(update)
+
     const clearFilters = () => {
         setQuery('')
-        setScope('all')
-        setActiveTags([])
+        refilter(() => {
+            setScope('all')
+            setActiveTags([])
+        })
     }
 
     const toggleTag = (tag: string, on: boolean) =>
-        setActiveTags((current) => (on ? [...current, tag] : current.filter((t) => t !== tag)))
+        refilter(() => setActiveTags((current) => (on ? [...current, tag] : current.filter((t) => t !== tag))))
 
     const sortLabel = SORTS.find((s) => s.value === prefs.sort)?.label ?? 'Recent'
     const tagLabel =
@@ -183,12 +189,13 @@ export function Library({
               ? activeTags[0]
               : `${activeTags[0]} +${activeTags.length - 1}`
     const cooked = filtering ? [] : recipes.filter((r) => r.lastCookedAt)
+    const resultsKey = [validScope, activeTags.join(','), prefs.sort, prefs.view].join('|')
 
     const viewToggle = (
         <IconButton
             label={prefs.view === 'grid' ? 'Show as list' : 'Show as grid'}
             icon={prefs.view === 'grid' ? icons.list : icons.grid}
-            onClick={() => updatePrefs({ view: prefs.view === 'grid' ? 'list' : 'grid' })}
+            onClick={() => refilter(() => updatePrefs({ view: prefs.view === 'grid' ? 'list' : 'grid' }))}
         />
     )
 
@@ -202,7 +209,10 @@ export function Library({
                 }
             />
             <MenuContent align="end">
-                <MenuRadioGroup value={prefs.sort} onValueChange={(value) => updatePrefs({ sort: value as SortKey })}>
+                <MenuRadioGroup
+                    value={prefs.sort}
+                    onValueChange={(value) => refilter(() => updatePrefs({ sort: value as SortKey }))}
+                >
                     {SORTS.map((s) => (
                         <MenuRadioItem key={s.value} value={s.value}>
                             {s.label}
@@ -222,7 +232,7 @@ export function Library({
                         className={styles.empty}
                         shape="cookie9"
                         icon={icons.book}
-                        title="No recipes yet"
+                        title="No Recipes Yet"
                         titleAs="h2"
                         action={
                             <div className={styles.emptyActions}>
@@ -324,12 +334,15 @@ export function Library({
                         )}
                     </div>
                     <ChipSet scroll bleed label="Filter recipes">
-                        <FilterChip selected={validScope === 'all'} onSelectedChange={() => setScope('all')}>
+                        <FilterChip
+                            selected={validScope === 'all'}
+                            onSelectedChange={() => refilter(() => setScope('all'))}
+                        >
                             All
                         </FilterChip>
                         <FilterChip
                             selected={validScope === 'fav'}
-                            onSelectedChange={(on) => setScope(on ? 'fav' : 'all')}
+                            onSelectedChange={(on) => refilter(() => setScope(on ? 'fav' : 'all'))}
                         >
                             Favorites
                         </FilterChip>
@@ -337,7 +350,7 @@ export function Library({
                             <FilterChip
                                 key={c.id}
                                 selected={validScope === `c:${c.id}`}
-                                onSelectedChange={(on) => setScope(on ? `c:${c.id}` : 'all')}
+                                onSelectedChange={(on) => refilter(() => setScope(on ? `c:${c.id}` : 'all'))}
                             >
                                 {c.name}
                             </FilterChip>
@@ -390,42 +403,49 @@ export function Library({
                     )}
                 </header>
 
-                {cooked.length > 0 && <JumpBackIn recipes={cooked} />}
+                <ViewTransition key={resultsKey} enter="cc-results" exit="cc-results" default="none">
+                    <div className={styles.results}>
+                        {cooked.length > 0 && <JumpBackIn recipes={cooked} />}
 
-                {visible.length > 0 ? (
-                    <section aria-labelledby="library-all" className={styles.section}>
-                        <h2 id="library-all" className={cooked.length > 0 ? styles.sectionTitle : styles.srOnly}>
-                            {filtering ? 'Results' : 'All recipes'}
-                        </h2>
-                        <RecipeBrowser
-                            recipes={visible}
-                            view={prefs.view}
-                            tokens={tokens}
-                            icons={icons}
-                            collections={collections}
-                            onFavorite={toggleFavorite}
-                            label="Recipes"
-                        />
-                    </section>
-                ) : deepPending ? (
-                    <div className={styles.searching} role="status" aria-label="Searching">
-                        <LoadingIndicator label="Searching" />
+                        {visible.length > 0 ? (
+                            <section aria-labelledby="library-all" className={styles.section}>
+                                <h2
+                                    id="library-all"
+                                    className={cooked.length > 0 ? styles.sectionTitle : styles.srOnly}
+                                >
+                                    {filtering ? 'Results' : 'All Recipes'}
+                                </h2>
+                                <RecipeBrowser
+                                    recipes={visible}
+                                    view={prefs.view}
+                                    tokens={tokens}
+                                    icons={icons}
+                                    collections={collections}
+                                    onFavorite={toggleFavorite}
+                                    label="Recipes"
+                                />
+                            </section>
+                        ) : deepPending ? (
+                            <div className={styles.searching} role="status" aria-label="Searching">
+                                <LoadingIndicator label="Searching" />
+                            </div>
+                        ) : (
+                            <EmptyState
+                                className={styles.empty}
+                                shape="clover4"
+                                icon={icons.searchOff}
+                                title="No Matches"
+                                titleAs="h2"
+                                role="status"
+                                action={
+                                    <Button variant="tonal" onClick={clearFilters}>
+                                        {onlyQuery ? 'Clear search' : 'Clear filters'}
+                                    </Button>
+                                }
+                            />
+                        )}
                     </div>
-                ) : (
-                    <EmptyState
-                        className={styles.empty}
-                        shape="clover4"
-                        icon={icons.searchOff}
-                        title="No matches"
-                        titleAs="h2"
-                        role="status"
-                        action={
-                            <Button variant="tonal" onClick={clearFilters}>
-                                {onlyQuery ? 'Clear search' : 'Clear filters'}
-                            </Button>
-                        }
-                    />
-                )}
+                </ViewTransition>
             </div>
         </PageTransition>
     )

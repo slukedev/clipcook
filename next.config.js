@@ -4,9 +4,11 @@ const nextConfig = {
     poweredByHeader: false,
     reactCompiler: true,
     experimental: {
-        // Library cards fully prefetch a recipe on hover so its photo can morph in; a minute
-        // bounds how stale such a page can be when edited elsewhere. Our own edits revalidate.
-        staleTimes: { static: 60 },
+        // Destinations and on-screen recipe cards prefetch whole pages so navigations commit in
+        // one step (no skeleton, photos morph); a minute bounds how stale such a page can be
+        // when edited elsewhere. Visited pages are reused for 30 seconds, so hopping between
+        // tabs and back is instant. Our own edits revalidate either way.
+        staleTimes: { static: 60, dynamic: 30 },
         serverActions: {
             // Original photos upload as FormData Files; the client pre-resizes
             // to ~2560px so real payloads stay a fraction of this.

@@ -6,7 +6,7 @@ import { requireSession } from '@/server/auth'
 import { getGroceryList, listRecipes } from '@/server/queries'
 import { type GroceryIcons, GroceryList } from './grocery-list'
 
-export const metadata: Metadata = { title: 'Grocery list' }
+export const metadata: Metadata = { title: 'Grocery List' }
 
 const CATEGORY_ICONS: Record<GroceryCategory, React.ReactNode> = {
     produce: <Icon name="nutrition" />,

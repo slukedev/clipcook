@@ -16,7 +16,20 @@ function hash(text: string): number {
  * in the theme's container colors with a dish glyph. Data URLs (local backend, legacy
  * docs) render as plain img; storage URLs go through next/image.
  */
-export function RecipePhoto({ id, src, alt, sizes }: { id: string; src: string; alt: string; sizes: string }) {
+export function RecipePhoto({
+    id,
+    src,
+    thumbnail,
+    alt,
+    sizes,
+}: {
+    id: string
+    src: string
+    /** The library card's image, already in the cache, shown until the full photo decodes. */
+    thumbnail?: string
+    alt: string
+    sizes: string
+}) {
     if (!src) {
         const shape = PLACEHOLDER_SHAPES[hash(id) % PLACEHOLDER_SHAPES.length] ?? 'cookie12'
         return (
@@ -27,9 +40,27 @@ export function RecipePhoto({ id, src, alt, sizes }: { id: string; src: string; 
             </div>
         )
     }
-    if (src.startsWith('data:') || src.startsWith('blob:')) {
-        // biome-ignore lint/performance/noImgElement: inline data URLs gain nothing from the optimizer
-        return <img className={styles.photo} src={src} alt={alt} decoding="async" fetchPriority="high" />
+    // The photo morphs in from its library card before the larger file has loaded, so the
+    // card's thumbnail sits underneath and the morph never lands on an empty frame.
+    const underlay =
+        thumbnail && thumbnail !== src && !thumbnail.startsWith('data:') ? (
+            // biome-ignore lint/performance/noImgElement: a cached thumbnail shown as-is
+            <img className={styles.underlay} src={thumbnail} alt="" aria-hidden decoding="sync" />
+        ) : null
+    // Inline data, blobs and our own image route are already sized; the optimizer adds nothing.
+    if (src.startsWith('data:') || src.startsWith('blob:') || src.startsWith('/api/images/')) {
+        return (
+            <>
+                {underlay}
+                {/* biome-ignore lint/performance/noImgElement: see above */}
+                <img className={styles.photo} src={src} alt={alt} decoding="async" fetchPriority="high" />
+            </>
+        )
     }
-    return <Image className={styles.photo} src={src} alt={alt} fill sizes={sizes} fetchPriority="high" />
+    return (
+        <>
+            {underlay}
+            <Image className={styles.photo} src={src} alt={alt} fill sizes={sizes} fetchPriority="high" />
+        </>
+    )
 }

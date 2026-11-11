@@ -3,11 +3,11 @@ import { notFound } from 'next/navigation'
 import { recipeColorCss } from '@/lib/cook/color'
 import { getThemePreference } from '@/lib/theme/server'
 import { requireSession } from '@/server/auth'
+import { inlineImageUrl } from '@/server/inline-images'
 import { getRecipe, listCollections } from '@/server/queries'
 import { recipeIdSchema } from '@/server/schemas'
 import { displayOptions } from './_view/display-options'
 import { RecipeScreen } from './_view/recipe-screen'
-import './_view/view-transitions.css'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -42,7 +42,13 @@ export default async function RecipePage({ params }: Props) {
 
     return (
         <RecipeScreen
-            recipe={recipe}
+            // Inline photos ship as cacheable URLs, not base64 in every page and prefetch.
+            // The thumbnail URL is the library card's, so it is already in the cache.
+            recipe={{
+                ...recipe,
+                image: inlineImageUrl(recipe.id, 'photo', recipe.image),
+                thumbnail: inlineImageUrl(recipe.id, 'thumb', recipe.thumbnail),
+            }}
             colorCss={css}
             displays={displays}
             collections={collections.map((c) => ({ id: c.id, name: c.name }))}
