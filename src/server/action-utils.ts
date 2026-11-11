@@ -7,7 +7,7 @@ import type { ActionResult } from '@/lib/domain/types'
 import { AuthError, requireSession, type SessionUser } from './auth'
 import { ClipError, clipErrorMessage, clipFailureCode } from './clip/errors'
 import { getStore } from './db'
-import { StoreError, type Store } from './db/types'
+import { type Store, StoreError } from './db/types'
 
 export function ok<T>(data: T): ActionResult<T> {
     return { ok: true, data }

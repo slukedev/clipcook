@@ -8,9 +8,9 @@ import { ExtendedFab, FabMenu, FabMenuItem } from '@/components/ui/fab'
 import { Menu, MenuContent, MenuLinkItem, MenuTrigger } from '@/components/ui/menu'
 import { NavigationBar, NavigationBarItem } from '@/components/ui/navigation-bar'
 import { NavigationRail, NavigationRailItem, useRailExpanded } from '@/components/ui/navigation-rail'
+import styles from './app-shell.module.scss'
 import { captureInstallPrompt } from './install-prompt'
 import { RAIL_COOKIE, takeLegacyMotion, writeCookie } from './preferences'
-import styles from './app-shell.module.scss'
 
 export interface Destination {
     href: string

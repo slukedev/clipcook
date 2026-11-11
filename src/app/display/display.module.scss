@@ -25,7 +25,7 @@
 }
 
 // Reaches into the icon button's size tokens: the design system stops at 56dp for M.
-.cornerButton[data-size] {
+.corner .cornerButton[data-size] {
     --_h: var(--md-display-target);
     --_icon: 28px;
     opacity: 0.85;

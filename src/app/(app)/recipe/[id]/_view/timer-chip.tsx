@@ -1,8 +1,8 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Ripple } from '@/components/ui/ripple'
 import { cx } from '@/components/ui/cx'
+import { Ripple } from '@/components/ui/ripple'
 import { type KitchenTimer, remainingMs, timerActions, useClock, useTimers } from '@/lib/cook/timers'
 import { findTimers, formatClock, type StepTimer } from '@/lib/recipe/timers'
 import styles from './timer-chip.module.scss'

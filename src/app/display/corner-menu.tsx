@@ -93,7 +93,9 @@ export function CornerMenu({
                     headline="Unlink this display?"
                     actions={
                         <>
-                            <AlertDialogClose render={<Button variant="text" size="m" className={styles.dialogButton} />}>
+                            <AlertDialogClose
+                                render={<Button variant="text" size="m" className={styles.dialogButton} />}
+                            >
                                 Cancel
                             </AlertDialogClose>
                             <Button

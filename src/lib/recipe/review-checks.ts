@@ -6,7 +6,8 @@ import { parseDurationToMinutes } from './time'
 
 export type ReviewField = 'title' | 'servings' | 'prepTime' | 'cookTime' | 'totalTime' | 'ingredients' | 'steps'
 
-const SERVINGS = /^(?:about\s+|up to\s+)?(?:\d|[½⅓⅔¼¾]|one|two|three|four|five|six|seven|eight|nine|ten|twelve|a dozen)/i
+const SERVINGS =
+    /^(?:about\s+|up to\s+)?(?:\d|[½⅓⅔¼¾]|one|two|three|four|five|six|seven|eight|nine|ten|twelve|a dozen)/i
 const MAX_MINUTES = 3 * 24 * 60
 
 /**

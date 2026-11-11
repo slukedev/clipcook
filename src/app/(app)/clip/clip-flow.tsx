@@ -57,7 +57,13 @@ interface Attempt {
 }
 
 type View =
-    | { type: 'entry'; mode: 'link' | 'text'; url: string; text: string; failure?: { job: ClipJob; message: string; code?: string } }
+    | {
+          type: 'entry'
+          mode: 'link' | 'text'
+          url: string
+          text: string
+          failure?: { job: ClipJob; message: string; code?: string }
+      }
     | { type: 'attempt'; attempt: Attempt }
     | { type: 'manual'; values: EditorValues; photo: EditorPhoto }
 

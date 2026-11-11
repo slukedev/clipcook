@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useDeferredValue, useEffect, useRef, useState } from 'react'
+import { searchRecipes } from '@/actions/recipes'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ChipSet, FilterChip } from '@/components/ui/chip'
@@ -10,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Glyph } from '@/components/ui/icon/glyph'
 import { IconButton } from '@/components/ui/icon-button'
 import { Kbd } from '@/components/ui/kbd'
+import { LoadingIndicator } from '@/components/ui/loading-indicator'
 import {
     Menu,
     MenuCheckboxItem,
@@ -21,15 +23,14 @@ import {
     MenuTrigger,
 } from '@/components/ui/menu'
 import { SearchBar } from '@/components/ui/search'
-import { LoadingIndicator } from '@/components/ui/loading-indicator'
 import { PageTransition } from '@/components/ui/view-transition'
-import { searchRecipes } from '@/actions/recipes'
+import type { RecipeSummary, TagCount } from '@/lib/domain/types'
 import { writeCookie } from '../_shell/preferences'
 import { useSessionUser } from '../_shell/session-context'
-import type { RecipeSummary, TagCount } from '@/lib/domain/types'
 import type { CollectionRef } from './collection-dialog'
 import type { LibraryIcons } from './icons'
 import { JumpBackIn } from './jump-back-in'
+import styles from './library.module.scss'
 import {
     LIBRARY_COOKIE,
     type LibraryPrefs,
@@ -41,11 +42,10 @@ import {
     serializeLibraryPrefs,
     sortRecipes,
 } from './library-data'
-import { RecipeBrowser } from './recipe-browser'
 import { useRecentSearches } from './recent-searches'
+import { RecipeBrowser } from './recipe-browser'
 import { SearchSuggestions } from './search-suggestions'
 import { useLibraryRecipes } from './use-library-recipes'
-import styles from './library.module.scss'
 
 interface LibraryProps {
     recipes: RecipeSummary[]
@@ -53,6 +53,8 @@ interface LibraryProps {
     tags: TagCount[]
     prefs: LibraryPrefs
     icons: LibraryIcons
+    /** Ingredient matches for the query the page was loaded with. */
+    initialSearch?: { key: string; ids: string[] }
 }
 
 /** 'all', 'fav', or 'c:<collection id>'. */
@@ -65,7 +67,14 @@ function isTyping(target: EventTarget | null): boolean {
 
 const plural = (n: number) => (n === 1 ? '1 recipe' : `${n} recipes`)
 
-export function Library({ recipes: serverRecipes, collections, tags, prefs: initialPrefs, icons }: LibraryProps) {
+export function Library({
+    recipes: serverRecipes,
+    collections,
+    tags,
+    prefs: initialPrefs,
+    icons,
+    initialSearch,
+}: LibraryProps) {
     const params = useSearchParams()
     const user = useSessionUser()
     const { recipes, toggleFavorite } = useLibraryRecipes(serverRecipes)
@@ -81,11 +90,14 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
     const tokens = queryTokens(deferredQuery)
     const searchKey = tokens.join(' ')
     // Titles and tags match here; the server adds recipes whose ingredients match.
-    const [deep, setDeep] = useState<{ key: string; ids: ReadonlySet<string> }>({ key: '', ids: new Set() })
+    const [deep, setDeep] = useState<{ key: string; ids: ReadonlySet<string> }>(() => ({
+        key: initialSearch?.key ?? '',
+        ids: new Set(initialSearch?.ids),
+    }))
     const deepPending = searchKey !== '' && deep.key !== searchKey
 
     useEffect(() => {
-        if (!searchKey) return
+        if (!searchKey || deep.key === searchKey) return
         let live = true
         const timer = window.setTimeout(() => {
             searchRecipes(searchKey)
@@ -100,7 +112,7 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
             live = false
             window.clearTimeout(timer)
         }
-    }, [searchKey])
+    }, [searchKey, deep.key])
     const validScope =
         scope === 'all' || scope === 'fav' || collections.some((c) => `c:${c.id}` === scope) ? scope : 'all'
     const filtering = tokens.length > 0 || validScope !== 'all' || activeTags.length > 0
@@ -110,9 +122,16 @@ export function Library({ recipes: serverRecipes, collections, tags, prefs: init
         if (validScope === 'fav' && !r.favorite) return false
         if (validScope.startsWith('c:') && !r.collectionIds.includes(validScope.slice(2))) return false
         if (activeTags.length > 0 && !activeTags.every((t) => r.tags.includes(t))) return false
-        return matches(r, tokens) || (deep.key === searchKey && deep.ids.has(r.id))
+        return true
     })
-    const visible = sortRecipes(filtered, prefs.sort)
+    // Title and tag matches keep their places; recipes found only by an ingredient
+    // follow them, so a late server answer adds cards below instead of reshuffling.
+    const direct = filtered.filter((r) => matches(r, tokens))
+    const byIngredient =
+        tokens.length > 0 && deep.key === searchKey
+            ? filtered.filter((r) => deep.ids.has(r.id) && !matches(r, tokens))
+            : []
+    const visible = [...sortRecipes(direct, prefs.sort), ...sortRecipes(byIngredient, prefs.sort)]
     const showTools = visible.length > 0 || deepPending
 
     // Filters live in the URL so Back from a recipe returns to the same view.

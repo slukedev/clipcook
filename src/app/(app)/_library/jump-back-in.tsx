@@ -3,8 +3,8 @@
 import { Carousel } from '@/components/ui/carousel'
 import { TransitionLink } from '@/components/ui/view-transition'
 import type { RecipeSummary } from '@/lib/domain/types'
-import { RecipeMedia } from './recipe-media'
 import styles from './jump-back-in.module.scss'
+import { RecipeMedia } from './recipe-media'
 
 const MAX_ITEMS = 10
 

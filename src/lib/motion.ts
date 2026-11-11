@@ -5,8 +5,8 @@ import { useSyncExternalStore } from 'react'
 import { type MotionScheme, SPRINGS, type SpringSpec, type SpringToken } from './theme/springs'
 
 export type { MotionScheme, SpringToken } from './theme/springs'
-export { useReducedMotion }
 export { vtName } from './theme/view-transition'
+export { useReducedMotion }
 
 /**
  * M3 springs as `motion` transitions. M3 publishes (damping ratio, stiffness);

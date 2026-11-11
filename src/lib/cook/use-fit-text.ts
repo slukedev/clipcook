@@ -2,7 +2,6 @@
 
 import { type RefObject, useLayoutEffect } from 'react'
 
-
 /**
  * Steps the type down until the step fits its stage, so nothing in it ever needs a
  * scroll from floury hands. CSS sets the largest size; this only ever shrinks it.

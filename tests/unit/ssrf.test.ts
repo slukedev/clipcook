@@ -235,9 +235,9 @@ describe('safeFetch against a local server', () => {
         })
 
         it('only accepts the value 1', () => {
-            expect(privateHostsAllowed(undefined, { NODE_ENV: 'development', CLIPCOOK_CLIP_ALLOW_PRIVATE: 'true' })).toBe(
-                false,
-            )
+            expect(
+                privateHostsAllowed(undefined, { NODE_ENV: 'development', CLIPCOOK_CLIP_ALLOW_PRIVATE: 'true' }),
+            ).toBe(false)
             expect(privateHostsAllowed(undefined, { NODE_ENV: 'development' })).toBe(false)
             expect(privateHostsAllowed(undefined, { NODE_ENV: 'production', CLIPCOOK_CLIP_ALLOW_PRIVATE: '1' })).toBe(
                 false,

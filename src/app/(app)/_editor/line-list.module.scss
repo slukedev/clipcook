@@ -112,6 +112,13 @@
     user-select: none;
     -webkit-user-select: none;
 
+    // 48dp wide to the touch: the extra 8dp reaches into the page margin, away from the field.
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0 0 0 -8px;
+    }
+
     .list[data-sorting] & {
         cursor: grabbing;
     }

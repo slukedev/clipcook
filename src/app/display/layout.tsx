@@ -3,8 +3,8 @@ import { Icon } from '@/components/ui/icon'
 import { schemeDeclarations, schemeFromSeed } from '@/lib/theme/scheme'
 import { BRAND_PRIMARY_CHROMA, BRAND_SEED } from '@/lib/theme/seed'
 import { getDisplaySession } from '@/server/display-auth'
-import { DisplayProvider } from './display-provider'
 import styles from './display.module.scss'
+import { DisplayProvider } from './display-provider'
 
 export const metadata: Metadata = {
     title: 'Kitchen display',

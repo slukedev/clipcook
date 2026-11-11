@@ -12,7 +12,9 @@ describe('normalizeSourceUrl', () => {
 
     it('keeps paths and meaningful params apart', () => {
         expect(normalizeSourceUrl('https://example.com/soup')).not.toBe(normalizeSourceUrl('https://example.com/stew'))
-        expect(normalizeSourceUrl('https://example.com/r?id=1')).not.toBe(normalizeSourceUrl('https://example.com/r?id=2'))
+        expect(normalizeSourceUrl('https://example.com/r?id=1')).not.toBe(
+            normalizeSourceUrl('https://example.com/r?id=2'),
+        )
         expect(normalizeSourceUrl('https://example.com/')).toBe('example.com')
     })
 

@@ -4,8 +4,8 @@ import { AlertDialog as BaseAlertDialog } from '@base-ui/react/alert-dialog'
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
 import type { ReactNode } from 'react'
 import { cx } from '../cx'
-import { IconButton } from '../icon-button/icon-button'
 import { Glyph } from '../icon/glyph'
+import { IconButton } from '../icon-button/icon-button'
 import styles from './dialog.module.scss'
 
 export const Dialog = BaseDialog.Root

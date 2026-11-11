@@ -46,8 +46,9 @@
 .actions {
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-inline-end: -8px;
+    // 40dp icon buttons 8dp apart: their 48dp touch zones meet without overlapping.
+    gap: 8px;
+    margin-inline-end: -4px;
 }
 
 // Compact windows keep "Add recipes" in the menu so the title has room.

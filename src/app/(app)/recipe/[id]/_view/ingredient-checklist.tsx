@@ -1,8 +1,8 @@
 'use client'
 
 import { Checkbox } from '@/components/ui/checkbox'
-import { List, ListItem } from '@/components/ui/list'
 import { cx } from '@/components/ui/cx'
+import { List, ListItem } from '@/components/ui/list'
 import type { IngredientSection } from '@/lib/cook/content'
 import { checkedIngredients, toggleIndex, useRecipeState } from '@/lib/cook/recipe-state'
 import styles from './ingredient-checklist.module.scss'

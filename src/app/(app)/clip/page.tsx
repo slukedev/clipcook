@@ -33,7 +33,11 @@ function jobFrom(params: Params): ClipJob | null {
 
 function run(job: ClipJob): Promise<ClipResult> {
     const action = job.kind === 'url' ? clipFromUrl : job.kind === 'text' ? clipFromText : claimClipDraft
-    return action(job.value).catch(() => ({ ok: false as const, error: 'Could not clip that page. Try again.', code: 'network' }))
+    return action(job.value).catch(() => ({
+        ok: false as const,
+        error: 'Could not clip that page. Try again.',
+        code: 'network',
+    }))
 }
 
 export default async function ClipPage({ searchParams }: { searchParams: Promise<Params> }) {

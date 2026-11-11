@@ -2,8 +2,8 @@
 
 import { Children, type HTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react'
 import { cx } from '../cx'
-import { IconButton } from '../icon-button/icon-button'
 import { Glyph } from '../icon/glyph'
+import { IconButton } from '../icon-button/icon-button'
 import styles from './carousel.module.scss'
 
 export interface CarouselProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {

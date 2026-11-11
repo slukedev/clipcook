@@ -7,8 +7,8 @@ import { SharedElement, TransitionLink, vtName } from '@/components/ui/view-tran
 import type { RecipeSummary } from '@/lib/domain/types'
 import type { LibraryIcons } from './icons'
 import { highlightRanges, recipeMeta, type ViewMode } from './library-data'
-import { RecipeMedia } from './recipe-media'
 import styles from './recipe-card.module.scss'
+import { RecipeMedia } from './recipe-media'
 
 export type CardAction = 'collections' | 'duplicate' | 'select' | 'remove' | 'delete'
 

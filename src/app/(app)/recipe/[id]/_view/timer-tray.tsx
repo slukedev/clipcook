@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react'
 import { cx } from '@/components/ui/cx'
-import { IconButton } from '@/components/ui/icon-button'
 import { Glyph } from '@/components/ui/icon/glyph'
+import { IconButton } from '@/components/ui/icon-button'
 import { remainingMs, timerActions, useClock, useTimers } from '@/lib/cook/timers'
 import { formatClock } from '@/lib/recipe/timers'
 import styles from './timer-tray.module.scss'

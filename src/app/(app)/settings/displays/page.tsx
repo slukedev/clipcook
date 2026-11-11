@@ -8,8 +8,8 @@ import { PageTransition } from '@/components/ui/view-transition'
 import { requireSession } from '@/server/auth'
 import { listDisplays, listRecipes } from '@/server/queries'
 import { AddDisplaySteps } from './add-display'
-import { DisplaysList } from './displays-list'
 import styles from './displays.module.scss'
+import { DisplaysList } from './displays-list'
 
 export const metadata: Metadata = { title: 'Kitchen displays' }
 
