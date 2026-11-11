@@ -1,4 +1,4 @@
-import type { DisplayContent, GroceryItem, ImportedRecipe, Recipe, RecipeSummary } from '@/lib/domain/types'
+import type { DisplayContent, GroceryItem, ImportedRecipe, PlanEntry, Recipe, RecipeSummary } from '@/lib/domain/types'
 
 /** A stored recipe. `imagePath` set means image/thumbnail are Firebase Storage URLs we own. */
 export interface RecipeRecord extends Recipe {
@@ -122,6 +122,15 @@ export interface Store {
 
     getGroceryItems(uid: string): Promise<GroceryItem[]>
     updateGroceryItems(uid: string, mutate: (items: GroceryItem[]) => GroceryItem[]): Promise<GroceryItem[]>
+
+    /** The whole meal plan, sorted by date and meal. */
+    getPlanEntries(uid: string): Promise<PlanEntry[]>
+    /**
+     * Rewrites the plan atomically. Saves prune entries older than 26 weeks and throw a
+     * LIMIT StoreError when the plan would grow past LIMITS.planEntries. `mutate` may run
+     * more than once (Firestore retries transactions), so it must not count side effects.
+     */
+    updatePlanEntries(uid: string, mutate: (entries: PlanEntry[]) => PlanEntry[]): Promise<PlanEntry[]>
 
     /**
      * Leaves out displays that were claimed but never collected their token within

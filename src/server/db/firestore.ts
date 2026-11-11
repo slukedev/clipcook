@@ -1,7 +1,9 @@
 import 'server-only'
 
 import { FieldValue, type Firestore, Timestamp } from 'firebase-admin/firestore'
-import type { GroceryItem, RecipeSummary } from '@/lib/domain/types'
+import type { GroceryItem, PlanEntry, RecipeSummary } from '@/lib/domain/types'
+import { finalizePlan, PlanLimitError, planEntriesFrom } from '@/lib/plan/entries'
+import { todayIn } from '@/lib/plan/week'
 import { adminDb } from '../firebase-admin'
 import { byNewest, displayContentFrom, groceryItemsFrom, millis, recipeFromData, summaryOf } from './normalize'
 import {
@@ -23,6 +25,7 @@ import {
 const RECIPES = 'allRecipes'
 const COLLECTIONS = 'collections'
 const GROCERY = 'groceryLists'
+const MEAL_PLANS = 'mealPlans'
 const DISPLAYS = 'displays'
 const PAIRINGS = 'displayPairings'
 const DRAFTS = 'clipDrafts'
@@ -32,6 +35,7 @@ const CAST_TOKENS = 'castTokens'
 const SUMMARY_FIELDS = [
     'uid',
     'title',
+    'servings',
     'thumbnail',
     'thumbnailUrl',
     'imageUrl',
@@ -313,6 +317,30 @@ export class FirestoreStore implements Store {
             const snap = await tx.get(ref)
             const next = mutate(groceryItemsFrom(snap.data()?.items))
             tx.set(ref, { uid, items: next, updatedAt: Date.now() })
+            return next
+        })
+    }
+
+    // ---- meal plan
+
+    async getPlanEntries(uid: string): Promise<PlanEntry[]> {
+        const doc = await this.db.collection(MEAL_PLANS).doc(uid).get()
+        return planEntriesFrom(doc.data()?.entries)
+    }
+
+    updatePlanEntries(uid: string, mutate: (entries: PlanEntry[]) => PlanEntry[]): Promise<PlanEntry[]> {
+        const ref = this.db.collection(MEAL_PLANS).doc(uid)
+        return this.db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref)
+            const current = planEntriesFrom(snap.data()?.entries)
+            let next: PlanEntry[]
+            try {
+                next = finalizePlan(current, mutate(current.map((e) => ({ ...e }))), todayIn('UTC'))
+            } catch (err) {
+                if (err instanceof PlanLimitError) throw new StoreError('LIMIT', err.message)
+                throw err
+            }
+            tx.set(ref, { uid, entries: next, updatedAt: Date.now() })
             return next
         })
     }
