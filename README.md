@@ -56,6 +56,21 @@ ClipCook stores data in Firestore and signs people in with Google through Fireba
 
    On Vercel, import the repository and set the same environment variables.
 
+### Moving from an older ClipCook
+
+If the new deployment uses the same Firebase project as the old app, there is nothing to move: recipes are read in place.
+
+For a new project, export from the old one and import in the app:
+
+1. Put the old project's service account in `.env.legacy` as `LEGACY_FIREBASE_ADMIN_PROJECT_ID`, `LEGACY_FIREBASE_ADMIN_CLIENT_EMAIL` and `LEGACY_FIREBASE_ADMIN_PRIVATE_KEY`.
+2. Run the export. Add `--email` if more than one account saved recipes.
+
+   ```bash
+   node --env-file=.env.legacy scripts/export-legacy.mjs --email you@example.com
+   ```
+
+3. In the new app, open Settings > Import and choose each file in `exports/`. Photos are copied into the new project.
+
 ### Google Cast (optional)
 
 Nest Hubs have no browser, so they need Cast. Register a custom receiver in the [Google Cast SDK Developer Console](https://cast.google.com/publish) with the receiver URL `https://<your domain>/display/cast`, then set `NEXT_PUBLIC_CAST_APP_ID`. Echo Shows and tablets don't need this; they pair through `/display` in their browser.
