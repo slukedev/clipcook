@@ -10,6 +10,7 @@
     --yolk: color-mix(in oklab, oklch(82% 0.16 78) 88%, var(--md-sys-color-surface));
     --basil: color-mix(in oklab, oklch(68% 0.13 145) 72%, var(--md-sys-color-surface));
     --berry: color-mix(in oklab, oklch(56% 0.16 8) 64%, var(--md-sys-color-surface));
+    --basil-ink: light-dark(oklch(30% 0.07 145), oklch(93% 0.05 145));
 
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
@@ -49,6 +50,10 @@
 
 .shape {
     position: absolute;
+    display: grid;
+    place-items: center;
+    inline-size: var(--md-shape-size);
+    block-size: var(--md-shape-size);
     animation: shape-in var(--md-sys-motion-spring-spatial-slow-duration) var(--md-sys-motion-spring-spatial-slow) both;
     animation-delay: calc(var(--_i) * 70ms);
     rotate: var(--_r, 0deg);
@@ -57,6 +62,24 @@
         // The table sits centered in the panel at a size the panel can hold.
         --_unit: min(100cqi, 72cqb, 640px);
     }
+}
+
+// The shape and its glyph share one cell; the glyph stays upright when the shape tilts.
+.fill,
+.glyph {
+    grid-area: 1 / 1;
+}
+
+.fill {
+    inline-size: 100%;
+    block-size: 100%;
+}
+
+.glyph {
+    --md-icon-size: calc(var(--md-shape-size) * 0.3);
+
+    rotate: calc(-1 * var(--_r, 0deg));
+    color: var(--_ink);
 }
 
 // Positions are in hundredths of the table's width.
@@ -72,6 +95,8 @@
 .paprika {
     @include place(62, 6, 18, 0);
 
+    --_ink: var(--md-sys-color-on-primary-container);
+
     color: var(--paprika);
 }
 
@@ -84,17 +109,23 @@
 .basil {
     @include place(36, 62, 42, 2, 12deg);
 
+    --_ink: var(--basil-ink);
+
     color: var(--basil);
 }
 
 .saffron {
     @include place(34, 2, 64, 3);
 
+    --_ink: var(--md-sys-color-on-tertiary-container);
+
     color: var(--saffron);
 }
 
 .crust {
     @include place(32, 50, 74, 4, -28deg);
+
+    --_ink: var(--md-sys-color-on-secondary-container);
 
     color: var(--crust);
 }
@@ -141,6 +172,30 @@
         gap: 40px;
         padding: 48px clamp(24px, 6vw, 96px);
         text-align: start;
+    }
+}
+
+.intro {
+    display: grid;
+    gap: 12px;
+    justify-items: center;
+
+    @include media.expanded-up {
+        justify-items: start;
+    }
+}
+
+.lede {
+    @include type.role(body-large);
+
+    max-inline-size: 30ch;
+    color: var(--md-sys-color-on-surface-variant);
+    text-wrap: balance;
+
+    @include media.expanded-up {
+        @include type.role(title-large);
+
+        max-inline-size: 26ch;
     }
 }
 

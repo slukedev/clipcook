@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { SHAPE_PATHS } from '@/components/ui/shape/shape-paths'
 
-export const alt = 'ClipCook'
+export const alt = 'ClipCook. Save recipes from any website and cook them step by step.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -46,15 +46,18 @@ export default function OpenGraphImage() {
                     left: 660,
                     top: 0,
                     bottom: 0,
+                    right: 64,
                     display: 'flex',
-                    alignItems: 'center',
-                    fontSize: 116,
-                    fontWeight: 600,
-                    letterSpacing: -3,
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: 20,
                     color: '#3E2F2B',
                 }}
             >
-                ClipCook
+                <div style={{ fontSize: 116, fontWeight: 600, letterSpacing: -3 }}>ClipCook</div>
+                <div style={{ fontSize: 38, lineHeight: 1.3, color: '#6B5852' }}>
+                    Save recipes from any website and cook them step by step.
+                </div>
             </div>
         </div>,
         size,
