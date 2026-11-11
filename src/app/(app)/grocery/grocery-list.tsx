@@ -300,7 +300,7 @@ export function GroceryList({
                                 <h2 id="grocery-from" className={styles.recipesLabel}>
                                     From recipes
                                 </h2>
-                                <ChipSet scroll label="From recipes">
+                                <ChipSet scroll bleed label="From recipes">
                                     {recipeIds.map((id) => (
                                         <AssistChip
                                             key={id}

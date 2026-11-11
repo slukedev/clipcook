@@ -61,7 +61,7 @@ export function SendToDisplay({
                 return
             }
             rememberDisplay(display.id)
-            snackbar(sentMessage(display, Date.now()))
+            snackbar(sentMessage(result.data, display.lastSeenAt, Date.now()))
         })
     }
 
