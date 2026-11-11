@@ -1,0 +1,187 @@
+@use "../../../../../styles/mixins/typography" as type;
+
+// Sticks under the 64dp bar. Items are tertiary-container pills; a ringing one switches
+// to solid tertiary and pulses until dismissed.
+.tray {
+    position: sticky;
+    inset-block-start: calc(64px + var(--safe-top));
+    z-index: 19;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    // Takes no room in the flow: the pills float over the content below the bar.
+    block-size: 0;
+    padding-inline: var(--md-sys-layout-margin);
+    pointer-events: none;
+}
+
+.list {
+    display: flex;
+    gap: 8px;
+    max-inline-size: 100%;
+    overflow-x: auto;
+    margin-block-start: 8px;
+    padding-block-end: 8px;
+    scrollbar-width: none;
+    list-style: none;
+    pointer-events: auto;
+}
+
+.item {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 56px;
+    padding-inline: 16px 4px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+    box-shadow: var(--md-sys-elevation-level2);
+
+    @starting-style {
+        opacity: 0;
+        scale: 0.92;
+    }
+
+    transition-property: background-color, opacity, scale;
+    transition-duration:
+        var(--md-sys-motion-spring-effects-default-duration),
+        var(--md-sys-motion-spring-effects-fast-duration),
+        var(--md-sys-motion-spring-spatial-fast-duration);
+    transition-timing-function:
+        var(--md-sys-motion-spring-effects-default),
+        var(--md-sys-motion-spring-effects-fast),
+        var(--md-sys-motion-spring-spatial-fast);
+
+    &[data-state="done"] {
+        background-color: var(--md-sys-color-tertiary);
+        color: var(--md-sys-color-on-tertiary);
+        animation: tray-ring 1.2s var(--md-sys-motion-easing-emphasized) infinite;
+    }
+
+    :where(button) {
+        --_content: currentcolor;
+    }
+}
+
+// Elapsed share of the timer, as a tonal fill behind the content.
+.progress {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: color-mix(in srgb, var(--md-sys-color-on-tertiary-container) 10%, transparent);
+    transform-origin: left center;
+    transition: transform 1s linear;
+
+    .item[data-state="done"] & {
+        display: none;
+    }
+}
+
+:dir(rtl) .progress {
+    transform-origin: right center;
+}
+
+.icon {
+    --md-icon-size: 20px;
+    display: grid;
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+}
+
+.where {
+    @include type.role(label-medium);
+    max-inline-size: 16ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.8;
+}
+
+.clock {
+    @include type.role(title-medium, $emphasized: true);
+    @include type.numeric;
+}
+
+.plus {
+    @include type.role(label-large, $emphasized: true);
+    @include type.numeric;
+}
+
+.announcer {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+// Cook mode: larger, at arm's length.
+.cook {
+    position: static;
+    block-size: auto;
+    padding: 0;
+    justify-content: flex-start;
+
+    .list {
+        flex-wrap: wrap;
+        overflow: visible;
+    }
+
+    .item {
+        min-block-size: 72px;
+        padding-inline: 20px 8px;
+        gap: 12px;
+        box-shadow: none;
+    }
+
+    .icon {
+        --md-icon-size: 24px;
+    }
+
+    .where {
+        @include type.role(label-large);
+    }
+
+    .clock {
+        @include type.role(headline-small, $emphasized: true);
+        @include type.numeric;
+    }
+}
+
+@keyframes tray-ring {
+    0%,
+    100% {
+        scale: 1;
+    }
+    50% {
+        scale: 1.04;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .item[data-state="done"] {
+        animation: tray-ring-fade 1.6s ease-in-out infinite;
+    }
+}
+
+@keyframes tray-ring-fade {
+    50% {
+        opacity: 0.75;
+    }
+}
+
+@media print {
+    .tray {
+        display: none;
+    }
+}
