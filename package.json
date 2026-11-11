@@ -14,7 +14,8 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "generate:theme": "esbuild scripts/generate-theme.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/generate-theme.cjs --log-level=error && node node_modules/.cache/generate-theme.cjs",
-        "generate:icons": "esbuild scripts/generate-icons.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/generate-icons.cjs --log-level=error && node node_modules/.cache/generate-icons.cjs"
+        "generate:icons": "esbuild scripts/generate-icons.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/generate-icons.cjs --log-level=error && node node_modules/.cache/generate-icons.cjs",
+        "seed:demo": "esbuild scripts/seed-demo.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/seed-demo.cjs --alias:server-only=./node_modules/server-only/empty.js --external:sharp --external:firebase-admin --external:next --log-level=error && node node_modules/.cache/seed-demo.cjs"
     },
     "dependencies": {
         "@base-ui/react": "^1.9.0",
