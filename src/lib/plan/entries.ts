@@ -232,3 +232,16 @@ export function suggestedMeal(entries: readonly PlanEntry[], date: string): Meal
     if (!taken.has('dinner')) return 'dinner'
     return MEAL_SLOTS.find((slot) => !taken.has(slot)) ?? 'dinner'
 }
+
+/** Which of today's meals leads: the one coming up at this hour, recipes before notes. */
+export function leadEntry(entries: readonly PlanEntry[], hour: number): PlanEntry | undefined {
+    const order: MealSlot[] =
+        hour < 11
+            ? ['breakfast', 'lunch', 'dinner', 'snack']
+            : hour < 16
+              ? ['lunch', 'dinner', 'snack', 'breakfast']
+              : ['dinner', 'snack', 'lunch', 'breakfast']
+    return entries.toSorted(
+        (a, b) => Number(!a.recipeId) - Number(!b.recipeId) || order.indexOf(a.meal) - order.indexOf(b.meal),
+    )[0]
+}

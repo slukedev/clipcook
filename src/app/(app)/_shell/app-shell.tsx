@@ -11,7 +11,7 @@ import { NavigationRail, NavigationRailItem, useRailExpanded } from '@/component
 import { prefetchPage, whenIdle } from '@/lib/navigation/prefetch'
 import styles from './app-shell.module.scss'
 import { captureInstallPrompt } from './install-prompt'
-import { RAIL_COOKIE, takeLegacyMotion, writeCookie } from './preferences'
+import { RAIL_COOKIE, rememberTimeZone, takeLegacyMotion, writeCookie } from './preferences'
 
 export interface Destination {
     href: string
@@ -84,6 +84,11 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
         captureInstallPrompt()
         adoptLegacyMotion()
     }, [])
+
+    // The server works out "today" for the meal plan from the browser's time zone.
+    useEffect(() => {
+        if (rememberTimeZone()) router.refresh()
+    }, [router])
 
     // Link only refreshes an expired prefetch on hover, which touch screens never send.
     // Re-warm the other destinations after each navigation instead; fresh ones are reused.

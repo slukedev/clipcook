@@ -7,6 +7,7 @@ import {
     entryScale,
     finalizePlan,
     groceryLinesFor,
+    leadEntry,
     PlanLimitError,
     planEntriesFrom,
     prunePlan,
@@ -223,5 +224,22 @@ describe('suggestedMeal', () => {
         expect(suggestedMeal([], '2026-11-11')).toBe('dinner')
         expect(suggestedMeal([entry({ meal: 'dinner' })], '2026-11-11')).toBe('breakfast')
         expect(suggestedMeal([entry({ meal: 'dinner' })], '2026-11-12')).toBe('dinner')
+    })
+})
+
+describe('leadEntry', () => {
+    const breakfast = entry({ id: 'b', meal: 'breakfast' })
+    const dinner = entry({ id: 'd', meal: 'dinner' })
+    const note = entry({ id: 'n', meal: 'lunch', recipeId: null, note: 'Eat out' })
+
+    it('leads with the meal coming up at this hour', () => {
+        expect(leadEntry([dinner, breakfast], 8)?.id).toBe('b')
+        expect(leadEntry([dinner, breakfast], 17)?.id).toBe('d')
+    })
+
+    it('prefers something to cook over a note, and returns nothing for an empty day', () => {
+        expect(leadEntry([note, dinner], 12)?.id).toBe('d')
+        expect(leadEntry([note], 12)?.id).toBe('n')
+        expect(leadEntry([], 12)).toBeUndefined()
     })
 })

@@ -1,0 +1,555 @@
+@use "../../../../styles/mixins/typography" as type;
+@use "../../../../styles/mixins/media";
+@use "../../../../styles/mixins/state-layer";
+@use "../../../../styles/mixins/focus-ring";
+
+.page {
+    padding-block-end: calc(var(--md-sys-space-16) + var(--safe-bottom));
+}
+
+.body {
+    display: grid;
+    gap: var(--md-sys-space-6);
+    inline-size: 100%;
+    max-inline-size: 1920px;
+    // Aligned with the app bar title, which keeps 16dp at every width.
+    padding-inline: max(16px, var(--safe-left)) max(16px, var(--safe-right));
+}
+
+.empty {
+    padding-block: var(--md-sys-space-16);
+}
+
+.srOnly {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+// The week's shopping is the planning moment's main action: a button where there is
+// room for one, the first menu item where there is not.
+.shopButton {
+    @include media.compact {
+        display: none;
+    }
+
+    @media (width >= 600px) and (width < 840px) {
+        display: none;
+    }
+}
+
+.compactOnly {
+    @include media.expanded-up {
+        display: none;
+    }
+}
+
+.menuCount {
+    @include type.role(label-large);
+    @include type.numeric;
+
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+// ---------------------------------------------------------------------------
+// The week. Compact and medium windows stack the days as a list; expanded and wider
+// windows lay them out as seven columns, with one row per meal in use. Each day is a
+// subgrid, so the dinners of the week share a row the way hours do in a calendar.
+
+.week {
+    display: flex;
+    flex-direction: column;
+    gap: var(--md-sys-space-5);
+    max-inline-size: 720px;
+
+    @include media.expanded-up {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-template-rows: auto repeat(var(--_lanes), minmax(128px, auto));
+        gap: var(--md-sys-space-2);
+        max-inline-size: none;
+
+        &[data-multi] {
+            grid-template-columns: max-content repeat(7, minmax(0, 1fr));
+        }
+    }
+}
+
+.laneLabel {
+    display: none;
+
+    @include media.expanded-up {
+        @include type.role(label-large);
+
+        display: block;
+        padding-block-start: var(--md-sys-space-3);
+        padding-inline-end: var(--md-sys-space-2);
+        color: var(--md-sys-color-on-surface-variant);
+    }
+}
+
+.day {
+    display: flex;
+    flex-direction: column;
+    gap: var(--md-sys-space-1);
+    border-radius: var(--md-sys-shape-corner-large-increased);
+    transition: background-color var(--md-sys-motion-spring-effects-fast-duration)
+        var(--md-sys-motion-spring-effects-fast);
+
+    @include media.expanded-up {
+        display: grid;
+        grid-row: 1 / span calc(var(--_lanes) + 1);
+        grid-template-rows: subgrid;
+        gap: var(--md-sys-space-2);
+        padding: var(--md-sys-space-2) var(--md-sys-space-1) var(--md-sys-space-2);
+
+        &[data-today] {
+            background-color: var(--md-sys-color-surface-container);
+        }
+    }
+
+    &[data-drop] {
+        background-color: var(--md-sys-color-secondary-container);
+    }
+}
+
+// Compact: "Today  Wed, Nov 11" with an add button. Wide: "Wed" over a large day
+// number, the way calendars head their columns.
+.dayHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-2);
+    min-block-size: 48px;
+    padding-inline: var(--md-sys-space-4) 0;
+    border-radius: var(--md-sys-shape-corner-full);
+
+    .day[data-today] > & {
+        background-color: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
+    }
+
+    @include media.expanded-up {
+        flex-direction: column;
+        justify-content: center;
+        gap: 2px;
+        padding: 0;
+
+        .day[data-today] > & {
+            background: none;
+            color: inherit;
+        }
+    }
+}
+
+.dayHeading {
+    display: flex;
+    align-items: baseline;
+    gap: var(--md-sys-space-2);
+    flex: 1;
+    min-inline-size: 0;
+
+    @include media.expanded-up {
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+}
+
+.dayName {
+    @include type.role(title-medium);
+
+    .day[data-past] & {
+        color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .day[data-today] & {
+        @include type.role(title-medium, $emphasized: true);
+
+        color: inherit;
+    }
+
+    @include media.expanded-up {
+        display: none;
+    }
+}
+
+.dayDate {
+    @include type.role(body-medium);
+
+    color: var(--md-sys-color-on-surface-variant);
+
+    .day[data-today] & {
+        color: inherit;
+    }
+
+    @include media.expanded-up {
+        display: none;
+    }
+}
+
+.dayShort,
+.dayNumber {
+    display: none;
+}
+
+@include media.expanded-up {
+    .dayShort {
+        @include type.role(label-large);
+
+        display: block;
+        color: var(--md-sys-color-on-surface-variant);
+
+        .day[data-today] & {
+            color: var(--md-sys-color-primary);
+        }
+    }
+
+    .dayNumber {
+        @include type.role(title-large);
+        @include type.numeric;
+
+        display: grid;
+        place-items: center;
+        inline-size: 44px;
+        block-size: 44px;
+        border-radius: var(--md-sys-shape-corner-full);
+        color: var(--md-sys-color-on-surface);
+
+        .day[data-past] & {
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .day[data-today] & {
+            @include type.role(title-large, $emphasized: true);
+
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+        }
+    }
+}
+
+.dayAdd {
+    flex: none;
+
+    @include media.expanded-up {
+        display: none;
+    }
+}
+
+// One meal of one day. Compact windows show only the ones with something in them.
+.cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--md-sys-space-2);
+
+    &[data-empty] {
+        display: none;
+    }
+
+    @include media.expanded-up {
+        position: relative;
+        min-block-size: 0;
+        border-radius: var(--md-sys-shape-corner-large);
+        transition: background-color var(--md-sys-motion-spring-effects-fast-duration)
+            var(--md-sys-motion-spring-effects-fast);
+
+        &[data-empty] {
+            display: flex;
+        }
+
+        &[data-drop] {
+            background-color: var(--md-sys-color-secondary-container);
+            outline: 2px solid var(--md-sys-color-secondary);
+            outline-offset: -2px;
+        }
+    }
+}
+
+.cellAdd {
+    display: none;
+
+    @include media.expanded-up {
+        @include state-layer.host;
+        @include focus-ring.ring;
+
+        display: grid;
+        place-items: center;
+        inline-size: 100%;
+        min-block-size: 48px;
+        margin-block-start: auto;
+        border: 0;
+        border-radius: var(--md-sys-shape-corner-full);
+        background: none;
+        color: var(--md-sys-color-on-surface-variant);
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+        --md-icon-size: 24px;
+
+        .day:hover &,
+        &:focus-visible {
+            opacity: 1;
+        }
+
+        // Touch screens have no hover to reveal it.
+        @media (hover: none) {
+            opacity: 1;
+        }
+
+        .week[data-dragging] & {
+            visibility: hidden;
+        }
+    }
+}
+
+.entries {
+    display: flex;
+    flex-direction: column;
+    gap: var(--md-sys-space-1);
+    list-style: none;
+
+    @include media.expanded-up {
+        gap: var(--md-sys-space-3);
+    }
+}
+
+// Compact: a row with a 56dp photo. Wide: the photo leads and the title sits below.
+.entry {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface-container-low);
+    transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    &[data-dragging] {
+        opacity: 0.4;
+    }
+
+    &:has(.entryLink:focus-visible) {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: 2px;
+    }
+
+    &[draggable="true"] {
+        cursor: grab;
+    }
+
+    @include media.expanded-up {
+        flex-direction: column;
+        align-items: stretch;
+        background: none;
+
+        &[data-note] {
+            border-radius: var(--md-sys-shape-corner-large);
+            background-color: var(--md-sys-color-tertiary-container);
+            color: var(--md-sys-color-on-tertiary-container);
+        }
+    }
+}
+
+.entryLink {
+    @include state-layer.host;
+
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-4);
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: 72px;
+    padding: var(--md-sys-space-2) 0 var(--md-sys-space-2) var(--md-sys-space-2);
+    border-radius: inherit;
+    color: inherit;
+    text-decoration: none;
+    outline: none;
+    -webkit-touch-callout: none;
+
+    // A note has nothing to open, so it has no hover state.
+    .entry[data-note] > &::before {
+        display: none;
+    }
+
+    @include media.expanded-up {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--md-sys-space-2);
+        min-block-size: 0;
+        padding: 0;
+
+        // The photo carries the hover state on a card without a container.
+        &::before {
+            display: none;
+        }
+
+        .entry[data-note] > & {
+            gap: var(--md-sys-space-1);
+            padding: var(--md-sys-space-3);
+        }
+    }
+}
+
+.thumb {
+    position: relative;
+    flex: none;
+    inline-size: 56px;
+    block-size: 56px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-medium);
+    background-color: var(--md-sys-color-surface-container-highest);
+
+    &[data-note] {
+        display: grid;
+        place-items: center;
+        background-color: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+    }
+
+    .day[data-past] .entry & {
+        opacity: 0.62;
+    }
+
+    @include media.expanded-up {
+        inline-size: 100%;
+        block-size: auto;
+        aspect-ratio: 4 / 3;
+        border-radius: var(--md-sys-shape-corner-large);
+
+        // State layer on the photo.
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-color: var(--md-sys-color-on-surface);
+            opacity: 0;
+            transition: opacity var(--md-sys-motion-spring-effects-fast-duration)
+                var(--md-sys-motion-spring-effects-fast);
+        }
+
+        .entryLink:hover &::after {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+
+        .entryLink:active &::after {
+            opacity: var(--md-sys-state-pressed-state-layer-opacity);
+        }
+
+        &[data-note] {
+            display: flex;
+            justify-content: flex-start;
+            inline-size: auto;
+            block-size: 24px;
+            aspect-ratio: auto;
+            background: none;
+            color: inherit;
+            --md-icon-size: 20px;
+
+            &::after {
+                display: none;
+            }
+        }
+    }
+}
+
+.noteIcon {
+    display: grid;
+    place-items: center;
+}
+
+.entryText {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.entryTitle {
+    @include type.role(body-large);
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+
+    .day[data-past] & {
+        color: var(--md-sys-color-on-surface-variant);
+    }
+
+    @include media.expanded-up {
+        @include type.role(title-small);
+
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+}
+
+.entryMeta {
+    @include type.role(body-medium);
+
+    color: var(--md-sys-color-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include media.expanded-up {
+        @include type.role(label-medium);
+
+        white-space: normal;
+
+        .entry[data-note] & {
+            color: inherit;
+        }
+    }
+}
+
+.entryMenu {
+    flex: none;
+    margin-inline-end: var(--md-sys-space-1);
+
+    @include media.expanded-up {
+        position: absolute;
+        inset-block-start: var(--md-sys-space-1);
+        inset-inline-end: var(--md-sys-space-1);
+        margin: 0;
+        border-radius: var(--md-sys-shape-corner-full);
+        background-color: var(--md-sys-color-surface-container-high);
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+        .entry:hover &,
+        .entry:focus-within &,
+        &[data-popup-open] {
+            opacity: 1;
+        }
+
+        @media (hover: none) {
+            opacity: 1;
+        }
+
+        .entry[data-note] & {
+            background: none;
+            color: var(--md-sys-color-on-tertiary-container);
+        }
+    }
+}
+
+.thisWeek {
+    white-space: nowrap;
+}
+
+.servingsDialog {
+    inline-size: min(360px, 100%);
+}
+
+.servingsBody {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--md-sys-space-2);
+    padding-block: var(--md-sys-space-2);
+}

@@ -1,0 +1,190 @@
+@use "../../../../styles/mixins/typography" as type;
+@use "../../../../styles/mixins/media";
+@use "../../../../styles/mixins/state-layer";
+@use "../../../../styles/mixins/focus-ring";
+
+.dialog {
+    inline-size: min(600px, 100%);
+    block-size: min(760px, calc(100dvh - 48px));
+}
+
+// The sheet keeps its height while results change, so it never jumps under a thumb.
+.sheet {
+    block-size: calc(100dvh - 72px);
+}
+
+.picker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--md-sys-space-3);
+    padding-block-end: var(--md-sys-space-2);
+}
+
+.meals {
+    margin-block-start: calc(-1 * var(--md-sys-space-1));
+}
+
+.search {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    padding-block: var(--md-sys-space-1);
+    background-color: inherit;
+}
+
+// Sticky children need the sheet's own fill behind them.
+.sheet .search,
+.dialog .search {
+    background-color: var(--md-sys-color-surface-container-low);
+}
+
+.dialog .search {
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
+.notes [data-added] {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--md-sys-space-4);
+}
+
+.groupTitle {
+    @include type.role(title-small);
+
+    padding-block: var(--md-sys-space-2) var(--md-sys-space-1);
+    color: var(--md-sys-color-primary);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    margin-inline: calc(-1 * var(--md-sys-space-3));
+    list-style: none;
+}
+
+.item {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 64px;
+}
+
+.row {
+    @include state-layer.host;
+    @include focus-ring.inward;
+
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-3);
+    inline-size: 100%;
+    min-block-size: 64px;
+    padding: var(--md-sys-space-2) var(--md-sys-space-2) var(--md-sys-space-2) var(--md-sys-space-3);
+    border: 0;
+    border-radius: var(--md-sys-shape-corner-large);
+    background: none;
+    color: var(--md-sys-color-on-surface);
+    text-align: start;
+    cursor: pointer;
+}
+
+.thumb {
+    position: relative;
+    flex: none;
+    inline-size: 48px;
+    block-size: 48px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-medium);
+    background-color: var(--md-sys-color-surface-container-highest);
+
+    &[data-icon] {
+        display: grid;
+        place-items: center;
+        background-color: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+    }
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.title {
+    @include type.role(body-large);
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.meta {
+    @include type.role(body-medium);
+
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+// Plus to add, a filled check once added; the change is the confirmation.
+.state {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 40px;
+    block-size: 40px;
+    border-radius: var(--md-sys-shape-corner-full);
+    color: var(--md-sys-color-on-surface-variant);
+    transition:
+        background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+    --md-icon-size: 24px;
+
+    &[data-added] {
+        border-radius: var(--md-sys-shape-corner-medium);
+        background-color: var(--md-sys-color-primary);
+        color: var(--md-sys-color-on-primary);
+    }
+}
+
+.loading {
+    display: grid;
+    place-items: center;
+    min-block-size: 160px;
+}
+
+.none {
+    @include type.role(body-large);
+
+    padding-block: var(--md-sys-space-8);
+    color: var(--md-sys-color-on-surface-variant);
+    text-align: center;
+}
+
+.srOnly {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+// Done stays in reach while the list scrolls.
+.sheetActions {
+    position: sticky;
+    inset-block-end: -24px;
+    z-index: 1;
+    display: flex;
+    justify-content: flex-end;
+    margin-inline: -24px;
+    margin-block: auto -24px;
+    padding: var(--md-sys-space-3) var(--md-sys-space-6) calc(var(--md-sys-space-4) + var(--safe-bottom));
+    background-color: var(--md-sys-color-surface-container-low);
+}

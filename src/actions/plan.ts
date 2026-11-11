@@ -227,16 +227,24 @@ export interface WeekGroceryResult {
     groceryAddedAt: number
 }
 
+const shopOptionsSchema = z
+    .object({ again: z.boolean().default(false), from: dateSchema.optional() })
+    .default({ again: false })
+
 /**
  * Puts the week's ingredients on the grocery list, each recipe scaled to its planned
  * servings and merged with what is already there. Only meals not added yet, unless
- * `again` is set.
+ * `again` is set, and none before `from` (days of this week that are already over).
  */
-export async function addPlanWeekToGrocery(weekStart: string, again = false): Promise<ActionResult<WeekGroceryResult>> {
+export async function addPlanWeekToGrocery(
+    weekStart: string,
+    options?: { again?: boolean; from?: string },
+): Promise<ActionResult<WeekGroceryResult>> {
     return withUser(async ({ user, store }) => {
         const start = dateSchema.parse(weekStart)
-        const shopAgain = z.boolean().parse(again)
-        const toShop = entriesToShop(entriesInWeek(await store.getPlanEntries(user.uid), start), shopAgain)
+        const { again, from } = shopOptionsSchema.parse(options)
+        const week = entriesInWeek(await store.getPlanEntries(user.uid), start).filter((e) => !from || e.date >= from)
+        const toShop = entriesToShop(week, again)
         const now = Date.now()
         const empty = { recipes: 0, lines: 0, entryIds: [], groceryAddedAt: now }
         if (toShop.length === 0) return ok(empty)

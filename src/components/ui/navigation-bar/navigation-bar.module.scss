@@ -134,6 +134,14 @@
         @include type.role(label-medium, $emphasized: true);
     }
 
+    // Five destinations on a 320dp phone: "Collections" keeps clear of its neighbors.
+    @include media.compact {
+        &,
+        .item[aria-current="page"] & {
+            font-size: clamp(0.6875rem, 3.4vw, var(--md-sys-typescale-label-medium-size));
+        }
+    }
+
     @include media.medium-up {
         @include type.role(label-medium);
     }
