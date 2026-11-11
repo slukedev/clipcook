@@ -1,0 +1,87 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+@use "../../../styles/mixins/focus-ring";
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.title {
+    @include type.role(title-large);
+
+    color: var(--md-sys-color-on-surface);
+}
+
+// Bleeds to the window edges so items slide out of view rather than into a margin.
+.carousel {
+    --md-carousel-height: 196px;
+    --md-carousel-inset: var(--md-sys-layout-margin);
+
+    margin-inline: calc(-1 * var(--md-sys-layout-margin));
+
+    @include media.medium-up {
+        --md-carousel-height: 228px;
+    }
+
+    @include media.large-up {
+        --md-carousel-height: 260px;
+    }
+}
+
+.item {
+    @include focus-ring.inward;
+
+    position: absolute;
+    inset: 0;
+    display: block;
+    border-radius: inherit;
+    color: #fff;
+
+    // Keeps the title legible on any photo.
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: linear-gradient(to top, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0) 58%);
+        pointer-events: none;
+    }
+
+    // State layer.
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background-color: #fff;
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    @include media.hover {
+        &:hover::after {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+    }
+
+    &:active::after {
+        opacity: var(--md-sys-state-pressed-state-layer-opacity);
+    }
+}
+
+.label {
+    @include type.role(title-medium);
+
+    position: absolute;
+    inset-inline: 16px;
+    inset-block-end: 14px;
+    z-index: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+}

@@ -1,0 +1,196 @@
+@use "../../styles/mixins/typography" as type;
+@use "../../styles/mixins/media";
+
+// Compact: the shape table on top, wordmark and one action below.
+// Expanded: the table fills a tonal panel on the start side.
+.page {
+    --paprika: var(--md-sys-color-primary-container);
+    --saffron: var(--md-sys-color-tertiary-container);
+    --crust: var(--md-sys-color-secondary-container);
+    --yolk: color-mix(in oklab, oklch(82% 0.16 78) 88%, var(--md-sys-color-surface));
+    --basil: color-mix(in oklab, oklch(68% 0.13 145) 72%, var(--md-sys-color-surface));
+    --berry: color-mix(in oklab, oklch(56% 0.16 8) 64%, var(--md-sys-color-surface));
+
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-block-size: 100dvh;
+    padding: calc(16px + var(--safe-top)) var(--md-sys-layout-margin) calc(24px + var(--safe-bottom));
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+
+    @include media.expanded-up {
+        grid-template-rows: none;
+        grid-template-columns: minmax(0, 1.1fr) minmax(360px, 1fr);
+        gap: 24px;
+        padding: 24px;
+    }
+}
+
+.art {
+    position: relative;
+    container-type: inline-size;
+    align-self: center;
+    justify-self: center;
+    inline-size: min(100%, 52dvh, 480px);
+    aspect-ratio: 1;
+
+    @include media.expanded-up {
+        container-type: size;
+        inline-size: auto;
+        block-size: 100%;
+        aspect-ratio: auto;
+        align-self: stretch;
+        justify-self: stretch;
+        border-radius: var(--md-sys-shape-corner-extra-extra-large);
+        background-color: var(--md-sys-color-surface-container);
+        overflow: hidden;
+    }
+}
+
+.shape {
+    position: absolute;
+    animation: shape-in var(--md-sys-motion-spring-spatial-slow-duration) var(--md-sys-motion-spring-spatial-slow) both;
+    animation-delay: calc(var(--_i) * 70ms);
+    rotate: var(--_r, 0deg);
+
+    @include media.expanded-up {
+        // The table sits centered in the panel at a size the panel can hold.
+        --_unit: min(100cqi, 72cqb, 640px);
+    }
+}
+
+// Positions are in hundredths of the table's width.
+@mixin place($size, $x, $y, $i, $r: 0deg) {
+    --md-shape-size: calc(var(--_unit, 100cqi) * #{$size} / 100);
+    --_i: #{$i};
+    --_r: #{$r};
+
+    inset-inline-start: calc(50% + var(--_unit, 100cqi) * #{$x - 50} / 100);
+    inset-block-start: calc(50% + var(--_unit, 100cqi) * #{$y - 50} / 100);
+}
+
+.paprika {
+    @include place(62, 6, 18, 0);
+
+    color: var(--paprika);
+}
+
+.yolk {
+    @include place(24, 46, 10, 1);
+
+    color: var(--yolk);
+}
+
+.basil {
+    @include place(36, 62, 42, 2, 12deg);
+
+    color: var(--basil);
+}
+
+.saffron {
+    @include place(34, 2, 64, 3);
+
+    color: var(--saffron);
+}
+
+.crust {
+    @include place(32, 50, 74, 4, -28deg);
+
+    color: var(--crust);
+}
+
+.berry {
+    @include place(18, 76, 8, 5, 18deg);
+
+    color: var(--berry);
+}
+
+@keyframes shape-in {
+    from {
+        opacity: 0;
+        scale: 0.4;
+        rotate: calc(var(--_r, 0deg) - 45deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shape {
+        animation-name: shape-fade;
+        animation-timing-function: linear;
+        animation-duration: var(--md-sys-motion-spring-effects-slow-duration);
+    }
+
+    @keyframes shape-fade {
+        from {
+            opacity: 0;
+        }
+    }
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding-block: 24px 8px;
+    text-align: center;
+
+    @include media.expanded-up {
+        align-items: flex-start;
+        justify-content: center;
+        gap: 40px;
+        padding: 48px clamp(24px, 6vw, 96px);
+        text-align: start;
+    }
+}
+
+.wordmark {
+    @include type.role(display-medium, $emphasized: true);
+
+    color: var(--md-sys-color-on-surface);
+    letter-spacing: -0.02em;
+    font-variation-settings:
+        "ROND" 100,
+        "GRAD" var(--md-sys-typescale-grade, 0);
+
+    @include media.expanded-up {
+        @include type.role(display-large, $emphasized: true);
+
+        font-size: clamp(57px, 6vw, 88px);
+        line-height: 1.05;
+        letter-spacing: -0.025em;
+        font-variation-settings:
+            "ROND" 100,
+            "GRAD" var(--md-sys-typescale-grade, 0);
+    }
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    inline-size: min(100%, 360px);
+
+    > button {
+        inline-size: 100%;
+    }
+
+    @include media.expanded-up {
+        align-items: flex-start;
+    }
+}
+
+.google {
+    box-sizing: border-box;
+    padding: 3px;
+    border-radius: 50%;
+    background-color: #fff;
+}
+
+.error {
+    @include type.role(body-medium);
+
+    min-block-size: 20px;
+    color: var(--md-sys-color-error);
+}

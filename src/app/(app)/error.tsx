@@ -1,28 +1,21 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Button, EmptyState } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import { SvgIcon } from '@/components/ui/icon/svg'
+import { CLOUD_OFF } from '../_status/glyphs'
+import { StatusScreen } from '../_status/status-screen'
 
-export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function AppError({ error, retry }: { error: unknown; retry: () => void }) {
     useEffect(() => {
         console.error(error)
     }, [error])
-
     return (
-        <main>
-            <EmptyState
-                icon="error"
-                headline="Something went wrong"
-                body={
-                    error.digest
-                        ? `Belle has, once again, gotten into the recipe drawer. (Ref: ${error.digest})`
-                        : 'Belle has, once again, gotten into the recipe drawer.'
-                }
-            >
-                <Button icon="refresh" onClick={reset}>
-                    Try again
-                </Button>
-            </EmptyState>
-        </main>
+        <StatusScreen
+            shape="puffy"
+            icon={<SvgIcon d={CLOUD_OFF} name="cloud_off" />}
+            title="This page didn't load"
+            action={<Button onClick={() => retry()}>Try again</Button>}
+        />
     )
 }

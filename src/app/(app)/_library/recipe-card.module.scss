@@ -1,0 +1,330 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+
+// Grid: the photo leads, title and quiet metadata below, favorite over the photo.
+// List: Expressive segmented rows with a 72dp photo.
+.card {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "media media"
+        "text more";
+    column-gap: 0;
+    row-gap: 10px;
+    align-items: start;
+    -webkit-touch-callout: none;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 300px;
+
+    &:has(.link:focus-visible) {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: 4px;
+        border-radius: var(--md-sys-shape-corner-large-increased);
+        animation: md-focus-ring var(--md-sys-motion-duration-long4) var(--md-sys-motion-easing-emphasized);
+    }
+
+    // Behind a selected photo, which shrinks into it.
+    &::before {
+        content: "";
+        grid-area: media;
+        align-self: stretch;
+        border-radius: var(--md-sys-shape-corner-extra-large);
+        background-color: var(--md-sys-color-secondary-container);
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    &[data-selected]::before {
+        opacity: 1;
+    }
+}
+
+.media {
+    position: relative;
+    grid-area: media;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-large-increased);
+    background-color: var(--md-sys-color-surface-container-highest);
+    transition:
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    // State layer.
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-color: var(--md-sys-color-on-surface);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    @include media.hover {
+        .card:hover &::after {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+    }
+
+    // Press: the corners round further and the photo gives a little.
+    .card:has(.link:active) & {
+        border-radius: var(--md-sys-shape-corner-extra-large);
+        scale: 0.97;
+
+        &::after {
+            opacity: var(--md-sys-state-pressed-state-layer-opacity);
+        }
+    }
+
+    .card[data-selected] & {
+        border-radius: var(--md-sys-shape-corner-extra-large);
+        scale: 0.86;
+    }
+}
+
+.check {
+    position: absolute;
+    inset-block-start: 10px;
+    inset-inline-start: 10px;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--md-sys-color-surface);
+    background-color: color-mix(in srgb, var(--md-sys-color-scrim) 24%, transparent);
+    color: var(--md-sys-color-on-primary);
+    opacity: 0;
+    scale: 0.8;
+    transition:
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    svg {
+        inline-size: 20px;
+        block-size: 20px;
+        fill: currentcolor;
+        opacity: 0;
+        scale: 0.4;
+        transition:
+            opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+            scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+    }
+
+    .card[data-selecting] & {
+        opacity: 1;
+        scale: 1;
+    }
+
+    .card[data-selected] & {
+        border-color: var(--md-sys-color-primary);
+        background-color: var(--md-sys-color-primary);
+
+        svg {
+            opacity: 1;
+            scale: 1;
+        }
+    }
+}
+
+.text {
+    grid-area: text;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+    padding-inline-start: 4px;
+}
+
+.title {
+    @include type.role(title-medium);
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    color: var(--md-sys-color-on-surface);
+    overflow-wrap: anywhere;
+
+    mark {
+        border-radius: var(--md-sys-shape-corner-extra-small);
+        background-color: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+    }
+}
+
+.link {
+    outline: none;
+
+    // The whole card is the link's hit area.
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+    }
+}
+
+.meta {
+    @include type.role(body-medium);
+
+    overflow: hidden;
+    color: var(--md-sys-color-on-surface-variant);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.actions {
+    display: contents;
+}
+
+// Sits over the photo; a surface-tinted fill keeps it legible on any image.
+.favorite.favorite {
+    --_container: color-mix(in srgb, var(--md-sys-color-surface-container-lowest) 86%, transparent);
+
+    grid-area: media;
+    z-index: 2;
+    align-self: start;
+    justify-self: end;
+    margin: 6px;
+}
+
+.more {
+    grid-area: more;
+    z-index: 2;
+    margin-block-start: -6px;
+    margin-inline-end: -8px;
+}
+
+.favorite,
+.more {
+    transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    .card[data-selecting] & {
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+// Favorites keep their filled heart visible on the photo; others show on hover.
+@include media.hover {
+    .favorite:not([data-pressed]) {
+        opacity: 0;
+    }
+
+    .card:not([data-selecting]):hover .favorite,
+    .card:not([data-selecting]):focus-within .favorite {
+        opacity: 1;
+    }
+}
+
+// ---------- list ----------
+
+.card[data-view="list"] {
+    grid-template-columns: 72px minmax(0, 1fr) auto auto;
+    grid-template-areas: "media text fav more";
+    align-items: center;
+    column-gap: 16px;
+    min-block-size: 88px;
+    padding: 8px;
+    padding-inline-end: 4px;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    background-color: var(--md-sys-color-surface-container-low);
+    contain-intrinsic-size: auto 88px;
+    transition: border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    &::before {
+        grid-area: auto;
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+    }
+
+    // Segmented: the group's ends round off; hover and press round the row.
+    :first-child > & {
+        border-start-start-radius: var(--md-sys-shape-corner-large);
+        border-start-end-radius: var(--md-sys-shape-corner-large);
+    }
+
+    :last-child > & {
+        border-end-start-radius: var(--md-sys-shape-corner-large);
+        border-end-end-radius: var(--md-sys-shape-corner-large);
+    }
+
+    // Two columns on large windows: each column's ends round off too.
+    @include media.large-up {
+        :nth-child(2) > & {
+            border-start-start-radius: var(--md-sys-shape-corner-large);
+            border-start-end-radius: var(--md-sys-shape-corner-large);
+        }
+
+        :nth-last-child(2):nth-child(odd) > & {
+            border-end-start-radius: var(--md-sys-shape-corner-large);
+            border-end-end-radius: var(--md-sys-shape-corner-large);
+        }
+    }
+
+    @include media.hover {
+        &:hover {
+            border-radius: var(--md-sys-shape-corner-medium);
+        }
+    }
+
+    &:has(.link:active),
+    &[data-selected] {
+        border-radius: var(--md-sys-shape-corner-large);
+    }
+
+    &:has(.link:focus-visible) {
+        border-radius: var(--md-sys-shape-corner-large);
+        outline-offset: 2px;
+    }
+
+    .media {
+        aspect-ratio: 1;
+        inline-size: 72px;
+        border-radius: var(--md-sys-shape-corner-medium);
+    }
+
+    .card:has(.link:active) & .media,
+    &[data-selected] .media {
+        scale: 1;
+    }
+
+    .check {
+        inset: 0;
+        margin: auto;
+    }
+
+    .title {
+        @include type.role(title-medium);
+
+        -webkit-line-clamp: 2;
+    }
+
+    .text {
+        padding-inline-start: 0;
+    }
+
+    .favorite.favorite {
+        --_container: transparent;
+
+        grid-area: fav;
+        align-self: center;
+        margin: 0;
+        opacity: 1;
+    }
+
+    .more {
+        grid-area: more;
+        align-self: center;
+        margin: 0;
+    }
+}
