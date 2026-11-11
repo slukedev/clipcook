@@ -11,11 +11,11 @@ ClipCook is an open-source recipe keeper built on Material 3 Expressive. Paste a
 ## Features
 
 - **Clip from anywhere.** Paste a link, share to ClipCook from Android or desktop Chrome (it installs as an app), use the bookmarklet on sites that block servers, or paste the recipe as text. Reads schema.org JSON-LD, microdata, the common WordPress recipe plugins, and falls back to heading detection.
-- **Cook mode.** One step at a time in large type, swipe or tap to move, the screen stays awake, timers start from the step text, ingredients for the current step are highlighted, and optional hands-free voice control.
+- **Cook mode.** Opens on what to gather and when you'll be done, then one step at a time in large type, swipe or tap to move, the screen stays awake, timers start from the step text, ingredients for the current step are highlighted, and optional hands-free voice control.
 - **Kitchen displays.** Open ClipCook once on an Echo Show, a tablet, or any browser and pair it with a short code. After that, send a recipe from your phone in one tap, and cook mode keeps the display on the same step. Google Cast to a Nest Hub works when a Cast app id is configured.
 - **Meal plan.** Plan the week by day and meal, see tonight's dish first with a Cook button, move meals by menu or drag and drop, and put the whole week on the grocery list scaled to the servings you plan.
-- **Grocery list.** Add ingredients from any recipe at the scale you are cooking. Items merge and group by aisle.
-- **Library.** Instant search, favorites, collections, tags, and sorting by recent, cooked or quickest.
+- **Grocery list.** Add ingredients from any recipe at the scale you are cooking. Items merge, group by aisle in store order, re-add in one tap, and check off offline.
+- **Library.** Starter recipes for a new, empty library, instant search, favorites, collections, tags, and sorting by recent, cooked or quickest.
 - **Scaling.** Servings scale every quantity, with proper fractions.
 - **Dynamic color.** Every recipe page takes its colors from the photo.
 - **Your data.** Export everything as JSON and import it back.
