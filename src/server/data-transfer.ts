@@ -7,6 +7,7 @@ import { deriveTotalMinutes } from '@/lib/recipe/time'
 import { normalizeTags } from './db/normalize'
 import type { CollectionRecord, RecipeRecord, Store } from './db/types'
 import { preparePhoto, toRecipe } from './recipes'
+import { httpUrlSchema } from './schemas'
 
 export const MAX_IMPORT_BYTES = 25 * 1024 * 1024
 export const MAX_IMPORT_RECIPES = 2000
@@ -69,7 +70,8 @@ const importedRecipeSchema = z.object({
     tags: z.array(z.string()).catch([]).default([]),
     collectionIds: z.array(z.string().max(128)).max(LIMITS.collections).catch([]).default([]),
     favorite: z.boolean().catch(false).default(false),
-    sourceUrl: z.string().url().max(2048).nullable().catch(null).default(null),
+    // http(s) only, like the editor: a javascript: or data: link must never reach an href.
+    sourceUrl: httpUrlSchema.nullable().catch(null).default(null),
     sourceName: z.string().max(200).nullable().catch(null).default(null),
     cookCount: z.number().int().min(0).catch(0).default(0),
     lastCookedAt: nullableNumber.default(null),

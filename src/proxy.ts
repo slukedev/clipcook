@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { safeNextPath } from '@/lib/domain/safe-path'
 
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'clipcook_session'
 
@@ -56,15 +57,10 @@ export function proxy(req: NextRequest) {
 
     const isLogin = pathname === '/login' || pathname.startsWith('/login/')
     if (hasSession && isLogin) {
-        const next = req.nextUrl.searchParams.get('next')
+        const target = new URL(safeNextPath(req.nextUrl.searchParams.get('next')), req.nextUrl.origin)
         const url = req.nextUrl.clone()
-        url.search = ''
-        url.pathname = '/'
-        if (next?.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') && !next.startsWith('/login')) {
-            const target = new URL(next, req.nextUrl.origin)
-            url.pathname = target.pathname
-            url.search = target.search
-        }
+        url.pathname = target.pathname
+        url.search = target.search
         return NextResponse.redirect(url)
     }
 

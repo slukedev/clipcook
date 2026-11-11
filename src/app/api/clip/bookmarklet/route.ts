@@ -9,7 +9,8 @@ export function GET(req: NextRequest) {
     return new Response(href ? bookmarkletHref(origin) : bookmarkletSource(origin), {
         headers: {
             'Content-Type': href ? 'text/plain; charset=utf-8' : 'text/javascript; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600',
+            // Private: without APP_URL the origin comes from request headers, so a shared cache must not keep it.
+            'Cache-Control': 'private, max-age=3600',
         },
     })
 }

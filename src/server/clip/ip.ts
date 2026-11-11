@@ -25,6 +25,7 @@ const BLOCKED_V6: Array<[string, number]> = [
     ['::', 128],
     ['::1', 128],
     ['::', 96], // IPv4-compatible (deprecated)
+    ['::ffff:0:0:0', 96], // IPv4-translated (SIIT)
     ['64:ff9b::', 96], // NAT64 well-known prefix
     ['64:ff9b:1::', 48], // NAT64 local-use
     ['100::', 64], // discard-only

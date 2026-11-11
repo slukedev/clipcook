@@ -14,6 +14,7 @@ import {
     type SerwistPlugin,
     StaleWhileRevalidate,
 } from 'serwist'
+import { endsSession, USER_DATA_CACHES } from './lib/sw-signals'
 
 declare const self: ServiceWorkerGlobalScope
 declare const __SW_VERSION__: string
@@ -21,6 +22,11 @@ declare const __SW_VERSION__: string
 const OFFLINE_URL = '/offline'
 const OFFLINE_CACHE = `offline-${__SW_VERSION__}`
 const PAGES_CACHE = 'pages'
+
+/** Drops every cached page and photo, so the next person on this device sees none of them. */
+function forgetUserData(): Promise<unknown> {
+    return Promise.all(USER_DATA_CACHES.map((name) => caches.delete(name)))
+}
 
 /** The offline page plus the CSS and JS it links, so it renders with no network at all. */
 async function cacheOfflinePage(): Promise<void> {
@@ -145,10 +151,25 @@ self.addEventListener('activate', (event) => {
 // Signing out drops cached pages, so the next person on this device does not see them.
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url)
+    // Server actions are POSTs, which no Serwist route sees. Settings signs out with one,
+    // and its only trace is the /login redirect header on the response.
+    if (
+        url.origin === self.location.origin &&
+        event.request.method === 'POST' &&
+        event.request.headers.has('next-action')
+    ) {
+        event.respondWith(
+            fetch(event.request).then(async (response) => {
+                if (endsSession(response.headers)) await forgetUserData()
+                return response
+            }),
+        )
+        return
+    }
     const leaving =
         url.pathname === '/api/auth/signout' || (event.request.mode === 'navigate' && url.pathname.startsWith('/login'))
     if (url.origin === self.location.origin && leaving) {
-        event.waitUntil(caches.delete(PAGES_CACHE))
+        event.waitUntil(forgetUserData())
     }
 })
 
