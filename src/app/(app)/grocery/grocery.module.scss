@@ -34,6 +34,54 @@
     max-inline-size: 720px;
 }
 
+// The add field and the things bought before that unfold under it while it has focus.
+.addArea {
+    display: grid;
+}
+
+.again {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+        grid-template-rows var(--md-sys-motion-spring-spatial-default-duration)
+            var(--md-sys-motion-spring-spatial-default),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    &[data-open] {
+        grid-template-rows: 1fr;
+        opacity: 1;
+    }
+}
+
+.againInner {
+    min-block-size: 0;
+    overflow: hidden;
+
+    > * {
+        padding-block-start: var(--md-sys-space-3);
+    }
+}
+
+// Offline: changes stay on screen and wait on this device.
+.offline {
+    @include type.role(label-large);
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-2);
+    justify-self: start;
+    min-block-size: 32px;
+    padding-inline: var(--md-sys-space-3) var(--md-sys-space-4);
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    --md-icon-size: 18px;
+}
+
+.offlineIcon {
+    display: grid;
+}
+
 // Add field: a pill on the container-high surface, like the search bar it sits beside in the shell.
 .add {
     position: relative;
@@ -130,15 +178,6 @@
 .group {
     display: grid;
     gap: var(--md-sys-space-2);
-
-    &[data-done] {
-        column-span: all;
-        max-inline-size: 720px;
-
-        @include media.expanded-up {
-            padding-block-start: var(--md-sys-space-4);
-        }
-    }
 }
 
 .groupHeader {
