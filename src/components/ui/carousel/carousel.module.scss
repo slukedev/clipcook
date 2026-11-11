@@ -96,6 +96,8 @@
 
 .nav {
     position: absolute;
+    // Above anything an item stacks inside itself (scrims, labels).
+    z-index: 3;
     inset-block-start: 50%;
     translate: 0 -50%;
     opacity: 0;

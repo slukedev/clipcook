@@ -26,6 +26,8 @@
     --cc-page-wide: 1600px;
     --cc-page-medium: 1280px;
     --cc-page-narrow: 760px;
+    /* Medium grows on very large windows so a single recipe doesn't look lost. */
+    --cc-page-medium-xl: 1440px;
 
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);

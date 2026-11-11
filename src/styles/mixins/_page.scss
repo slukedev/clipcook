@@ -37,3 +37,12 @@ $_widths: (
     padding-inline: max(var(--md-sys-layout-margin), var(--safe-left))
         max(var(--md-sys-layout-margin), var(--safe-right));
 }
+
+// A bar of 40px icon buttons (top app bars and their skeletons): insets the row so the
+// first and last glyphs sit on the content edge, and a leading title (padded 8px by the
+// bar) does too. Works framed or not; outside a frame the edge is the window margin.
+@mixin bar-inset {
+    --cc-bar-inset: calc(max(var(--md-sys-layout-margin), (100% - var(--cc-page-max, 100%)) / 2) - 8px);
+
+    padding-inline: max(var(--cc-bar-inset), var(--safe-left)) max(var(--cc-bar-inset), var(--safe-right));
+}
