@@ -1,0 +1,91 @@
+@use '../../../styles/mixins/typography' as type;
+@use '../../../styles/mixins/state-layer';
+@use '../../../styles/mixins/focus-ring';
+
+// Kitchen-sized stepper: minus, value, plus. Big enough for a floury thumb.
+.root {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.label {
+    @include type.role(label-large);
+    color: var(--md-sys-color-on-surface-variant);
+    padding-inline: 4px;
+}
+
+.group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 9999px;
+    background-color: var(--md-sys-color-surface-container-high);
+
+    [data-size='s'] & {
+        padding: 2px;
+    }
+}
+
+.button {
+    @include state-layer.host;
+    @include focus-ring.ring;
+
+    --_h: 48px;
+    --md-icon-size: 24px;
+
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--_h);
+    block-size: var(--_h);
+    border-radius: calc(var(--_h) / 2);
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    transition:
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    &:active:not([data-disabled]),
+    &[data-ripple-pressed] {
+        border-radius: var(--md-sys-shape-corner-medium);
+    }
+
+    &[data-disabled] {
+        opacity: var(--md-sys-state-disabled-content-opacity);
+        cursor: default;
+    }
+
+    [data-size='s'] & {
+        --_h: 40px;
+        --md-icon-size: 20px;
+    }
+
+    [data-size='l'] & {
+        --_h: 64px;
+        --md-icon-size: 28px;
+    }
+}
+
+.input {
+    @include type.role(title-large, $emphasized: true);
+    @include type.numeric;
+    inline-size: var(--_value-width, 4ch);
+    min-inline-size: 3ch;
+    padding: 0;
+    border: 0;
+    border-radius: var(--md-sys-shape-corner-small);
+    background: none;
+    color: var(--md-sys-color-on-surface);
+    text-align: center;
+    outline: none;
+
+    &:focus-visible {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+    }
+
+    [data-size='l'] & {
+        @include type.role(headline-small, $emphasized: true);
+    }
+}

@@ -1,0 +1,118 @@
+@use '../../../styles/mixins/typography' as type;
+@use '../../../styles/mixins/state-layer';
+
+// Snackbar: inverseSurface, extra-small corners, level 3, 48dp (68dp for two
+// lines), max 600dp. Enters on the fast spatial spring; swipes away.
+.viewport {
+    position: fixed;
+    inset-inline: 16px;
+    inset-block-end: calc(16px + var(--md-snackbar-offset, 0px) + var(--safe-bottom));
+    z-index: 1300;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    outline: 0;
+}
+
+.snackbar {
+    position: absolute;
+    inset-block-end: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    inline-size: fit-content;
+    min-inline-size: min(344px, 100%);
+    max-inline-size: min(600px, 100%);
+    min-block-size: 48px;
+    padding-inline: 16px 8px;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    background-color: var(--md-sys-color-inverse-surface);
+    color: var(--md-sys-color-inverse-on-surface);
+    box-shadow: var(--md-sys-elevation-level3);
+    pointer-events: auto;
+    user-select: none;
+    transform: translate(var(--toast-swipe-movement-x, 0px), var(--toast-swipe-movement-y, 0px));
+    transition:
+        transform var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    &[data-starting-style] {
+        opacity: 0;
+        transform: translateY(100%) scale(0.96);
+    }
+
+    &[data-ending-style] {
+        opacity: 0;
+        transition:
+            transform var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+            opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    &[data-ending-style]:not([data-swipe-direction]) {
+        transform: translateY(8px);
+    }
+
+    &[data-ending-style][data-swipe-direction='down'] {
+        transform: translateY(calc(var(--toast-swipe-movement-y) + 150%));
+    }
+
+    &[data-ending-style][data-swipe-direction='left'] {
+        transform: translateX(calc(var(--toast-swipe-movement-x) - 120%));
+    }
+
+    &[data-ending-style][data-swipe-direction='right'] {
+        transform: translateX(calc(var(--toast-swipe-movement-x) + 120%));
+    }
+
+    &[data-swiping] {
+        transition: none;
+    }
+
+    &[data-limited] {
+        opacity: 0;
+    }
+}
+
+.content {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    column-gap: 4px;
+}
+
+.message {
+    @include type.role(body-medium);
+    flex: 1 1 auto;
+    padding-block: 14px;
+    padding-inline-end: 8px;
+}
+
+.action {
+    @include state-layer.host;
+    @include type.role(label-large);
+    display: inline-flex;
+    align-items: center;
+    block-size: 40px;
+    padding-inline: 12px;
+    border-radius: 20px;
+    color: var(--md-sys-color-inverse-primary);
+    outline: none;
+
+    &:focus-visible {
+        outline: var(--md-focus-ring-width) solid var(--md-sys-color-inverse-primary);
+        outline-offset: 2px;
+    }
+}
+
+.close {
+    @include state-layer.host;
+    display: grid;
+    place-items: center;
+    inline-size: 40px;
+    block-size: 40px;
+    border-radius: 50%;
+    color: var(--md-sys-color-inverse-on-surface);
+    --md-icon-size: 24px;
+}

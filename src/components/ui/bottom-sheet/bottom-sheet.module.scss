@@ -1,0 +1,123 @@
+@use '../../../styles/mixins/typography' as type;
+
+// Bottom sheet: surfaceContainerLow, 28dp top corners, max 640dp wide, 32x4 drag
+// handle in a 48dp zone, scrim at 32%. Swipes follow the finger; releases spring.
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1150;
+    min-block-size: 100dvh;
+    background-color: var(--md-sys-color-scrim);
+    opacity: calc(0.32 * (1 - var(--drawer-swipe-progress, 0)));
+    transition: opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+        opacity: 0;
+    }
+
+    &[data-swiping] {
+        transition-duration: 0ms;
+    }
+}
+
+.viewport {
+    position: fixed;
+    inset: 0;
+    z-index: 1151;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.popup {
+    --_bleed: 48px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    inline-size: min(640px, 100%);
+    max-block-size: calc(100dvh - 72px);
+    margin-block-end: calc(-1 * var(--_bleed));
+    padding-block-end: calc(var(--_bleed) + var(--safe-bottom));
+    border-start-start-radius: var(--md-sys-shape-corner-extra-large);
+    border-start-end-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    box-shadow: var(--md-sys-elevation-level1);
+    outline: 0;
+    pointer-events: auto;
+    touch-action: none;
+    transform: translateY(calc(var(--drawer-snap-point-offset, 0px) + var(--drawer-swipe-movement-y, 0px)));
+    transition: transform var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default);
+    will-change: transform;
+
+    &[data-swiping] {
+        transition-duration: 0ms;
+        user-select: none;
+    }
+
+    &[data-starting-style],
+    &[data-ending-style] {
+        transform: translateY(calc(100% - var(--_bleed) + 2px));
+    }
+
+    &[data-ending-style] {
+        transition:
+            transform calc(var(--drawer-swipe-strength, 1) * var(--md-sys-motion-spring-spatial-default-duration))
+            var(--md-sys-motion-spring-effects-default);
+    }
+
+    &[data-standard] {
+        box-shadow: var(--md-sys-elevation-level1);
+    }
+}
+
+.handle {
+    display: grid;
+    place-items: center;
+    flex: none;
+    block-size: 48px;
+    cursor: grab;
+    touch-action: none;
+
+    &::before {
+        content: '';
+        inline-size: 32px;
+        block-size: 4px;
+        border-radius: 9999px;
+        background-color: var(--md-sys-color-on-surface-variant);
+        opacity: 0.4;
+        transition:
+            inline-size var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+            opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    [data-swiping] &::before {
+        inline-size: 48px;
+        opacity: 0.8;
+    }
+}
+
+.title {
+    @include type.role(title-large);
+    padding: 0 24px 8px;
+}
+
+.body {
+    flex: 1;
+    min-block-size: 0;
+    padding: 0 24px 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+}
+
+.hiddenTitle {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}

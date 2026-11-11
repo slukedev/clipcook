@@ -1,0 +1,125 @@
+@use '../../../styles/mixins/media';
+
+// M3 carousel on native scroll snapping. Items are masked rather than resized as
+// they reach the edges (scroll-driven, so it tracks the finger exactly).
+.root {
+    position: relative;
+    min-inline-size: 0;
+}
+
+.track {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--md-carousel-inset, 16px);
+    padding-inline: var(--md-carousel-inset, 16px);
+    scrollbar-width: none;
+    outline: none;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    &:focus-visible {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: 2px;
+    }
+}
+
+.item {
+    position: relative;
+    flex: 0 0 var(--_width);
+    block-size: var(--md-carousel-height, 220px);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    overflow: hidden;
+    scroll-snap-align: start;
+    background-color: var(--md-sys-color-surface-container-highest);
+
+    > img,
+    > picture,
+    > a > img {
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: cover;
+    }
+}
+
+.multi > .item {
+    --_width: clamp(140px, 40%, 320px);
+
+    @include media.expanded-up {
+        --_width: clamp(180px, 28%, 360px);
+    }
+}
+
+.hero > .item {
+    --_width: calc(100% - 64px);
+    scroll-snap-align: center;
+
+    @include media.expanded-up {
+        --_width: min(720px, 70%);
+    }
+}
+
+.uncontained > .item {
+    --_width: var(--md-carousel-item-width, 240px);
+}
+
+@supports (animation-timeline: view()) {
+    .multi > .item,
+    .hero > .item {
+        animation: md-carousel-mask linear both;
+        animation-timeline: view(inline);
+    }
+}
+
+// Entering from the end the item is a narrow sliver; leaving at the start it narrows
+// again. In between it shows whole.
+@keyframes md-carousel-mask {
+    0% {
+        clip-path: inset(0 55% 0 0 round 28px);
+        opacity: 0.6;
+    }
+    18%,
+    82% {
+        clip-path: inset(0 0 0 0 round 28px);
+        opacity: 1;
+    }
+    100% {
+        clip-path: inset(0 0 0 55% round 28px);
+        opacity: 0.6;
+    }
+}
+
+.nav {
+    position: absolute;
+    inset-block-start: 50%;
+    translate: 0 -50%;
+    opacity: 0;
+    transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    @media (hover: hover) and (pointer: fine) {
+        .root:hover &:not([data-hidden]) {
+            opacity: 1;
+        }
+    }
+
+    &:focus-within {
+        opacity: 1;
+    }
+
+    &[data-hidden] {
+        pointer-events: none;
+    }
+}
+
+.prev {
+    inset-inline-start: 4px;
+}
+
+.next {
+    inset-inline-end: 4px;
+}
