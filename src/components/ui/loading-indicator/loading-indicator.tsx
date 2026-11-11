@@ -68,9 +68,12 @@ export function LoadingIndicator({
         }
         let frame = 0
         let visible = true
-        let origin = performance.now()
+        // Anchored to the first frame's timestamp (not performance.now(), which is later
+        // than the frame time) so the first frames advance instead of repeating t = 0.
+        let origin = -1
         const tick = (now: number) => {
-            const elapsed = Math.max(0, now - origin)
+            if (origin < 0) origin = now
+            const elapsed = now - origin
             const index = Math.floor(elapsed / MORPH_MS)
             const local = (elapsed - index * MORPH_MS) / 1000
             const progress = springAt(local, MORPH_SPRING)
@@ -78,15 +81,15 @@ export function LoadingIndicator({
             const to = shapes[(index + 1) % shapes.length] as Points
             path.setAttribute('d', pointsToPath(lerpPoints(from, to, progress), scale))
             path.setAttribute('transform', `rotate(${(index + progress) * 90} 50 50)`)
-            if (visible) frame = requestAnimationFrame(tick)
+            frame = visible ? requestAnimationFrame(tick) : 0
         }
         const observer = new IntersectionObserver(([entry]) => {
-            const next = entry?.isIntersecting ?? true
-            if (next && !visible) {
-                origin = performance.now()
+            visible = entry?.isIntersecting ?? true
+            // Only one loop at a time: if the old one has not stopped yet, it carries on.
+            if (visible && !frame) {
+                origin = -1
                 frame = requestAnimationFrame(tick)
             }
-            visible = next
         })
         if (rootRef.current) observer.observe(rootRef.current)
         frame = requestAnimationFrame(tick)

@@ -66,12 +66,12 @@ function useFrames(
         let visible = true
         const loop = (now: number) => {
             const more = onFrame(now)
-            if (more && visible && running) frame = requestAnimationFrame(loop)
+            frame = more && visible && running ? requestAnimationFrame(loop) : 0
         }
         const observer = new IntersectionObserver(([entry]) => {
-            const next = entry?.isIntersecting ?? true
-            if (next && !visible) frame = requestAnimationFrame(loop)
-            visible = next
+            visible = entry?.isIntersecting ?? true
+            // Only one loop at a time: if the old one has not stopped yet, it carries on.
+            if (visible && !frame) frame = requestAnimationFrame(loop)
         })
         if (root.current) observer.observe(root.current)
         frame = requestAnimationFrame(loop)

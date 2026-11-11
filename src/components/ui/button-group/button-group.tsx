@@ -66,11 +66,12 @@ export function ButtonGroup({ size = 's', label, className, children, ...rest }:
             all.forEach((slot, k) => {
                 slot.style.flexBasis = `${natural[k]}px`
             })
-            // Next frame, so the transition starts from the measured widths.
-            requestAnimationFrame(() => {
-                all.forEach((slot, k) => {
-                    slot.style.flexBasis = `${Math.max(0, widths[k] ?? 0)}px`
-                })
+            // Commit the measured widths as the transition's start before setting the
+            // target. Without the style flush, `auto` goes straight to px, which cannot
+            // interpolate, and the first press snaps instead of springing.
+            for (const slot of all) void getComputedStyle(slot).flexBasis
+            all.forEach((slot, k) => {
+                slot.style.flexBasis = `${Math.max(0, widths[k] ?? 0)}px`
             })
             window.addEventListener('pointerup', release, { once: true })
             window.addEventListener('pointercancel', release, { once: true })

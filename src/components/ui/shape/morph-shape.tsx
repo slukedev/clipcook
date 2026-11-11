@@ -37,8 +37,10 @@ export function MorphShape({ shape, size, spring = 'spatial-default', className,
             return
         }
         let frame = 0
-        const start = performance.now()
+        let start = -1
         const tick = (now: number) => {
+            // The first frame's timestamp is t = 0, so every frame after it moves.
+            if (start < 0) start = now
             const elapsed = (now - start) / 1000
             const t = springAt(elapsed, spec)
             const points = lerpPoints(from, target, t)
