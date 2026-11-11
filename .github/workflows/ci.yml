@@ -46,7 +46,7 @@ jobs:
       # Builds the app, starts it on port 3130 with the local backend in .data-e2e,
       # seeds the demo cook and runs both projects (playwright.config.ts).
       - run: npm run test:e2e
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
