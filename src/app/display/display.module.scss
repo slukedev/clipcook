@@ -46,3 +46,9 @@
     --_h: 64px;
     min-inline-size: 96px;
 }
+
+// This surface never scrolls the page, so the page gives back the scrollbar gutter it
+// reserves elsewhere; otherwise classic scrollbars leave an empty strip at the right edge.
+:global(html):has(.root) {
+    scrollbar-gutter: auto;
+}
