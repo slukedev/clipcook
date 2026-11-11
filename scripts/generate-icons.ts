@@ -78,6 +78,10 @@ const ICONS = [
     'note_add',
     'code',
     'bug_report',
+    // Settings
+    'animation',
+    'description',
+    'install_desktop',
     // Library organisation
     'bookmark',
     'bookmarks',

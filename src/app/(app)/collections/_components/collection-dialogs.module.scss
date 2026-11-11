@@ -1,0 +1,9 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    padding-block-start: 4px;
+
+    > * {
+        inline-size: 100%;
+    }
+}

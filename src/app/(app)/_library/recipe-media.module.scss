@@ -1,0 +1,44 @@
+@use "../../../styles/mixins/typography" as type;
+
+.photo {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    background-color: var(--md-sys-color-surface-container-highest);
+}
+
+// Tinted from the title's hue, mixed into the theme's own surfaces so it follows
+// light, dark and contrast settings.
+.placeholder {
+    --_tint: oklch(68% 0.15 var(--_hue));
+
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    container-type: size;
+    background-color: color-mix(in oklab, var(--_tint) 22%, var(--md-sys-color-surface-container-high));
+
+    > * {
+        grid-area: 1 / 1;
+    }
+}
+
+.shape {
+    --md-shape-size: 62cqmin;
+
+    color: color-mix(in oklab, var(--_tint) 58%, var(--md-sys-color-surface-container-high));
+}
+
+.initial {
+    @include type.role(display-medium, $emphasized: true);
+
+    font-size: 30cqmin;
+    line-height: 1;
+    color: color-mix(in oklab, var(--_tint) 30%, var(--md-sys-color-on-surface));
+    font-variation-settings:
+        "ROND" 100,
+        "GRAD" var(--md-sys-typescale-grade, 0);
+}
