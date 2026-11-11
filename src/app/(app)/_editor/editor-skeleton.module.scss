@@ -1,0 +1,31 @@
+@use "../../../styles/mixins/typography" as type;
+
+.bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-block-size: calc(64px + var(--safe-top));
+    padding: var(--safe-top) 12px 0 8px;
+}
+
+.heading {
+    @include type.role(title-large);
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.photo {
+    aspect-ratio: 4 / 3;
+    inline-size: 100%;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.title {
+    @include type.role(title-large);
+    margin-block-end: 12px;
+}

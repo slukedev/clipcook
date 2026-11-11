@@ -1,0 +1,70 @@
+@use "../../styles/mixins/typography" as type;
+@use "../../styles/mixins/media";
+
+.page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-block-size: 100dvh;
+    padding: calc(24px + var(--safe-top)) var(--md-sys-layout-margin) calc(24px + var(--safe-bottom));
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    text-align: center;
+}
+
+.art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 120px;
+    block-size: 120px;
+    margin-block-end: 8px;
+}
+
+.shape {
+    position: absolute;
+    inset: 0;
+    color: var(--md-sys-color-secondary-container);
+    animation: drift 24s linear infinite;
+
+    @include media.reduced-motion {
+        animation: none;
+    }
+}
+
+@keyframes drift {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.icon {
+    position: relative;
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    [hidden] {
+        display: none;
+    }
+}
+
+.title {
+    @include type.role(headline-small, $emphasized: true);
+    margin: 0;
+    text-wrap: balance;
+}
+
+.body {
+    @include type.role(body-large);
+    max-inline-size: 36ch;
+    margin: 0 0 8px;
+    color: var(--md-sys-color-on-surface-variant);
+}

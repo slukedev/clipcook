@@ -1,0 +1,116 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+
+.file {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.empty,
+.filled {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    max-block-size: min(60vh, 520px);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    overflow: hidden;
+    transition:
+        outline-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
+    outline: 2px dashed transparent;
+    outline-offset: -2px;
+
+    &[data-over] {
+        outline-color: var(--md-sys-color-primary);
+    }
+}
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px 16px;
+    background-color: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface-variant);
+
+    &[data-over] {
+        background-color: var(--md-sys-color-primary-container);
+    }
+}
+
+.emptyArt {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 96px;
+    block-size: 96px;
+}
+
+.emptyShape {
+    position: absolute;
+    inset: 0;
+    color: var(--md-sys-color-primary-container);
+    transition: transform var(--md-sys-motion-spring-spatial-slow-duration) var(--md-sys-motion-spring-spatial-slow);
+
+    .empty[data-over] & {
+        color: var(--md-sys-color-primary);
+        transform: rotate(40deg) scale(1.08);
+    }
+}
+
+.emptyIcon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-on-primary-container);
+    --md-icon-size: 36px;
+
+    .empty[data-over] & {
+        color: var(--md-sys-color-on-primary);
+    }
+}
+
+.emptyActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.hint {
+    @include type.role(body-medium);
+    margin: 0;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.filled {
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
+.image {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+.busy {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background-color: color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent);
+}
+
+.overlay {
+    position: absolute;
+    inset-block-end: 12px;
+    inset-inline-end: 12px;
+    display: flex;
+    gap: 8px;
+}
