@@ -70,7 +70,7 @@ export function LoadingIndicator({
         let visible = true
         let origin = performance.now()
         const tick = (now: number) => {
-            const elapsed = now - origin
+            const elapsed = Math.max(0, now - origin)
             const index = Math.floor(elapsed / MORPH_MS)
             const local = (elapsed - index * MORPH_MS) / 1000
             const progress = springAt(local, MORPH_SPRING)
