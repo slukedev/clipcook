@@ -66,6 +66,97 @@
 .railModal,
 .railLarge {
     flex: none;
+    // Room above the mark, clear of the status bar.
+    padding-block-start: calc(16px + var(--safe-top));
+    // A tonal panel, so navigation reads as its own area beside the page.
+    background-color: var(--md-sys-color-surface-container-low);
+}
+
+@mixin dark {
+    :global(:root[data-theme="dark"]) & {
+        @content;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :global(:root:not([data-theme="light"])) & {
+            @content;
+        }
+    }
+}
+
+// The app mark (and wordmark, expanded) at the top of the rail. Drawn in the active
+// scheme's roles, so a recipe's photo colors reach it too.
+.brand {
+    @include focus-ring.ring;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-inline-size: 48px;
+    min-block-size: 48px;
+    padding: 4px;
+    margin: -4px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    color: var(--md-sys-color-on-surface);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mark {
+    // Light: a bright cookie on the saturated primary tile, as on the app icon. Dark: the
+    // container pair, which keeps that loud tile and light cookie instead of inverting.
+    --_tile: var(--md-sys-color-primary);
+    --_cookie: var(--md-sys-color-on-primary);
+    --_sun: var(--md-sys-color-tertiary-container);
+
+    @include dark {
+        --_tile: var(--md-sys-color-primary-container);
+        --_cookie: var(--md-sys-color-on-primary-container);
+        --_sun: var(--md-sys-color-tertiary);
+    }
+
+    flex: none;
+    inline-size: 40px;
+    block-size: 40px;
+    transition: scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    .brand:active & {
+        scale: 0.92;
+    }
+}
+
+.markTile {
+    fill: var(--_tile);
+    transition: fill var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow);
+}
+
+.markCookie {
+    fill: var(--_cookie);
+    transition: fill var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow);
+}
+
+.markSun {
+    fill: var(--_sun);
+    transition: fill var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow);
+}
+
+.wordmark {
+    @include type.role(title-large, $emphasized: true);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+
+    .brand[data-toggled] & {
+        animation: brand-in var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
+    }
+}
+
+@keyframes brand-in {
+    from {
+        opacity: 0;
+    }
 }
 
 .railModal {

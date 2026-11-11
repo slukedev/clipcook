@@ -29,6 +29,10 @@ export interface NavigationRailProps {
     expandable?: boolean
     /** Usually a `RailFab`, which collapses with the rail. */
     fab?: ReactNode
+    /** App mark at the top. Reads `useRailExpanded()` to show a wordmark when expanded. */
+    brand?: ReactNode
+    /** Destinations pinned to the bottom of the rail, such as settings. */
+    footer?: ReactNode
     label?: string
     className?: string
     children: ReactNode
@@ -42,6 +46,8 @@ export function NavigationRail({
     modal = false,
     expandable = true,
     fab,
+    brand,
+    footer,
     label = 'Main',
     className,
     children,
@@ -129,18 +135,25 @@ export function NavigationRail({
                 data-modal={modal || undefined}
             >
                 <div className={styles.header}>
-                    {expandable && (
-                        <IconButton
-                            ref={menuRef}
-                            label={expanded ? 'Collapse navigation' : 'Expand navigation'}
-                            icon={<Glyph name={expanded ? 'menu_open' : 'menu'} />}
-                            onClick={() => setExpanded(!expanded)}
-                            aria-expanded={expanded}
-                        />
+                    {(brand || expandable) && (
+                        <div className={styles.top}>
+                            {brand && <div className={styles.brand}>{brand}</div>}
+                            {expandable && (
+                                <IconButton
+                                    ref={menuRef}
+                                    className={styles.menu}
+                                    label={expanded ? 'Collapse navigation' : 'Expand navigation'}
+                                    icon={<Glyph name={expanded ? 'menu_open' : 'menu'} />}
+                                    onClick={() => setExpanded(!expanded)}
+                                    aria-expanded={expanded}
+                                />
+                            )}
+                        </div>
                     )}
-                    {fab}
+                    {fab && <div className={styles.fab}>{fab}</div>}
                 </div>
                 <div className={styles.items}>{children}</div>
+                {footer && <div className={cx(styles.items, styles.footer)}>{footer}</div>}
             </nav>
         </RailContext>
     )

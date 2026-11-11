@@ -61,14 +61,58 @@
     }
 }
 
+// Collapsed: mark, menu button and FAB stack on the rail's center line. Expanded: the
+// mark and wordmark share a row with the collapse button at its end, and the FAB
+// lines up with the destination pills below.
 .header {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    align-items: center;
+    gap: 12px;
     min-block-size: 40px;
     padding-inline: 20px;
     margin-block-end: 24px;
+
+    .rail[data-expanded] & {
+        align-items: stretch;
+        padding-inline: 20px 12px;
+    }
+}
+
+.top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    .rail[data-expanded] & {
+        flex-direction: row;
+        gap: 4px;
+        min-block-size: 48px;
+    }
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    min-inline-size: 0;
+
+    .rail[data-expanded] & {
+        flex: 1 1 auto;
+    }
+}
+
+.menu {
+    flex: none;
+}
+
+.fab {
+    display: flex;
+    justify-content: center;
+
+    .rail[data-expanded] & {
+        justify-content: flex-start;
+    }
 }
 
 .items {
@@ -76,6 +120,12 @@
     flex-direction: column;
     gap: 4px;
     list-style: none;
+}
+
+// Pinned under the destinations, at the bottom of a tall window.
+.footer {
+    margin-block-start: auto;
+    padding-block-start: 12px;
 }
 
 .item {

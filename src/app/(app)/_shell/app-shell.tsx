@@ -40,6 +40,7 @@ interface AppShellProps {
 // Top-level destinations fade through (M3) and are prefetched whole, so switching tabs
 // never shows a skeleton.
 const DESTINATION_LINK = { prefetch: true, transitionTypes: ['nav-fade'] }
+const SETTINGS_HREF = '/settings'
 
 function badgeLabel(destination: Destination): string | undefined {
     if (!destination.badge) return undefined
@@ -107,14 +108,24 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
         />
     ))
     const railFab = <ClipRailFab icon={clipIcon} actions={clipActions} />
+    // Settings sits apart from the places you cook from, at the foot of the rail.
+    const railMain = railItems.filter((_, i) => destinations[i]?.href !== SETTINGS_HREF)
+    const railFooter = railItems.filter((_, i) => destinations[i]?.href === SETTINGS_HREF)
+    const brand = <RailBrand />
 
     return (
         <div className={styles.shell}>
             <a href="#main" className={styles.skip}>
                 Skip to content
             </a>
-            <NavigationRail className={`${styles.railModal} cc-vt-rail`} modal fab={railFab}>
-                {railItems}
+            <NavigationRail
+                className={`${styles.railModal} cc-vt-rail`}
+                modal
+                brand={brand}
+                fab={railFab}
+                footer={railFooter}
+            >
+                {railMain}
             </NavigationRail>
             <NavigationRail
                 className={`${styles.railLarge} cc-vt-rail-large`}
@@ -123,9 +134,11 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
                     setLargeExpanded(next)
                     writeCookie(RAIL_COOKIE, next ? 'expanded' : 'collapsed')
                 }}
+                brand={brand}
                 fab={railFab}
+                footer={railFooter}
             >
-                {railItems}
+                {railMain}
             </NavigationRail>
             <div className={styles.column}>
                 <main id="main" tabIndex={-1} className={styles.main}>
@@ -183,5 +196,44 @@ function ClipRailFab({ icon, actions }: { icon: ReactNode; actions: ClipAction[]
                 ))}
             </MenuContent>
         </Menu>
+    )
+}
+
+/**
+ * The ClipCook mark, drawn in the active scheme so it follows the recipe colors with
+ * the rest of the window, and the wordmark beside it while the rail is expanded.
+ */
+function RailBrand() {
+    const expanded = useRailExpanded()
+    // The wordmark fades in when the rail expands, never on page load.
+    const [shown, setShown] = useState(expanded)
+    const [toggled, setToggled] = useState(false)
+    if (expanded !== shown) {
+        setShown(expanded)
+        setToggled(true)
+    }
+    return (
+        <Link
+            href="/"
+            className={styles.brand}
+            aria-label="ClipCook, library"
+            data-toggled={toggled || undefined}
+            {...DESTINATION_LINK}
+        >
+            <svg className={styles.mark} viewBox="0 0 100 100" aria-hidden focusable="false">
+                <rect className={styles.markTile} width="100" height="100" rx="28" />
+                <path
+                    className={styles.markCookie}
+                    transform="translate(17 22) scale(0.62)"
+                    d="M39.8 6C45.6 0.8 54.4 0.8 60.2 6C63.1 8.7 67 10.1 71 9.9C78.8 9.6 85.5 15.3 86.6 23C87.1 27 89.2 30.5 92.3 33C98.5 37.7 100 46.4 95.8 53C93.7 56.4 93 60.4 93.8 64.3C95.5 71.9 91.1 79.6 83.7 82C79.9 83.2 76.7 85.8 74.9 89.3C71.2 96.2 63 99.2 55.7 96.3C52.1 94.8 47.9 94.8 44.3 96.3C37 99.2 28.8 96.2 25.1 89.3C23.3 85.8 20.1 83.2 16.3 82C8.9 79.6 4.5 71.9 6.2 64.3C7 60.4 6.3 56.4 4.2 53C0 46.4 1.5 37.7 7.7 33C10.8 30.5 12.9 27 13.4 23C14.5 15.3 21.2 9.6 29 9.9C33 10.1 36.9 8.7 39.8 6Z"
+                />
+                <circle className={styles.markSun} cx="69.5" cy="29.5" r="14.3" />
+            </svg>
+            {expanded && (
+                <span className={styles.wordmark} aria-hidden>
+                    ClipCook
+                </span>
+            )}
+        </Link>
     )
 }
