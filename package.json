@@ -48,7 +48,8 @@
         "typescript": "~6.0.3"
     },
     "overrides": {
-        "jose": "^5.10.0"
+        "jose": "^5.10.0",
+        "sharp": "$sharp"
     },
     "allowScripts": {
         "sharp@0.34.5": true,
