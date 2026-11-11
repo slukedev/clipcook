@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { IconButton } from '@/components/ui/icon-button'
+import { goBackWithMorph } from '@/components/ui/view-transition'
 import { transitionTypesFor } from '@/lib/theme/view-transition'
 import styles from './top-bar.module.scss'
 
@@ -17,11 +18,13 @@ interface NavigationLike {
  * the page's h1 is out of view.
  */
 export function TopBar({
+    recipeId,
     title,
     titleId,
     back,
     trailing,
 }: {
+    recipeId: string
     title: string
     titleId: string
     back: ReactNode
@@ -69,7 +72,7 @@ export function TopBar({
         const nav = (window as unknown as { navigation?: NavigationLike }).navigation
         if (nav?.canGoBack) {
             event.preventDefault()
-            router.back()
+            goBackWithMorph(recipeId, () => router.back())
         }
     }
 

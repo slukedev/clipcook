@@ -1,9 +1,11 @@
 'use client'
 
+import type { PrefetchKind } from 'next/dist/client/components/router-reducer/router-reducer-types'
+import { useRouter } from 'next/navigation'
 import { type MouseEvent, type PointerEvent, type ReactNode, useRef } from 'react'
 import { IconButton } from '@/components/ui/icon-button'
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
-import { SharedElement, TransitionLink, vtName } from '@/components/ui/view-transition'
+import { morphTarget, SharedElement, TransitionLink, vtName } from '@/components/ui/view-transition'
 import type { RecipeSummary } from '@/lib/domain/types'
 import type { LibraryIcons } from './icons'
 import { highlightRanges, recipeMeta, type ViewMode } from './library-data'
@@ -74,10 +76,15 @@ export function RecipeCard({
     onToggleSelect,
     onAction,
 }: RecipeCardProps) {
+    const router = useRouter()
     const press = useRef<{ timer: number; x: number; y: number } | null>(null)
     const swallowClick = useRef(false)
     const meta = recipeMeta(recipe)
     const { id } = recipe
+
+    // The photo can only morph into the recipe page when that page renders in the same
+    // commit, so warm the whole page on intent instead of only its loading shell.
+    const warm = () => router.prefetch(`/recipe/${id}`, { kind: 'full' as PrefetchKind })
 
     const cancelPress = () => {
         if (press.current) window.clearTimeout(press.current.timer)
@@ -86,6 +93,7 @@ export function RecipeCard({
 
     // Touch: a long press starts selecting, as in Photos and Files.
     const onPointerDown = (event: PointerEvent) => {
+        if (!selecting) warm()
         if (event.pointerType !== 'touch' || selecting) return
         const { clientX: x, clientY: y } = event
         cancelPress()
@@ -136,7 +144,7 @@ export function RecipeCard({
             }}
         >
             <SharedElement name={vtName('recipe-photo', id)}>
-                <div className={styles.media}>
+                <div className={styles.media} {...morphTarget('photo', id)}>
                     <RecipeMedia src={recipe.thumbnail} title={recipe.title} sizes={photoSizes} priority={priority} />
                     <span className={styles.check} aria-hidden>
                         <svg viewBox="0 0 24 24" focusable="false" aria-hidden>
@@ -147,11 +155,13 @@ export function RecipeCard({
             </SharedElement>
             <div className={styles.text}>
                 <SharedElement name={vtName('recipe-title', id)}>
-                    <h3 className={styles.title}>
+                    <h3 className={styles.title} {...morphTarget('title', id)}>
                         <TransitionLink
                             href={`/recipe/${id}`}
                             className={styles.link}
                             onClick={onLinkClick}
+                            onPointerEnter={selecting ? undefined : warm}
+                            onFocus={selecting ? undefined : warm}
                             draggable={!selecting}
                             role={selecting ? 'checkbox' : undefined}
                             aria-checked={selecting ? selected : undefined}
