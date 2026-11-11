@@ -4,6 +4,9 @@ const nextConfig = {
     poweredByHeader: false,
     reactCompiler: true,
     experimental: {
+        // Library cards fully prefetch a recipe on hover so its photo can morph in; a minute
+        // bounds how stale such a page can be when edited elsewhere. Our own edits revalidate.
+        staleTimes: { static: 60 },
         serverActions: {
             // Original photos upload as FormData Files; the client pre-resizes
             // to ~2560px so real payloads stay a fraction of this.

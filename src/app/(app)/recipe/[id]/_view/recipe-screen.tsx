@@ -4,7 +4,7 @@ import { CastButton } from '@/components/kitchen/cast-button'
 import { Button } from '@/components/ui/button'
 import { AssistChip, ChipSet } from '@/components/ui/chip'
 import { Icon } from '@/components/ui/icon'
-import { PageTransition, SharedElement, vtName } from '@/components/ui/view-transition'
+import { morphTarget, PageTransition, SharedElement, vtName } from '@/components/ui/view-transition'
 import type { Recipe } from '@/lib/domain/types'
 import { prettifyFractions } from '@/lib/recipe/ingredients'
 import { recipeIcons } from './icons'
@@ -56,6 +56,7 @@ export function RecipeScreen({
             {colorCss && <style dangerouslySetInnerHTML={{ __html: colorCss }} />}
             <div className={styles.root} data-recipe={recipe.id} data-has-photo={recipe.image ? '' : undefined}>
                 <TopBar
+                    recipeId={recipe.id}
                     title={recipe.title}
                     titleId={titleId}
                     back={icons.back}
@@ -103,7 +104,7 @@ export function RecipeScreen({
                         <header className={styles.header}>
                             <div className={styles.photoFrame}>
                                 <SharedElement name={vtName('recipe-photo', recipe.id)}>
-                                    <div className={styles.photo}>
+                                    <div className={styles.photo} {...morphTarget('photo', recipe.id)}>
                                         <RecipePhoto
                                             id={recipe.id}
                                             src={recipe.image}
@@ -115,7 +116,7 @@ export function RecipeScreen({
                             </div>
                             <div className={styles.summary} data-bar-sentinel>
                                 <SharedElement name={vtName('recipe-title', recipe.id)}>
-                                    <h1 id={titleId} className={styles.title}>
+                                    <h1 id={titleId} className={styles.title} {...morphTarget('title', recipe.id)}>
                                         {recipe.title}
                                     </h1>
                                 </SharedElement>
