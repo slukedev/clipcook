@@ -1,0 +1,116 @@
+// View Transitions for route changes. React's <ViewTransition> (see
+// src/components/ui/view-transition) assigns these classes per transition type:
+//   nav-forward / nav-back: M3 shared axis X; anything else: fade through.
+// Shared elements (recipe photo, title) morph on the slow spatial spring.
+
+::view-transition-group(*) {
+    animation-duration: var(--md-sys-motion-spring-spatial-slow-duration);
+    animation-timing-function: var(--md-sys-motion-spring-spatial-slow);
+}
+
+::view-transition-old(*),
+::view-transition-new(*) {
+    animation-duration: var(--md-sys-motion-spring-effects-default-duration);
+    animation-timing-function: var(--md-sys-motion-spring-effects-default);
+}
+
+// Shared elements crossfade content while the group morphs bounds. Images keep their
+// aspect instead of stretching.
+::view-transition-old(.cc-shared),
+::view-transition-new(.cc-shared) {
+    height: 100%;
+    object-fit: cover;
+    animation-duration: var(--md-sys-motion-spring-effects-slow-duration);
+}
+
+::view-transition-old(.cc-fade) {
+    animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast) both;
+}
+
+::view-transition-new(.cc-fade) {
+    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
+        var(--md-sys-motion-spring-effects-fast-duration) both;
+}
+
+::view-transition-old(.cc-forward) {
+    animation:
+        cc-vt-slide-out-start var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default) both,
+        cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast) both;
+}
+
+::view-transition-new(.cc-forward) {
+    animation:
+        cc-vt-slide-in-end var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default) both,
+        cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
+            var(--md-sys-motion-spring-effects-fast-duration) both;
+}
+
+::view-transition-old(.cc-back) {
+    animation:
+        cc-vt-slide-out-end var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default) both,
+        cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast) both;
+}
+
+::view-transition-new(.cc-back) {
+    animation:
+        cc-vt-slide-in-start var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default) both,
+        cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
+            var(--md-sys-motion-spring-effects-fast-duration) both;
+}
+
+@keyframes cc-vt-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes cc-vt-fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes cc-vt-slide-out-start {
+    to {
+        translate: calc(-30px * var(--cc-dir, 1)) 0;
+    }
+}
+
+@keyframes cc-vt-slide-in-end {
+    from {
+        translate: calc(30px * var(--cc-dir, 1)) 0;
+    }
+}
+
+@keyframes cc-vt-slide-out-end {
+    to {
+        translate: calc(30px * var(--cc-dir, 1)) 0;
+    }
+}
+
+@keyframes cc-vt-slide-in-start {
+    from {
+        translate: calc(-30px * var(--cc-dir, 1)) 0;
+    }
+}
+
+// Movement goes; the crossfade stays.
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*) {
+        animation-duration: 0ms;
+    }
+
+    ::view-transition-old(.cc-forward),
+    ::view-transition-old(.cc-back) {
+        animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) linear both;
+    }
+
+    ::view-transition-new(.cc-forward),
+    ::view-transition-new(.cc-back) {
+        animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) linear both;
+    }
+}
+
+:root[dir='rtl'] {
+    --cc-dir: -1;
+}

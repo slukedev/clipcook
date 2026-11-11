@@ -41,7 +41,7 @@ export function storageAvailable(): Promise<boolean> {
     return bucketProbe
 }
 
-/** Legacy inline caps — keep every doc comfortably under Firestore's 1 MiB. */
+/** Inline caps keep every doc comfortably under Firestore's 1 MiB. */
 const MAX_INLINE_IMAGE_BASE64 = 900 * 1024
 const MAX_INLINE_THUMB_BASE64 = 48 * 1024
 
@@ -52,45 +52,69 @@ export interface InlineRecipeImage {
     seedColor: number
 }
 
+/** Clip drafts also carry recipe text in the same 1 MiB doc. */
+const MAX_CLIP_IMAGE_BASE64 = 640 * 1024
+
+type QualityLadder = Array<[edge: number, quality: number]>
+
+const INLINE_IMAGE_LADDER: QualityLadder = [
+    [1600, 80],
+    [1280, 75],
+    [1024, 70],
+    [800, 60],
+]
+const INLINE_THUMB_LADDER: QualityLadder = [
+    [480, 70],
+    [320, 65],
+    [240, 60],
+    [160, 55],
+]
+
+/** Encodes WebP renditions down a quality ladder until the base64 fits. */
+async function encodeInline(base: Sharp, maxBase64: number, ladder: QualityLadder): Promise<string> {
+    for (const [edge, quality] of ladder) {
+        const buf = await base
+            .clone()
+            .resize(edge, edge, { fit: 'inside', withoutEnlargement: true })
+            .webp({ quality })
+            .toBuffer()
+        const b64 = buf.toString('base64')
+        if (b64.length <= maxBase64) return `data:image/webp;base64,${b64}`
+    }
+    throw new Error('unsupported image format: could not fit size limits')
+}
+
+function openImage(input: Buffer | ArrayBuffer | Uint8Array): Sharp {
+    const source = Buffer.isBuffer(input) ? input : Buffer.from(input as ArrayBuffer)
+    // .rotate() bakes in EXIF orientation; limitInputPixels guards decompression bombs.
+    return sharp(source, { limitInputPixels: 64_000_000 }).rotate()
+}
+
 /**
  * Storage-less fallback: same sharp pipeline, but the renditions are written
- * inline on the Firestore doc as WebP data URLs (like legacy docs, which were
- * larger client-encoded JPEGs). Quality-ladders down to fit the caps.
+ * inline on the doc as WebP data URLs. Quality-ladders down to fit the caps.
  */
-export async function processInlineRecipeImage(input: Buffer | ArrayBuffer): Promise<InlineRecipeImage> {
-    const source = Buffer.isBuffer(input) ? input : Buffer.from(input)
-    const base = sharp(source, { limitInputPixels: 64_000_000 }).rotate()
-    const seedColor = await extractSeedColor(base.clone())
-
-    const encode = async (maxBase64: number, ladder: Array<[number, number]>): Promise<string> => {
-        for (const [edge, quality] of ladder) {
-            const buf = await base
-                .clone()
-                .resize(edge, edge, { fit: 'inside', withoutEnlargement: true })
-                .webp({ quality })
-                .toBuffer()
-            const b64 = buf.toString('base64')
-            if (b64.length <= maxBase64) return `data:image/webp;base64,${b64}`
-        }
-        throw new Error('unsupported image format: could not fit size limits')
-    }
-
-    const [image, thumbnail] = await Promise.all([
-        encode(MAX_INLINE_IMAGE_BASE64, [
-            [1600, 80],
-            [1280, 75],
-            [1024, 70],
-            [800, 60],
-        ]),
-        encode(MAX_INLINE_THUMB_BASE64, [
-            [480, 70],
-            [320, 65],
-            [240, 60],
-            [160, 55],
-        ]),
+export async function processInlineRecipeImage(input: Buffer | ArrayBuffer | Uint8Array): Promise<InlineRecipeImage> {
+    const base = openImage(input)
+    const [seedColor, image, thumbnail] = await Promise.all([
+        extractSeedColor(base.clone()),
+        encodeInline(base, MAX_INLINE_IMAGE_BASE64, INLINE_IMAGE_LADDER),
+        encodeInline(base, MAX_INLINE_THUMB_BASE64, INLINE_THUMB_LADDER),
     ])
-
     return { image, thumbnail, seedColor }
+}
+
+/**
+ * A clipped photo, re-encoded as one WebP data URL. Decoding with sharp is the
+ * real content check; the bytes came from an untrusted site.
+ */
+export async function clipImageDataUrl(input: Uint8Array): Promise<string> {
+    const base = openImage(input)
+    const meta = await base.metadata()
+    if (!meta.width || !meta.height || meta.width < 64 || meta.height < 64) {
+        throw new Error('unsupported image format: too small')
+    }
+    return encodeInline(base, MAX_CLIP_IMAGE_BASE64, INLINE_IMAGE_LADDER)
 }
 
 /**
@@ -100,12 +124,10 @@ export async function processInlineRecipeImage(input: Buffer | ArrayBuffer): Pro
  * uses for wallpaper-based dynamic color).
  *
  * sharp rejects non-image payloads by content, so this also serves as
- * validation — never trust the uploaded MIME type.
+ * validation: never trust the uploaded MIME type.
  */
-export async function processRecipeImage(input: Buffer | ArrayBuffer): Promise<ProcessedRecipeImage> {
-    const source = Buffer.isBuffer(input) ? input : Buffer.from(input)
-    // .rotate() bakes in EXIF orientation; limitInputPixels guards decompression bombs.
-    const base = sharp(source, { limitInputPixels: 64_000_000 }).rotate()
+export async function processRecipeImage(input: Buffer | ArrayBuffer | Uint8Array): Promise<ProcessedRecipeImage> {
+    const base = openImage(input)
 
     const [image, thumbnail, seedColor] = await Promise.all([
         base

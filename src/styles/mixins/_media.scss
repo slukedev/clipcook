@@ -1,19 +1,13 @@
-// M3 window size classes — https://m3.material.io/foundations/layout/applying-layout
-//
-//   compact       <  600px   phones
-//   medium        600–839px  small tablets, foldables
-//   expanded      840–1199px large tablets, small laptops
-//   large        1200–1599px laptops, desktops
-//   extra-large  ≥ 1600px    large desktops, ultrawide
-//
-// Usage: @include media.medium-up { ... }
+// M3 window size classes:
+//   compact < 600, medium 600 to 839, expanded 840 to 1199, large 1200 to 1599, extra-large >= 1600
+//   @include media.expanded-up { ... }
 
 $medium: 600px;
 $expanded: 840px;
 $large: 1200px;
 $extra-large: 1600px;
 
-@mixin compact-only {
+@mixin compact {
     @media (width < #{$medium}) {
         @content;
     }
@@ -39,6 +33,18 @@ $extra-large: 1600px;
 
 @mixin extra-large-up {
     @media (width >= #{$extra-large}) {
+        @content;
+    }
+}
+
+@mixin hover {
+    @media (hover: hover) and (pointer: fine) {
+        @content;
+    }
+}
+
+@mixin reduced-motion {
+    @media (prefers-reduced-motion: reduce) {
         @content;
     }
 }

@@ -1,23 +1,17 @@
-// M3 focus indicator: a 3px secondary-colored ring offset outside the
-// component shape, shown only for keyboard focus.
-// https://m3.material.io/foundations/interaction/states/applying-states#focus
+// M3 focus indicator: 3px secondary ring, 2px outside the shape, keyboard focus only.
+// It grows to 8px and settles back, as material-web's focus ring does.
 
-@mixin ring($offset: 2px) {
+@mixin ring($offset: var(--md-focus-ring-offset), $selector: '&:focus-visible') {
     outline: none;
 
-    &:focus-visible {
-        outline: 3px solid var(--md-sys-color-secondary);
+    #{$selector} {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
         outline-offset: $offset;
+        animation: md-focus-ring var(--md-sys-motion-duration-long4) var(--md-sys-motion-easing-emphasized);
     }
 }
 
-// For focus rings drawn inside the component edge (e.g. inputs where the
-// container already provides the visual boundary).
-@mixin inward {
-    outline: none;
-
-    &:focus-visible {
-        outline: 3px solid var(--md-sys-color-secondary);
-        outline-offset: -3px;
-    }
+// Rings drawn inside the edge, for fields and full-bleed rows.
+@mixin inward($selector: '&:focus-visible') {
+    @include ring(calc(-1 * var(--md-focus-ring-width)), $selector);
 }

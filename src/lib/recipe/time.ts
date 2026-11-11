@@ -66,6 +66,7 @@ const HUMAN_PART =
 export function parseDurationToMinutes(input: string | null | undefined): number | null {
     if (!input) return null
     const text = normalizeFractions(String(input).trim())
+        .replace(/\b(?:a\s+)?half\s+(?:an?\s+)?hour\b/gi, '30 minutes')
     if (!text) return null
     if (/^P/i.test(text)) {
         const iso = parseIso(text)
@@ -82,10 +83,11 @@ export function parseDurationToMinutes(input: string | null | undefined): number
         const unit = (m[2] ?? '').toLowerCase()
         const per = UNIT_MINUTES.find(([re]) => re.test(unit))?.[1]
         if (qty === null || per === undefined) continue
+        // Single-letter units only after digits, so 'and' is not 'a' plus 'd'.
+        if (unit.length === 1 && !/\d$/.test(m[1] ?? '')) continue
         total += (qty + (m[3] ? 0.5 : 0)) * per
         matched = true
     }
-    if (!matched && /\bhalf an hour\b/i.test(text)) return 30
     return matched ? Math.round(total) : null
 }
 

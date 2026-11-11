@@ -1,14 +1,10 @@
-// M3 state layer: a ::before overlay tinted with the content color that
-// appears on hover/focus/press. The host must create a stacking context
-// and hide overflow so the layer clips to the container shape.
+// M3 state layer: a ::before tint in the content color for hover, focus and drag.
+// Press feedback comes from <Ripple />, which sits on the same host.
 //
-// Usage:
-//   .button {
-//       @include state-layer.host;
-//       @include state-layer.color(var(--md-sys-color-on-primary));
-//   }
+//   .button { @include state-layer.host; }
+//   .chip { @include state-layer.host(var(--md-sys-color-on-surface-variant)); }
 
-@mixin host {
+@mixin host($color: currentcolor) {
     position: relative;
     isolation: isolate;
 
@@ -18,10 +14,10 @@
         inset: 0;
         z-index: -1;
         border-radius: inherit;
-        background-color: currentcolor;
+        background-color: $color;
         opacity: 0;
-        transition: opacity var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-linear);
         pointer-events: none;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
     }
 
     @media (hover: hover) {
@@ -30,17 +26,17 @@
         }
     }
 
-    &:focus-visible::before {
+    &:focus-visible::before,
+    &:has(:focus-visible)::before {
         opacity: var(--md-sys-state-focus-state-layer-opacity);
     }
 
-    &:active:not(:disabled, [data-disabled])::before,
-    &[data-pressed]::before {
-        opacity: var(--md-sys-state-pressed-state-layer-opacity);
+    &[data-dragging]::before {
+        opacity: var(--md-sys-state-dragged-state-layer-opacity);
     }
 }
 
-// Tint the state layer with a color other than currentcolor.
+// Retint an existing host.
 @mixin color($color) {
     &::before {
         background-color: $color;

@@ -1,0 +1,29 @@
+/* M3 layout: window margins by width class, 4dp spacing grid, pane spacing. */
+
+:root {
+    --md-sys-space-1: 4px;
+    --md-sys-space-2: 8px;
+    --md-sys-space-3: 12px;
+    --md-sys-space-4: 16px;
+    --md-sys-space-5: 20px;
+    --md-sys-space-6: 24px;
+    --md-sys-space-8: 32px;
+    --md-sys-space-10: 40px;
+    --md-sys-space-12: 48px;
+    --md-sys-space-16: 64px;
+
+    --md-sys-layout-margin: 16px;
+    --md-sys-layout-pane-spacer: 24px;
+    --md-sys-layout-max-body: 75ch;
+
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+}
+
+@media (width >= 600px) {
+    :root {
+        --md-sys-layout-margin: 24px;
+    }
+}
