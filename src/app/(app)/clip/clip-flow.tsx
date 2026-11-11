@@ -611,7 +611,6 @@ function Entry({
                         autoFocus={!failure}
                         value={url}
                         error={error}
-                        leadingIcon={icons.link}
                         trailingIcon={
                             canPaste ? (
                                 <IconButton label="Paste" icon={icons.paste} onClick={() => void paste()} />

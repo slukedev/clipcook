@@ -96,11 +96,21 @@
     gap: 12px;
 }
 
+.actions,
+.next {
+    // Wider windows keep the buttons at their own width, centered under the field like
+    // everything else on this page.
+    @include media.medium-up {
+        justify-content: center;
+    }
+}
+
 .actions > * {
     flex: 1 1 auto;
 
     @include media.medium-up {
         flex: 0 0 auto;
+        min-inline-size: 160px;
     }
 }
 
