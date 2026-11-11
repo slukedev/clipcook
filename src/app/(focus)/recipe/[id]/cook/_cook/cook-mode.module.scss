@@ -215,6 +215,93 @@
     }
 }
 
+// Before you start: time, tools and (compact) ingredients, read top to bottom like a page.
+.prep {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-inline-size: 720px;
+
+    &[data-enter="next"] {
+        animation:
+            cook-in-next var(--md-sys-motion-spring-spatial-default-duration)
+                var(--md-sys-motion-spring-spatial-default) both,
+            cook-fade var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
+                both;
+    }
+
+    &[data-enter="prev"] {
+        animation:
+            cook-in-prev var(--md-sys-motion-spring-spatial-default-duration)
+                var(--md-sys-motion-spring-spatial-default) both,
+            cook-fade var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
+                both;
+    }
+}
+
+.prepTitle {
+    @include type.role(headline-large, $emphasized: true);
+    text-wrap: balance;
+}
+
+.facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+}
+
+.fact {
+    @include type.role(title-medium);
+    @include type.numeric;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 48px;
+    padding-inline: 16px 20px;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-surface-container-high);
+    --md-icon-size: 22px;
+
+    > :first-child {
+        color: var(--md-sys-color-primary);
+    }
+}
+
+.prepSection,
+.prepIngredients {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.prepIngredients {
+    @include media.expanded-up {
+        display: none;
+    }
+}
+
+.prepHeading {
+    @include type.role(title-large, $emphasized: true);
+}
+
+.tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+}
+
+.tool {
+    @include type.role(body-large);
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 48px;
+    padding-inline: 16px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
 @keyframes cook-in-next {
     from {
         transform: translateX(56px);
@@ -233,7 +320,7 @@
     }
 }
 
-:dir(rtl) .card {
+:dir(rtl) :is(.card, .prep) {
     &[data-enter="next"] {
         animation-name: cook-in-prev, cook-fade;
     }
@@ -445,8 +532,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .card[data-enter="next"],
-    .card[data-enter="prev"] {
+    :is(.card, .prep)[data-enter="next"],
+    :is(.card, .prep)[data-enter="prev"] {
         animation: cook-fade var(--md-sys-motion-spring-effects-default-duration)
             var(--md-sys-motion-spring-effects-default) both;
     }

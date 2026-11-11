@@ -77,6 +77,9 @@ export const cookStep = createState<number>('step', 0, (v) =>
     typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : 0,
 )
 
+/** Cook mode is past its "before you start" overview and on the steps. */
+export const cookStarted = createState<boolean>('started', false, (v) => v === true)
+
 export type IndexState = typeof checkedIngredients
 
 /** Reads one piece of per-recipe state and re-renders when it changes. */
