@@ -3,6 +3,8 @@ import { expect, test } from './support/fixtures'
 const PAGES = [
     '/',
     '/collections',
+    '/plan',
+    '/plan?week=2026-11-30',
     '/grocery',
     '/settings',
     '/settings/displays',

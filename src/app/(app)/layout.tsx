@@ -49,6 +49,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             selectedIcon: <Icon name="collections_bookmark" filled />,
         },
         {
+            href: '/plan',
+            label: 'Plan',
+            icon: <Icon name="calendar_month" />,
+            selectedIcon: <Icon name="calendar_month" filled />,
+        },
+        {
             href: '/grocery',
             label: 'Grocery',
             icon: <Icon name="shopping_basket" />,

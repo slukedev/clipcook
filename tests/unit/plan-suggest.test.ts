@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isQuick, notMadeLately, suggestionGroups, tonightSuggestions } from '@/lib/plan/suggest'
+import { isQuick, mealFit, notMadeLately, suggestionGroups, tonightSuggestions } from '@/lib/plan/suggest'
 
 const NOW = Date.UTC(2026, 10, 11)
 const DAY = 86_400_000
@@ -12,6 +12,7 @@ function recipe(id: string, overrides: Partial<Parameters<typeof isQuick>[0] & R
         totalMinutes: null as number | null,
         cookCount: 0,
         lastCookedAt: null as number | null,
+        tags: [] as string[],
         ...overrides,
     }
 }
@@ -28,6 +29,17 @@ describe('isQuick and notMadeLately', () => {
         expect(notMadeLately({ cookCount: 0, lastCookedAt: null }, NOW)).toBe(false)
         expect(notMadeLately({ cookCount: 3, lastCookedAt: NOW - 5 * DAY }, NOW)).toBe(false)
         expect(notMadeLately({ cookCount: 3, lastCookedAt: NOW - 30 * DAY }, NOW)).toBe(true)
+    })
+})
+
+describe('mealFit', () => {
+    it('reads a meal from tags, and only rules a recipe out when tags place it elsewhere', () => {
+        expect(mealFit(['weeknight', 'spicy'], 'dinner')).toBe(1)
+        expect(mealFit(['breakfast', 'vegetarian'], 'dinner')).toBe(-1)
+        expect(mealFit(['baking', 'dessert'], 'lunch')).toBe(-1)
+        expect(mealFit(['vegan'], 'dinner')).toBe(0)
+        expect(mealFit([], 'breakfast')).toBe(0)
+        expect(mealFit(['breakfast'], 'breakfast')).toBe(1)
     })
 })
 
@@ -57,7 +69,16 @@ describe('suggestionGroups', () => {
 
     it('caps each group', () => {
         const many = Array.from({ length: 9 }, (_, i) => recipe(`q${i}`, { totalMinutes: 15 }))
-        expect(suggestionGroups(many, NOW, 4)[0]?.recipes).toHaveLength(4)
+        expect(suggestionGroups(many, NOW, 'dinner', 4)[0]?.recipes).toHaveLength(4)
+    })
+
+    it('leads each group with what suits the meal', () => {
+        const list = [
+            recipe('pancakes', { totalMinutes: 10, tags: ['breakfast'] }),
+            recipe('stir fry', { totalMinutes: 20, tags: ['weeknight'] }),
+        ]
+        expect(suggestionGroups(list, NOW, 'dinner')[0]?.recipes.map((r) => r.id)).toEqual(['stir fry', 'pancakes'])
+        expect(suggestionGroups(list, NOW, 'breakfast')[0]?.recipes.map((r) => r.id)).toEqual(['pancakes', 'stir fry'])
     })
 })
 
@@ -75,6 +96,18 @@ describe('tonightSuggestions', () => {
             new Set(['planned']),
         )
         expect(picks.map((r) => r.id)).toEqual(['quick-fav', 'quick', 'slow-fav'])
+    })
+
+    it('never suggests pancakes or cookies for dinner', () => {
+        const picks = tonightSuggestions(
+            [
+                recipe('pancakes', { favorite: true, totalMinutes: 15, tags: ['breakfast'] }),
+                recipe('cookies', { totalMinutes: 25, tags: ['baking', 'dessert'] }),
+                recipe('curry', { totalMinutes: 45, tags: ['weeknight'] }),
+            ],
+            NOW,
+        )
+        expect(picks.map((r) => r.id)).toEqual(['curry'])
     })
 
     it('still suggests something from a library with no times or favorites', () => {

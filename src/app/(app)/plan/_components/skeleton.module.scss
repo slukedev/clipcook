@@ -1,0 +1,61 @@
+@use "../../../../styles/mixins/media";
+
+// Placeholder shapes sized like the planner's real parts (see plan.module.scss and
+// tonight.module.scss), so the page lands without a jump.
+
+.tonight {
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-4);
+    inline-size: 100%;
+    max-inline-size: 720px;
+    padding: var(--md-sys-space-4);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-surface-container);
+
+    @include media.medium-up {
+        gap: var(--md-sys-space-6);
+        padding: var(--md-sys-space-5) var(--md-sys-space-6) var(--md-sys-space-6) var(--md-sys-space-5);
+    }
+}
+
+.photo {
+    flex: none;
+    inline-size: clamp(104px, 28vw, 160px);
+    block-size: auto;
+    aspect-ratio: 1;
+}
+
+.lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--md-sys-space-2);
+    flex: 1;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    min-block-size: 48px;
+    padding-inline-start: var(--md-sys-space-4);
+
+    @include media.expanded-up {
+        justify-content: center;
+        padding: 0;
+        min-block-size: 70px;
+    }
+}
+
+.cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.entry {
+    block-size: 72px;
+
+    @include media.expanded-up {
+        block-size: auto;
+        aspect-ratio: 4 / 3;
+    }
+}

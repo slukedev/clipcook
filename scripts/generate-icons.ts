@@ -108,6 +108,16 @@ const ICONS = [
     'grocery',
     'checklist',
     'cleaning_services',
+    // Meal plan
+    'calendar_month',
+    'calendar_add_on',
+    'event',
+    'event_repeat',
+    'today',
+    'date_range',
+    'edit_calendar',
+    'takeout_dining',
+    'group',
     // Cooking
     'kitchen',
     'restaurant',

@@ -1,6 +1,8 @@
 // Small per-device preferences, in cookies so the server renders them without a
 // layout shift. Theme, contrast and motion live in @/lib/theme.
 
+import { TIME_ZONE_COOKIE } from '@/lib/plan/week'
+
 export const RAIL_COOKIE = 'clipcook_rail'
 const LEGACY_MOTION_KEY = 'clipcook_motion'
 
@@ -24,4 +26,30 @@ export function takeLegacyMotion(): 'standard' | null {
     } catch {
         return null
     }
+}
+
+export function readCookie(name: string): string | null {
+    for (const part of document.cookie.split('; ')) {
+        const eq = part.indexOf('=')
+        if (part.slice(0, eq) !== name) continue
+        try {
+            return decodeURIComponent(part.slice(eq + 1))
+        } catch {
+            return null
+        }
+    }
+    return null
+}
+
+/** Stores the browser's time zone when it changed (first visit, travel). True when it did. */
+export function rememberTimeZone(): boolean {
+    let zone: string
+    try {
+        zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    } catch {
+        return false
+    }
+    if (!zone || readCookie(TIME_ZONE_COOKIE) === zone) return false
+    writeCookie(TIME_ZONE_COOKIE, zone)
+    return true
 }
