@@ -1,8 +1,18 @@
-import { LoginClient } from './LoginClient'
+import { signInDemo } from '@/actions/auth'
 
+// Temporary sign-in used while the pages are rebuilt.
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
     const params = await searchParams
-    const raw = Array.isArray(params.next) ? params.next[0] : params.next
-    const nextPath = typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//') ? raw : undefined
-    return <LoginClient nextPath={nextPath} />
+    const next = Array.isArray(params.next) ? params.next[0] : params.next
+    async function demo() {
+        'use server'
+        await signInDemo(next)
+    }
+    return (
+        <main>
+            <form action={demo}>
+                <button type="submit">Continue as demo cook</button>
+            </form>
+        </main>
+    )
 }
