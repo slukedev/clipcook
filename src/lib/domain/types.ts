@@ -122,6 +122,7 @@ export interface ImportedRecipe {
     totalTime?: string
     ingredients?: string[]
     instructions?: string[]
+    notes?: string
     /** data URL (already downscaled WebP when it came from a clip). */
     image?: string
     sourceUrl?: string
