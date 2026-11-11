@@ -7,7 +7,7 @@ const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'clipcook_session'
  * their own cookie, and every /api route checks auth itself (and must answer
  * with a status code, never a login redirect).
  */
-const PUBLIC_PREFIXES = ['/login', '/display', '/api']
+const PUBLIC_PREFIXES = ['/login', '/display', '/api', '/offline', '/robots.txt', '/sitemap.xml', '/opengraph-image']
 if (process.env.NODE_ENV === 'development') PUBLIC_PREFIXES.push('/dev')
 
 function isPublic(pathname: string): boolean {
@@ -84,6 +84,6 @@ export function proxy(req: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|manifest.json|manifest.webmanifest|icon-.*\\.png|apple-touch-icon\\.png|logo\\.webp|sw\\.js).*)',
+        '/((?!_next/static|_next/image|favicon.ico|manifest.json|manifest.webmanifest|icon-.*\\.png|icon\\.svg|apple-touch-icon\\.png|logo\\.webp|sw\\.js).*)',
     ],
 }
