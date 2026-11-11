@@ -34,9 +34,13 @@ export function PageTransition({ children }: { children: ReactNode }) {
  * Pairs an element across routes (recipe photo in the list and on the detail page)
  * so it morphs between them. Name it with `vtName('recipe-photo', id)` on both sides.
  */
+// Only route changes pair shared elements. A list re-rendering in place (a filter, the
+// grid and list toggle) remounts the same names, and those must not fly across the page.
+const SHARE = { 'nav-forward': 'cc-shared', 'nav-back': 'cc-shared', 'nav-fade': 'cc-shared', default: 'none' }
+
 export function SharedElement({ name, children }: { name: string; children: ReactNode }) {
     return (
-        <ViewTransition name={name} share="cc-shared" default="none">
+        <ViewTransition name={name} share={SHARE} default="none">
             {children}
         </ViewTransition>
     )

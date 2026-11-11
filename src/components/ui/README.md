@@ -81,6 +81,8 @@ const router = useViewTransitionRouter(); router.push('/grocery', 'fade')
 `forward` and `back` use M3 shared axis X and `fade` fades through. An untyped commit (a Suspense reveal) crossfades, so wrap a route's `loading.tsx` skeleton in `<PageTransition>` too and it hands over to the page without a gap. Styles live in `src/styles/_view-transitions.scss`.
 
 - **Land in one step.** A shared element only morphs when the destination renders in the same commit, so prefetch whole pages: `<Link prefetch>` for a few fixed links, `prefetchPage(router, href)` on intent, and `useWarmOnView(ref, warm)` (`@/lib/navigation`) for list items that rest on screen.
+- **Prefetch fetches data, not code.** A client component a route uses for the first time is downloaded on navigation, and the page suspends into its skeleton meanwhile. Prefer server components and CSS for small behaviors on pages that should land in one step.
+- **Shared elements pair only on navigation.** `SharedElement` shares for `nav-*` types, so a list re-rendering in place (a filter, the grid and list toggle) never flings photos across the page.
 - **Chrome is anchored.** The navigation bar, rails and FAB carry global `cc-vt-*` classes that name them, so they sit above the page snapshots and never move. Name things in global CSS, not CSS modules: modules hash `view-transition-name` values.
 - **History.** Browser back and forward render inside popstate, which React does not animate. `goBackWithMorph(id, back, options)` runs one by hand for in-app back buttons; mark both halves with `morphTarget(kind, id)`.
 
