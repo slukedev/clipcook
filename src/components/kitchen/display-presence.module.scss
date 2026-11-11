@@ -30,8 +30,12 @@
     outline: 1.5px solid var(--md-sys-color-outline);
     outline-offset: -1.5px;
 
-    &[data-active] {
+    &[data-presence="online"] {
         outline-color: transparent;
         background-color: var(--md-sys-color-primary);
+    }
+
+    &[data-presence="unlinked"] {
+        outline-style: dashed;
     }
 }

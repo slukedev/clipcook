@@ -61,7 +61,7 @@ export function TimerTray({
                                     className={styles.button}
                                     size={cook ? 'm' : 's'}
                                     label={`Add 1 minute to ${where}`}
-                                    icon={<span className={styles.plus}>+1</span>}
+                                    icon={<span className={styles.plus}>+1 min</span>}
                                     onClick={() => timerActions.addMinute(t.id)}
                                 />
                             )}

@@ -141,6 +141,8 @@ export function CookMode({
     const dockRef = useRef<HTMLDivElement>(null)
     /** A timer started from the keyboard: focus follows it into the tray. */
     const handoff = useRef<string | null>(null)
+    /** The display just chosen, so its first send can report whether the screen is on. */
+    const announce = useRef<string | null>(null)
     useFitText(stageRef, cardRef, `${index}:${scale}:${mentioned.join()}`)
     const drag = useRef<{
         id: number
@@ -234,7 +236,9 @@ export function CookMode({
         const key = handoff.current
         if (!key || !timers.some((t) => `${t.recipeId}:${t.step}:${t.label}` === key)) return
         handoff.current = null
-        dockRef.current?.querySelector<HTMLElement>(`[data-timer="${CSS.escape(key)}"] button`)?.focus()
+        dockRef.current
+            ?.querySelector<HTMLElement>(`[data-timer="${CSS.escape(key)}"] button[aria-label^="Pause"]`)
+            ?.focus()
     }, [timers])
 
     // Mirror every step on the chosen display, debounced so fast paging sends once.
@@ -245,11 +249,19 @@ export function CookMode({
                 if (!result.ok) {
                     setSyncTo(null)
                     snackbar({ message: result.error, urgent: true })
+                    return
+                }
+                // The first send after choosing a display says whether that screen is there.
+                const chosen = announce.current
+                announce.current = null
+                if (chosen === syncTo) {
+                    const option = displays.find((d) => d.id === syncTo)
+                    snackbar(sentMessage(result.data, option?.lastSeenAt ?? null, Date.now()))
                 }
             })
         }, 150)
         return () => window.clearTimeout(timer)
-    }, [syncTo, index, scale, recipe.id, snackbar])
+    }, [syncTo, index, scale, recipe.id, snackbar, displays])
 
     const readStep = () => {
         if (!step) return
@@ -392,7 +404,7 @@ export function CookMode({
         setSyncTo(display?.id ?? null)
         if (!display) return
         rememberDisplay(display.id)
-        snackbar(sentMessage(display, Date.now()))
+        announce.current = display.id
     }
 
     const displayControl = () => {

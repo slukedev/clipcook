@@ -165,10 +165,10 @@
     align-items: center;
     min-block-size: 40px;
     margin-block-start: 12px;
+    @include type.subhead;
+    // Lines up with the checkboxes; the shared subhead style, a size up for arm's length.
     padding-inline: 14px;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface-variant);
+    font-size: 1.125rem;
 
     &:first-child {
         margin-block-start: 0;
@@ -264,10 +264,9 @@
 }
 
 .stepSection {
+    @include type.subhead;
     padding: 16px 8px 6px;
     font-size: clamp(1rem, 0.875rem + 0.6vmin, 1.25rem);
-    font-weight: 600;
-    color: var(--md-sys-color-tertiary);
 }
 
 .stepRow {

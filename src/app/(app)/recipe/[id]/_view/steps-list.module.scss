@@ -27,9 +27,8 @@
 }
 
 .heading {
-    @include type.role(title-medium, $emphasized: true);
+    @include type.subhead;
     margin-block-start: 12px;
-    color: var(--md-sys-color-secondary);
 }
 
 .list {
