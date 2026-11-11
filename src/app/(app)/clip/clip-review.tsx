@@ -16,11 +16,7 @@ import type { EditorIcons } from '../_editor/icons'
 import { photoColorCss, seedFromPhoto } from '../_editor/photo'
 import { hostOf, toFormData, valuesFromImported } from '../_editor/values'
 import styles from './clip-review.module.scss'
-
-export interface LibraryEntry {
-    id: string
-    title: string
-}
+import { findDuplicate, type LibraryEntry } from './jobs'
 
 interface ClipReviewProps {
     recipe: ImportedRecipe
@@ -33,10 +29,6 @@ interface ClipReviewProps {
 const SCOPE = '[data-clip-review]'
 const STEP_SHAPES = ['cookie4', 'clover4', 'sunny', 'cookie6', 'gem', 'flower'] as const
 
-function normalizeTitle(title: string): string {
-    return title.trim().toLowerCase().replace(/\s+/g, ' ')
-}
-
 /** What a clip found, in the recipe page's visual language, with Save one tap away. */
 export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipReviewProps) {
     const router = useViewTransitionRouter()
@@ -47,8 +39,7 @@ export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipRevie
     const [colorCss, setColorCss] = useState('')
 
     const title = recipe.title?.trim() || 'Untitled recipe'
-    const wanted = normalizeTitle(title)
-    const duplicate = library.find((r) => normalizeTitle(r.title) === wanted) ?? null
+    const duplicate = findDuplicate(library, { title, sourceUrl: recipe.sourceUrl })
     const host = recipe.sourceUrl ? hostOf(recipe.sourceUrl) : ''
     const sourceLabel = recipe.sourceName?.trim() || host
     const ingredients = recipe.ingredients ?? []

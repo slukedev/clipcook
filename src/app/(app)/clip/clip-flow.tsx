@@ -38,7 +38,7 @@ import {
     valuesFromImported,
 } from '../_editor/values'
 import styles from './clip.module.scss'
-import { ClipReview, type LibraryEntry } from './clip-review'
+import { ClipReview } from './clip-review'
 import {
     type ClipFailure,
     type ClipJob,
@@ -46,6 +46,7 @@ import {
     classifyClipError,
     findUrl,
     isLoneUrl,
+    type LibraryEntry,
     offlineAwareError,
 } from './jobs'
 
@@ -56,7 +57,7 @@ interface Attempt {
 }
 
 type View =
-    | { type: 'entry'; mode: 'link' | 'text'; url: string; text: string; failure?: { job: ClipJob; message: string } }
+    | { type: 'entry'; mode: 'link' | 'text'; url: string; text: string; failure?: { job: ClipJob; message: string; code?: string } }
     | { type: 'attempt'; attempt: Attempt }
     | { type: 'manual'; values: EditorValues; photo: EditorPhoto }
 
@@ -172,12 +173,12 @@ export function ClipFlow({ initial, mode, library, tags, collections, icons }: C
                     collections={collections}
                     icons={icons}
                     onExit={exit}
-                    onFailure={(message) =>
+                    onFailure={(message, code) =>
                         toEntry({
                             mode: attempt.job.kind === 'text' ? 'text' : 'link',
                             url: attempt.job.kind === 'url' ? attempt.job.value : '',
                             text: attempt.job.kind === 'text' ? attempt.job.value : '',
-                            failure: { job: attempt.job, message },
+                            failure: { job: attempt.job, message, code },
                         })
                     }
                 />
@@ -218,11 +219,11 @@ function Outcome({
     collections: EditorCollection[]
     icons: EditorIcons
     onExit: () => void
-    onFailure: (message: string) => void
+    onFailure: (message: string, code?: string) => void
 }) {
     const result = use(attempt.result)
     useEffect(() => {
-        if (!result.ok) onFailure(result.error)
+        if (!result.ok) onFailure(result.error, result.code)
     })
     if (!result.ok) return <Pending job={attempt.job} icons={icons} onExit={onExit} onRestart={() => {}} />
     return (
@@ -387,7 +388,7 @@ function Entry({
     const [suggestion, setSuggestion] = useState<string | null>(null)
     const [canPaste, setCanPaste] = useState(false)
     const formRef = useRef<HTMLFormElement>(null)
-    const kind = failure ? classifyClipError(failure.message) : null
+    const kind = failure ? classifyClipError(failure.code) : null
 
     useEffect(() => {
         setCanPaste(typeof navigator.clipboard?.readText === 'function')

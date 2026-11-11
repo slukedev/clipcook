@@ -1,3 +1,5 @@
+import type { ClipFailureCode } from '@/lib/domain/types'
+
 export type ClipErrorCode =
     | 'INVALID_URL'
     | 'BLOCKED_ADDRESS'
@@ -44,4 +46,24 @@ const MESSAGES: Record<ClipErrorCode, string> = {
 export function clipErrorMessage(err: unknown): string {
     if (err instanceof ClipError) return MESSAGES[err.code]
     return 'Could not clip that page. Try again.'
+}
+
+const CODES: Record<ClipErrorCode, ClipFailureCode> = {
+    INVALID_URL: 'invalid_url',
+    BLOCKED_ADDRESS: 'blocked_address',
+    TIMEOUT: 'timeout',
+    TOO_LARGE: 'too_large',
+    NOT_HTML: 'not_html',
+    SITE_BLOCKED: 'blocked',
+    NOT_FOUND: 'not_found',
+    RATE_LIMITED: 'rate_limited',
+    UPSTREAM: 'upstream',
+    TOO_MANY_REDIRECTS: 'too_many_redirects',
+    NETWORK: 'network',
+    NO_RECIPE: 'no_recipe',
+    BAD_IMAGE: 'bad_image',
+}
+
+export function clipFailureCode(err: ClipError): ClipFailureCode {
+    return CODES[err.code]
 }

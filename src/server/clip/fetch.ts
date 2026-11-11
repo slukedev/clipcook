@@ -176,12 +176,22 @@ function mapNetworkError(err: unknown): ClipError {
 }
 
 /**
+ * Whether private and loopback hosts may be fetched. Never in production, whatever
+ * the caller or the environment asks; in development `CLIPCOOK_CLIP_ALLOW_PRIVATE=1`
+ * lets a recipe site running on the same machine be clipped.
+ */
+export function privateHostsAllowed(requested: boolean | undefined, env: NodeJS.ProcessEnv = process.env): boolean {
+    if (env.NODE_ENV === 'production') return false
+    return requested === true || env.CLIPCOOK_CLIP_ALLOW_PRIVATE === '1'
+}
+
+/**
  * GET with SSRF protection: every hop is re-validated, DNS answers are checked at
  * connect time (no rebinding window), bodies are capped after decompression, and
  * the whole exchange shares one deadline.
  */
 export async function safeFetch(rawUrl: string, options: FetchOptions): Promise<FetchedResource> {
-    const allowPrivate = options.allowPrivate === true
+    const allowPrivate = privateHostsAllowed(options.allowPrivate)
     const deadline = options.deadline ?? Date.now() + FETCH_BUDGET_MS
     const dispatcher = allowPrivate ? createSafeDispatcher(true) : safeDispatcher()
     const controller = new AbortController()

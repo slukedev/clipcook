@@ -43,6 +43,7 @@ export type RecipeSummary = Pick<
     | 'totalMinutes'
     | 'totalTime'
     | 'sourceName'
+    | 'sourceUrl'
     | 'createdAt'
     | 'updatedAt'
     | 'lastCookedAt'
@@ -130,7 +131,28 @@ export interface ImportedRecipe {
     tags?: string[]
 }
 
-export type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string }
+/** `code` is a stable machine-readable reason; `error` is the sentence to show. */
+export type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string; code?: string }
+
+/** Failure codes the clip actions return. */
+export type ClipFailureCode =
+    | 'invalid_url'
+    | 'blocked_address'
+    | 'not_html'
+    | 'not_found'
+    | 'too_large'
+    | 'too_many_redirects'
+    | 'blocked'
+    | 'timeout'
+    | 'network'
+    | 'rate_limited'
+    | 'upstream'
+    | 'no_recipe'
+    | 'bad_image'
+    | 'empty'
+    | 'too_long'
+    | 'unauthenticated'
+    | 'draft_expired'
 
 export interface ImportCounts {
     recipesAdded: number

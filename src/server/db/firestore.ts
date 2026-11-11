@@ -42,6 +42,7 @@ const SUMMARY_FIELDS = [
     'prepTime',
     'cookTime',
     'sourceName',
+    'sourceUrl',
     'createdAt',
     'updatedAt',
     'lastCookedAt',
