@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type MouseEvent, type PointerEvent, type ReactNode, useRef } from 'react'
 import { IconButton } from '@/components/ui/icon-button'
@@ -228,10 +229,11 @@ function MenuItemFor({
     onSelect: () => void
 }) {
     if (action === 'cook') {
-        // A plain link and a full load: cook mode is its own surface, and a client navigation
-        // straight from the library aborts the page transition when the scrollbar goes away.
         return (
-            <MenuLinkItem icon={icons.cook} render={<a href={`/recipe/${recipeId}/cook`} />}>
+            <MenuLinkItem
+                icon={icons.cook}
+                render={<Link href={`/recipe/${recipeId}/cook`} transitionTypes={['cook']} prefetch />}
+            >
                 {LABELS.cook}
             </MenuLinkItem>
         )
