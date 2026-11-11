@@ -50,3 +50,8 @@ next-env.d.ts
 
 # agent worktrees
 /.claude/worktrees/
+
+# end-to-end tests (Playwright)
+/.data-e2e/
+/playwright-report/
+/test-results/
