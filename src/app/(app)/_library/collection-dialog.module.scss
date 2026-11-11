@@ -1,0 +1,50 @@
+@use "../../../styles/mixins/typography" as type;
+
+.list {
+    display: flex;
+    flex-direction: column;
+    margin-inline: -12px;
+    max-block-size: min(50dvh, 400px);
+    overflow-y: auto;
+    list-style: none;
+}
+
+.row {
+    display: flex;
+    inline-size: 100%;
+    min-block-size: 56px;
+    padding-inline: 4px 12px;
+    border-radius: var(--md-sys-shape-corner-large);
+
+    @media (hover: hover) {
+        &:hover {
+            background-color: color-mix(
+                in srgb,
+                var(--md-sys-color-on-surface) calc(var(--md-sys-state-hover-state-layer-opacity) * 100%),
+                transparent
+            );
+        }
+    }
+}
+
+.name {
+    flex: 1;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+}
+
+.create {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-block-start: 16px;
+
+    > button {
+        margin-block-start: 8px;
+    }
+}
+
+.field {
+    flex: 1;
+    min-inline-size: 0;
+}
