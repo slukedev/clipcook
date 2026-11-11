@@ -48,7 +48,8 @@ export function LinkForm({ initialCode, icons }: { initialCode: string; icons: I
     const shape = linked ? 'sunny' : pending ? 'cookie12' : error ? 'puffy' : 'cookie9'
 
     return (
-        <main className={styles.main}>
+        // A div, not main: the app shell already provides the page's main landmark.
+        <div className={styles.main}>
             <div className={styles.art} data-state={linked ? 'done' : error ? 'error' : 'idle'} aria-hidden>
                 <MorphShape shape={shape} className={styles.artShape} />
                 <span className={styles.artIcon} data-hidden={linked ? '' : undefined}>
@@ -179,6 +180,6 @@ export function LinkForm({ initialCode, icons }: { initialCode: string; icons: I
                     </Button>
                 </form>
             )}
-        </main>
+        </div>
     )
 }

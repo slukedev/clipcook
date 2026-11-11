@@ -44,7 +44,8 @@ function emptyData(): LocalData {
 const clone = <T>(value: T): T => structuredClone(value)
 
 export function localDataDir(): string {
-    return path.resolve(process.env.CLIPCOOK_DATA_DIR || path.join(process.cwd(), '.data'))
+    // The folder is chosen at runtime and holds user data, never code: keep it out of output tracing.
+    return path.resolve(/*turbopackIgnore: true*/ process.env.CLIPCOOK_DATA_DIR || path.join(process.cwd(), '.data'))
 }
 
 /**

@@ -6,10 +6,10 @@ import styles from './login.module.scss'
 
 export const metadata: Metadata = { title: 'Sign in' }
 
-/** Same-origin path plus query only; anything else goes to the library. */
+/** Same-origin path plus query only; anything else goes to the library. Shared text makes long ones. */
 function safeNext(value: string | string[] | undefined): string | undefined {
     const next = Array.isArray(value) ? value[0] : value
-    if (!next || next.length > 512 || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) {
+    if (!next || next.length > 8192 || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) {
         return undefined
     }
     return next.startsWith('/login') ? undefined : next

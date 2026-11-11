@@ -9,9 +9,12 @@ import { backend } from '@/server/db'
 
 const idTokenSchema = z.string().min(1).max(4096)
 
-/** Only same-origin paths; '//evil.example' and '/\\evil' are rejected. */
+/**
+ * Only same-origin paths; '//evil.example' and '/\\evil' are rejected. The length cap
+ * is generous because a share-target link carries the whole shared text (/clip?text=).
+ */
 function safeNext(next: unknown): string {
-    if (typeof next !== 'string' || next.length > 512) return '/'
+    if (typeof next !== 'string' || next.length > 8192) return '/'
     if (!next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return '/'
     if (next.startsWith('/login')) return '/'
     return next

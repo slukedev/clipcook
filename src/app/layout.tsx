@@ -19,6 +19,8 @@ const googleSansFlex = Google_Sans_Flex({
 })
 
 export const metadata: Metadata = {
+    // Absolute URLs for the Open Graph image; without it Next points them at localhost:3000.
+    metadataBase: process.env.APP_URL ? new URL(process.env.APP_URL) : undefined,
     title: {
         default: 'ClipCook',
         template: '%s · ClipCook',
