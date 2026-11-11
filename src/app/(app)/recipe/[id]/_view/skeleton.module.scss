@@ -1,0 +1,46 @@
+.bar {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-block-size: calc(64px + var(--safe-top));
+    padding-block-start: var(--safe-top);
+    padding-inline: 8px 12px;
+}
+
+.spacer {
+    flex: 1;
+}
+
+.fill {
+    position: absolute;
+    inset: 0;
+    block-size: 100%;
+    border-radius: 0;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-inline: var(--md-sys-layout-margin);
+
+    @container recipe (width >= 780px) {
+        padding-inline: 0;
+    }
+}
+
+.rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.step {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: start;
+}

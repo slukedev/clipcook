@@ -1,0 +1,138 @@
+@use "../../../../../styles/mixins/typography" as type;
+@use "../../../../../styles/mixins/state-layer";
+@use "../../../../../styles/mixins/focus-ring";
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 48px;
+}
+
+.title {
+    @include type.role(headline-small, $emphasized: true);
+    margin-inline-end: auto;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.heading {
+    @include type.role(title-medium, $emphasized: true);
+    margin-block-start: 12px;
+    color: var(--md-sys-color-secondary);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: none;
+}
+
+.step {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 16px;
+    padding-block: 8px;
+}
+
+.number {
+    @include state-layer.host(var(--md-sys-color-on-primary-container));
+    @include focus-ring.ring;
+
+    display: grid;
+    place-items: center;
+    inline-size: 48px;
+    block-size: 48px;
+    border-radius: var(--md-sys-shape-corner-full);
+    color: var(--md-sys-color-primary-container);
+    cursor: pointer;
+    transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    > * {
+        grid-area: 1 / 1;
+    }
+
+    .step[data-done] & {
+        color: var(--md-sys-color-primary);
+    }
+}
+
+.shape {
+    --md-shape-size: 44px;
+}
+
+.digit {
+    @include type.role(title-medium, $emphasized: true);
+    @include type.numeric;
+    --md-icon-size: 22px;
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-on-primary-container);
+
+    .step[data-done] & {
+        color: var(--md-sys-color-on-primary);
+    }
+}
+
+.text {
+    @include type.role(body-large);
+    max-inline-size: 68ch;
+    padding-block-start: 12px;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+    cursor: default;
+    transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    .step[data-done] & {
+        color: var(--md-sys-color-on-surface-variant);
+    }
+}
+
+@media print {
+    .head > :not(.title) {
+        display: none;
+    }
+
+    .step {
+        grid-template-columns: 24pt minmax(0, 1fr);
+        column-gap: 8pt;
+        padding-block: 2pt;
+        break-inside: avoid;
+    }
+
+    .number {
+        inline-size: 24pt;
+        block-size: 24pt;
+        color: #ddd !important;
+    }
+
+    .shape {
+        --md-shape-size: 22pt;
+    }
+
+    .digit {
+        color: #000 !important;
+        font-size: 11pt;
+    }
+
+    .text {
+        padding-block-start: 3pt;
+        color: #000 !important;
+        font-size: 11pt;
+        line-height: 1.45;
+    }
+}
