@@ -2,9 +2,9 @@ import type { DisplayContent, DisplayState, KitchenDisplay } from '@/lib/domain/
 import { LIMITS } from '@/lib/domain/types'
 import { CODE_PATTERN, normalizeCode, randomCode, randomToken, safeEqual, sha256 } from './crypto'
 import type { DisplayRecord, Store } from './db/types'
-import { StoreError } from './db/types'
+import { PAIRING_TTL_MS, StoreError } from './db/types'
 
-export const PAIRING_TTL_MS = 10 * 60_000
+export { PAIRING_TTL_MS }
 export const CAST_TOKEN_TTL_MS = 2 * 60_000
 /** lastSeenAt is written at most this often, so polling stays a single read. */
 export const HEARTBEAT_INTERVAL_MS = 60_000
@@ -52,8 +52,19 @@ export interface PairingStart {
     expiresAt: number
 }
 
+/** What a display may send as its own id: a UUID from local storage, or anything similar. */
+export const DEVICE_ID_PATTERN = /^[A-Za-z0-9_-]{8,64}$/
+
+export function cleanDeviceId(value: unknown): string | null {
+    return typeof value === 'string' && DEVICE_ID_PATTERN.test(value) ? value : null
+}
+
 /** A new pairing code for a display that has no cookie yet. */
-export async function startPairing(store: Store, now = Date.now()): Promise<PairingStart> {
+export async function startPairing(
+    store: Store,
+    now = Date.now(),
+    deviceId: string | null = null,
+): Promise<PairingStart> {
     // Collisions are astronomically unlikely in a 10-minute window, but cheap to rule out.
     for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomCode(6)
@@ -68,6 +79,7 @@ export async function startPairing(store: Store, now = Date.now()): Promise<Pair
             createdAt: now,
             expiresAt,
             claimedBy: null,
+            deviceId,
         })
         return { code, pairingId, pollToken, expiresAt }
     }
@@ -78,12 +90,19 @@ export type ClaimError = 'invalid_code' | 'expired' | 'already_claimed' | 'too_m
 
 export type ClaimResult = { ok: true; display: KitchenDisplay } | { ok: false; error: ClaimError }
 
-/** A signed-in user types the code shown on the display. */
+export const DEFAULT_DISPLAY_NAME = 'Kitchen'
+
+/**
+ * A signed-in user types the code shown on the display. When this cook already has an
+ * entry for the same device (it lost its cookie, or was reset), that entry is reused so
+ * the send menu never shows a dead twin. A null `name` means the cook kept the suggested
+ * name: a reused entry keeps its own, a new one gets the default.
+ */
 export async function claimDisplayCode(
     store: Store,
     uid: string,
     rawCode: string,
-    name: string,
+    name: string | null,
     now = Date.now(),
 ): Promise<ClaimResult> {
     const code = normalizeCode(rawCode)
@@ -91,23 +110,30 @@ export async function claimDisplayCode(
     const pairing = await store.findActivePairing(code, now)
     if (!pairing) return { ok: false, error: 'invalid_code' }
     if (pairing.claimedBy) return { ok: false, error: 'already_claimed' }
-    const existing = await store.listDisplays(uid)
-    if (existing.length >= LIMITS.displays) return { ok: false, error: 'too_many_displays' }
-    const record: DisplayRecord = {
-        id: randomToken(12),
-        uid,
-        name: uniqueDisplayName(
-            name.trim() || 'Kitchen display',
-            existing.map((d) => d.name),
-        ),
-        tokenHash: null,
-        createdAt: now,
-        lastSeenAt: null,
-        current: null,
-        version: 1,
-        castDeviceId: null,
-    }
-    const result = await store.claimPairing(pairing.id, record, now)
+    const existing = await store.listDisplays(uid, now)
+    const same = pairing.deviceId ? existing.find((d) => d.deviceId === pairing.deviceId) : undefined
+    if (!same && existing.length >= LIMITS.displays) return { ok: false, error: 'too_many_displays' }
+    const typed = name?.trim() || null
+    const others = existing.filter((d) => d !== same).map((d) => d.name)
+    const record: DisplayRecord = same
+        ? {
+              ...same,
+              name: typed ? uniqueDisplayName(typed, others) : same.name,
+              deviceId: pairing.deviceId,
+          }
+        : {
+              id: randomToken(12),
+              uid,
+              name: uniqueDisplayName(typed ?? DEFAULT_DISPLAY_NAME, others),
+              tokenHash: null,
+              createdAt: now,
+              lastSeenAt: null,
+              current: null,
+              version: 1,
+              castDeviceId: null,
+              deviceId: pairing.deviceId,
+          }
+    const result = await store.claimPairing(pairing.id, same ? { ...record, createdAt: now } : record, now, !!same)
     if (result === 'ok') return { ok: true, display: toKitchenDisplay(record) }
     if (result === 'expired') return { ok: false, error: 'expired' }
     if (result === 'claimed') return { ok: false, error: 'already_claimed' }
@@ -120,16 +146,28 @@ export type PollResult =
     | { status: 'not_found' }
     | { status: 'claimed'; displayId: string; cookie: string }
 
-/** The display polls; once claimed it receives its long-lived token exactly once. */
+/**
+ * The display polls; once claimed it receives its long-lived token exactly once.
+ * `previous` resolves the display this browser's cookie still proves, if any: when the new
+ * claim is a different entry for the same device, the old one is removed, since the
+ * new cookie replaces the only key to it.
+ */
 export async function pollPairing(
     store: Store,
     pairingId: string,
     pollToken: string,
     now = Date.now(),
+    previousDisplay?: () => Promise<DisplayRecord | null>,
 ): Promise<PollResult> {
     const token = randomToken(32)
     const result = await store.collectPairing(pairingId, sha256(pollToken), sha256(token), now)
     if (result.status !== 'claimed') return result
+    const previous = previousDisplay ? await previousDisplay() : null
+    if (previous && previous.id !== result.displayId) {
+        const next = await store.getDisplay(result.displayId)
+        const sameDevice = !previous.deviceId || !next?.deviceId || previous.deviceId === next.deviceId
+        if (sameDevice) await store.deleteDisplay(previous.uid, previous.id).catch(() => undefined)
+    }
     return { status: 'claimed', displayId: result.displayId, cookie: encodeDisplayCookie(result.displayId, token) }
 }
 
@@ -262,6 +300,7 @@ export async function claimCastToken(
         current: null,
         version: 1,
         castDeviceId: deviceId,
+        deviceId: null,
     }
     await store.createDisplay(record)
     return { displayId: record.id, cookie: encodeDisplayCookie(record.id, displayToken) }

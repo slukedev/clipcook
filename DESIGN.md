@@ -22,10 +22,10 @@ The Expressive corner scale (none to full, including large-increased, extra-larg
 
 The Expressive motion scheme by default, the Standard scheme as a setting.
 
-| Spring | Damping | Stiffness |
-| --- | --- | --- |
-| Spatial fast / default / slow | 0.6 / 0.8 / 0.8 | 800 / 380 / 200 |
-| Effects fast / default / slow | 1.0 | 3800 / 1600 / 800 |
+| Spring                        | Damping         | Stiffness         |
+| ----------------------------- | --------------- | ----------------- |
+| Spatial fast / default / slow | 0.6 / 0.8 / 0.8 | 800 / 380 / 200   |
+| Effects fast / default / slow | 1.0             | 3800 / 1600 / 800 |
 
 Spatial springs move things (position, size, shape). Effects springs change color and opacity and never overshoot. JS motion uses `src/lib/motion.ts`; CSS uses `linear()` approximations of the same springs in `src/styles/theme/motion.css`. Route changes use React view transitions: shared axis between destinations, and a shared element morph from a library card to its recipe. Reduced motion removes movement and keeps short fades.
 

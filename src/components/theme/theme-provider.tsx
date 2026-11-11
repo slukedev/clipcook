@@ -2,8 +2,8 @@
 
 import { createContext, use, useState, useSyncExternalStore } from 'react'
 import {
-    COOKIE_MAX_AGE,
     CONTRAST_COOKIE,
+    COOKIE_MAX_AGE,
     type Contrast,
     MOTION_COOKIE,
     type MotionMode,

@@ -228,6 +228,7 @@ describe('LocalStore writes', () => {
             createdAt: now,
             expiresAt: now + 60_000,
             claimedBy: null,
+            deviceId: null,
         })
         const before = await stampOf()
         expect(await store.collectPairing('p1', 'poll', 'display', now)).toEqual({ status: 'pending' })
@@ -247,6 +248,7 @@ describe('LocalStore writes', () => {
             current: null,
             version: 0,
             castDeviceId: null,
+            deviceId: null,
         }
         expect(await store.claimPairing('p1', display, now)).toBe('ok')
         const claimed = await stampOf()

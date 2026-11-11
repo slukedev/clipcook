@@ -262,6 +262,7 @@
 
     // Gallery-only: keep app bars inside their frame.
     header > div {
+        // biome-ignore lint/complexity/noImportantStyles: gallery only; app bars are fixed by their own component styles
         position: relative !important;
     }
 }

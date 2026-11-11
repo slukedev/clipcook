@@ -2,6 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { LIMITS } from '@/lib/domain/types'
 import { CODE_PATTERN, randomCode } from '@/server/crypto'
 import { LocalStore } from '@/server/db/local'
 import {
@@ -190,6 +191,132 @@ describe('cast tokens', () => {
 
         const late = await createCastToken(store, 'alice', T0)
         expect(await claimCastToken(store, late.token, null, null, T0 + CAST_TOKEN_TTL_MS + 1)).toBeNull()
+    })
+})
+
+describe('re-pairing the same device', () => {
+    const DEVICE = '6f1c2a9e-3b4d-4e5f-8a7b-0c1d2e3f4a5b'
+
+    async function pairDevice(name: string | null, at: number, deviceId: string | null = DEVICE, uid = 'alice') {
+        const start = await startPairing(store, at, deviceId)
+        const claim = await claimDisplayCode(store, uid, start.code, name, at + 100)
+        if (!claim.ok) throw new Error(claim.error)
+        return { start, claim: claim.display }
+    }
+
+    it('reuses the entry for a device that lost its cookie and keeps its name', async () => {
+        const first = await pairDevice('Counter', T0)
+        await pollPairing(store, first.start.pairingId, first.start.pollToken, T0 + 200)
+        await sendToDisplay(store, 'alice', first.claim.id, { recipeId: 'r1', step: 2, scale: 1 }, T0 + 300)
+
+        const again = await pairDevice(null, T0 + 1000)
+        expect(again.claim.id).toBe(first.claim.id)
+        expect(again.claim.name).toBe('Counter')
+        const poll = await pollPairing(store, again.start.pairingId, again.start.pollToken, T0 + 1200)
+        if (poll.status !== 'claimed') throw new Error(poll.status)
+
+        const all = await store.listDisplays('alice')
+        expect(all).toHaveLength(1)
+        expect(all[0]?.current).toMatchObject({ recipeId: 'r1', step: 2 })
+        expect((await authenticateDisplay(store, poll.cookie))?.id).toBe(first.claim.id)
+    })
+
+    it('takes a newly typed name when re-pairing', async () => {
+        await pairDevice('Counter', T0)
+        await pairDevice('Island', T0 + 1000, DEVICE)
+        await pairDevice('Fridge', T0 + 2000, 'another-device-0001')
+        expect((await store.listDisplays('alice')).map((d) => d.name).sort()).toEqual(['Fridge', 'Island'])
+    })
+
+    it('typing a name another display uses still gets a number', async () => {
+        await pairDevice('Fridge', T0, 'another-device-0001')
+        await pairDevice('Counter', T0 + 100)
+        const again = await pairDevice('fridge', T0 + 1000)
+        expect(again.claim.name).toBe('fridge 2')
+    })
+
+    it('reusing an entry does not count against the display limit', async () => {
+        await pairDevice('Mine', T0)
+        for (let i = 0; i < LIMITS.displays - 1; i++) await pairDevice(`D${i}`, T0 + 10 + i, `other-device-${i}000`)
+        expect(await store.listDisplays('alice')).toHaveLength(LIMITS.displays)
+        const again = await pairDevice(null, T0 + 1000)
+        expect(again.claim.name).toBe('Mine')
+        const extra = await startPairing(store, T0 + 2000, 'brand-new-device')
+        expect(await claimDisplayCode(store, 'alice', extra.code, null, T0 + 2100)).toEqual({
+            ok: false,
+            error: 'too_many_displays',
+        })
+    })
+
+    it('a device paired by another cook gets its own entry there', async () => {
+        await pairDevice('Kitchen', T0)
+        const bob = await pairDevice(null, T0 + 1000, DEVICE, 'bob')
+        expect(bob.claim.name).toBe('Kitchen')
+        expect(await store.listDisplays('alice')).toHaveLength(1)
+        expect(await store.listDisplays('bob')).toHaveLength(1)
+    })
+
+    it('clients without a device id always get a new entry', async () => {
+        await pairDevice(null, T0, null)
+        await pairDevice(null, T0 + 1000, null)
+        expect((await store.listDisplays('alice')).map((d) => d.name).sort()).toEqual(['Kitchen', 'Kitchen 2'])
+    })
+
+    it('a valid cookie for another entry of the same device is retired on collection', async () => {
+        const first = await pairDevice('Old', T0)
+        const firstPoll = await pollPairing(store, first.start.pairingId, first.start.pollToken, T0 + 200)
+        if (firstPoll.status !== 'claimed') throw new Error(firstPoll.status)
+        const previous = await authenticateDisplay(store, firstPoll.cookie)
+
+        // Paired again under another account while the browser still holds the old cookie.
+        const bob = await pairDevice(null, T0 + 1000, DEVICE, 'bob')
+        const poll = await pollPairing(store, bob.start.pairingId, bob.start.pollToken, T0 + 1200, async () => previous)
+        expect(poll.status).toBe('claimed')
+        expect(await store.listDisplays('alice')).toHaveLength(0)
+        expect(await authenticateDisplay(store, firstPoll.cookie)).toBeNull()
+        expect(await store.listDisplays('bob')).toHaveLength(1)
+    })
+
+    it('keeps the entry when the cookie belongs to the very entry being re-paired', async () => {
+        const first = await pairDevice('Kitchen', T0)
+        const firstPoll = await pollPairing(store, first.start.pairingId, first.start.pollToken, T0 + 200)
+        if (firstPoll.status !== 'claimed') throw new Error(firstPoll.status)
+        const previous = await authenticateDisplay(store, firstPoll.cookie)
+        const again = await pairDevice(null, T0 + 1000)
+        await pollPairing(store, again.start.pairingId, again.start.pollToken, T0 + 1200, async () => previous)
+        expect((await store.listDisplays('alice')).map((d) => d.id)).toEqual([first.claim.id])
+    })
+
+    it('leaves a cookie for a different device alone', async () => {
+        const other = await pairDevice('Fridge', T0, 'another-device-0001')
+        const otherPoll = await pollPairing(store, other.start.pairingId, other.start.pollToken, T0 + 200)
+        if (otherPoll.status !== 'claimed') throw new Error(otherPoll.status)
+        const previous = await authenticateDisplay(store, otherPoll.cookie)
+        const mine = await pairDevice('Counter', T0 + 1000)
+        await pollPairing(store, mine.start.pairingId, mine.start.pollToken, T0 + 1200, async () => previous)
+        expect(await store.listDisplays('alice')).toHaveLength(2)
+    })
+
+    it('drops displays that were claimed but never collected within the pairing window', async () => {
+        const stale = await pairDevice('Never', Date.now() - PAIRING_TTL_MS - 5000, 'stale-device-0001')
+        const live = await pairDevice('Fresh', Date.now(), 'fresh-device-0001')
+        const ids = (await store.listDisplays('alice')).map((d) => d.id)
+        expect(ids).toEqual([live.claim.id])
+        // The next write removes it from storage for good.
+        await store.touchDisplay(live.claim.id, Date.now())
+        expect(await store.getDisplay(stale.claim.id)).toBeNull()
+        // Once collected, age no longer matters; the uncollected one ages out.
+        const linked = await pairDevice('Linked', Date.now(), 'linked-device-0001')
+        await pollPairing(store, linked.start.pairingId, linked.start.pollToken, Date.now())
+        const later = Date.now() + PAIRING_TTL_MS + 5000
+        expect((await store.listDisplays('alice', later)).map((d) => d.name)).toEqual(['Linked'])
+    })
+
+    it('re-pairing an entry that never linked restarts its collection window', async () => {
+        const first = await pairDevice('Kitchen', Date.now() - PAIRING_TTL_MS + 1000)
+        const again = await pairDevice(null, Date.now())
+        expect(again.claim.id).toBe(first.claim.id)
+        expect(await store.listDisplays('alice', Date.now() + 5000)).toHaveLength(1)
     })
 })
 

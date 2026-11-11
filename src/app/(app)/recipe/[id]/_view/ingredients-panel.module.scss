@@ -63,6 +63,7 @@
 
     .head > :not(.title),
     .scaler {
+        // biome-ignore lint/complexity/noImportantStyles: controls stay off paper whatever their own display rule is
         display: none !important;
     }
 

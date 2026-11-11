@@ -128,6 +128,7 @@
     .number {
         inline-size: 24pt;
         block-size: 24pt;
+        // biome-ignore lint/complexity/noImportantStyles: print ink beats the themed step colors
         color: #ddd !important;
     }
 
@@ -136,12 +137,14 @@
     }
 
     .digit {
+        // biome-ignore lint/complexity/noImportantStyles: print ink beats the themed step colors
         color: #000 !important;
         font-size: 11pt;
     }
 
     .text {
         padding-block-start: 3pt;
+        // biome-ignore lint/complexity/noImportantStyles: print ink beats the themed step colors
         color: #000 !important;
         font-size: 11pt;
         line-height: 1.45;

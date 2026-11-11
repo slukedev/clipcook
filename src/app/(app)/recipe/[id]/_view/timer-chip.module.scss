@@ -131,7 +131,9 @@
         border: 0;
         padding: 0;
         margin: 0;
+        // biome-ignore lint/complexity/noImportantStyles: print beats the running, paused and done state colors
         background: none !important;
+        // biome-ignore lint/complexity/noImportantStyles: print beats the running, paused and done state colors
         color: inherit !important;
         font: inherit;
     }

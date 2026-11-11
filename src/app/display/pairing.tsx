@@ -31,6 +31,7 @@ const POLL_MS = 2500
 const REFRESH_EARLY_MS = 20_000
 /** A reload keeps showing the same code: new codes are rate limited per network. */
 const STORE_KEY = 'cc:display-pairing'
+const DEVICE_KEY = 'cc:display-device'
 
 /** The QR arrives as black-on-white markup; recolor it so it follows the theme. */
 function themeQr(svg: string): string {
@@ -44,9 +45,30 @@ function storedPairing(): Pairing | null {
     return Date.now() - saved.receivedAt < saved.ttl - REFRESH_EARLY_MS ? saved : null
 }
 
+/**
+ * This screen's own id, kept across lost cookies so linking it again replaces its old
+ * entry instead of adding another. Null where storage is blocked; pairing still works.
+ */
+function deviceId(): string | null {
+    const saved = readJson<string | null>('local', DEVICE_KEY, null)
+    if (typeof saved === 'string' && saved) return saved
+    try {
+        const id = crypto.randomUUID()
+        writeJson('local', DEVICE_KEY, id)
+        return readJson<string | null>('local', DEVICE_KEY, null) === id ? id : null
+    } catch {
+        return null
+    }
+}
+
 async function startPairing(): Promise<Pairing | { error: string; retryAfter: number; offline: boolean }> {
     try {
-        const res = await fetch('/api/display/pair', { method: 'POST', cache: 'no-store' })
+        const res = await fetch('/api/display/pair', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deviceId: deviceId() }),
+        })
         if (res.status === 429) {
             const retryAfter = Number(res.headers.get('Retry-After')) || 60
             return { error: 'Too many new codes.', retryAfter, offline: false }

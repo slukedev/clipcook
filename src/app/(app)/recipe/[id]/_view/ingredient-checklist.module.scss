@@ -78,7 +78,9 @@
     .row {
         min-block-size: 0;
         padding: 2pt 0;
+        // biome-ignore lint/complexity/noImportantStyles: print ink beats checked and hover row states
         background: none !important;
+        // biome-ignore lint/complexity/noImportantStyles: print ink beats checked and hover row states
         color: #000 !important;
     }
 

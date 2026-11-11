@@ -62,29 +62,29 @@ Nest Hubs have no browser, so they need Cast. Register a custom receiver in the 
 
 ## Environment variables
 
-| Variable | Purpose |
-| --- | --- |
-| `CLIPCOOK_BACKEND` | `firebase` or `local`. Defaults to Firebase when its admin variables exist, otherwise local in development. Production refuses to start without one. |
-| `CLIPCOOK_DATA_DIR`, `LOCAL_AUTH_SECRET` | Local backend storage folder and session signing key. |
-| `FIREBASE_ADMIN_*` | Service account for server-side Firestore, Auth and Storage. |
-| `NEXT_PUBLIC_FIREBASE_*` | Web app config used by the Google sign-in popup. |
-| `SESSION_COOKIE_NAME`, `SESSION_COOKIE_MAX_AGE` | Session cookie settings. |
-| `APP_URL` | Public origin for QR codes, the bookmarklet and redirects. |
-| `TRUST_PROXY_HOPS` | Reverse proxies in front of the app, for per-IP rate limits. |
-| `NEXT_PUBLIC_CAST_APP_ID` | Optional Google Cast receiver app id. |
+| Variable                                        | Purpose                                                                                                                                              |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLIPCOOK_BACKEND`                              | `firebase` or `local`. Defaults to Firebase when its admin variables exist, otherwise local in development. Production refuses to start without one. |
+| `CLIPCOOK_DATA_DIR`, `LOCAL_AUTH_SECRET`        | Local backend storage folder and session signing key.                                                                                                |
+| `FIREBASE_ADMIN_*`                              | Service account for server-side Firestore, Auth and Storage.                                                                                         |
+| `NEXT_PUBLIC_FIREBASE_*`                        | Web app config used by the Google sign-in popup.                                                                                                     |
+| `SESSION_COOKIE_NAME`, `SESSION_COOKIE_MAX_AGE` | Session cookie settings.                                                                                                                             |
+| `APP_URL`                                       | Public origin for QR codes, the bookmarklet and redirects.                                                                                           |
+| `TRUST_PROXY_HOPS`                              | Reverse proxies in front of the app, for per-IP rate limits.                                                                                         |
+| `NEXT_PUBLIC_CAST_APP_ID`                       | Optional Google Cast receiver app id.                                                                                                                |
 
 ## Scripts
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Development server |
-| `npm run build` / `npm start` | Production build and server (bundles the service worker first) |
-| `npm test` | Unit tests (Vitest) |
-| `npm run test:e2e` | End-to-end tests (Playwright, local backend) |
-| `npm run typecheck`, `npm run lint`, `npm run format` | TypeScript and Biome |
-| `npm run seed:demo` | Reset the local demo account with sample recipes |
-| `npm run generate:theme` | Regenerate color and motion tokens |
-| `npm run generate:icons` | Regenerate inlined Material Symbols |
+| Command                                               | Purpose                                                        |
+| ----------------------------------------------------- | -------------------------------------------------------------- |
+| `npm run dev`                                         | Development server                                             |
+| `npm run build` / `npm start`                         | Production build and server (bundles the service worker first) |
+| `npm test`                                            | Unit tests (Vitest)                                            |
+| `npm run test:e2e`                                    | End-to-end tests (Playwright, local backend)                   |
+| `npm run typecheck`, `npm run lint`, `npm run format` | TypeScript and Biome                                           |
+| `npm run seed:demo`                                   | Reset the local demo account with sample recipes               |
+| `npm run generate:theme`                              | Regenerate color and motion tokens                             |
+| `npm run generate:icons`                              | Regenerate inlined Material Symbols                            |
 
 ## How it's built
 

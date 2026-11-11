@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'clipcook_session'
 
