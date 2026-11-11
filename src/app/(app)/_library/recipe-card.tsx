@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { type MouseEvent, type PointerEvent, type ReactNode, useRef } from 'react'
 import { IconButton } from '@/components/ui/icon-button'
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
+import { Menu, MenuContent, MenuItem, MenuLinkItem, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
 import { morphTarget, SharedElement, TransitionLink, vtName } from '@/components/ui/view-transition'
 import type { RecipeSummary } from '@/lib/domain/types'
 import { prefetchPage } from '@/lib/navigation/prefetch'
@@ -203,6 +203,7 @@ export function RecipeCard({
                         {actions.map((action) => (
                             <MenuItemFor
                                 key={action}
+                                recipeId={id}
                                 action={action}
                                 icons={icons}
                                 onSelect={() => onAction(action, id)}
@@ -215,7 +216,26 @@ export function RecipeCard({
     )
 }
 
-function MenuItemFor({ action, icons, onSelect }: { action: CardAction; icons: LibraryIcons; onSelect: () => void }) {
+function MenuItemFor({
+    recipeId,
+    action,
+    icons,
+    onSelect,
+}: {
+    recipeId: string
+    action: CardAction
+    icons: LibraryIcons
+    onSelect: () => void
+}) {
+    if (action === 'cook') {
+        // A plain link and a full load: cook mode is its own surface, and a client navigation
+        // straight from the library aborts the page transition when the scrollbar goes away.
+        return (
+            <MenuLinkItem icon={icons.cook} render={<a href={`/recipe/${recipeId}/cook`} />}>
+                {LABELS.cook}
+            </MenuLinkItem>
+        )
+    }
     return (
         <>
             {(action === 'delete' || action === 'collections') && <MenuSeparator />}
