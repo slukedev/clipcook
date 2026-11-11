@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { List, ListItem } from '@/components/ui/list'
 import { useSnackbar } from '@/components/ui/snackbar'
 import { scaledLines } from '@/lib/cook/content'
+import { pushFresh } from '@/lib/navigation/fresh'
 import { AdaptiveSheet } from './adaptive-sheet'
 import styles from './grocery-sheet.module.scss'
 
@@ -48,7 +49,7 @@ export function GrocerySheet({
             snackbar({
                 message: n === 1 ? 'Added 1 item' : `Added ${n} items`,
                 action: 'View list',
-                onAction: () => router.push('/grocery'),
+                onAction: () => pushFresh(router, '/grocery'),
             })
         })
     }

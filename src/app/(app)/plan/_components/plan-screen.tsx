@@ -24,6 +24,7 @@ import { useSnackbar } from '@/components/ui/snackbar'
 import { Tooltip } from '@/components/ui/tooltip'
 import { TopAppBar } from '@/components/ui/top-app-bar'
 import type { ActionResult, MealSlot, PlanEntry, RecipeSummary } from '@/lib/domain/types'
+import { pushFresh } from '@/lib/navigation/fresh'
 import { entriesToShop, MEAL_LABELS, plannedRecipeIds, suggestedMeal } from '@/lib/plan/entries'
 import { addDays, formatWeekRange, relativeDayName, shortDate, weekDates, weekdayName } from '@/lib/plan/week'
 import { AddSheet, type AddTarget } from './add-sheet'
@@ -236,7 +237,7 @@ export function PlanScreen({
                 snackbar({
                     message: `Added ${plural(result.recipes, 'recipe')} to the list`,
                     action: 'View list',
-                    onAction: () => router.push('/grocery'),
+                    onAction: () => pushFresh(router, '/grocery'),
                 })
             },
         )
