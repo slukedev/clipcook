@@ -94,6 +94,7 @@ export function RecipeScreen({
                                 delete: icons.delete,
                                 add: icons.add,
                                 tv: icons.tv,
+                                plan: icons.plan,
                             }}
                         />
                     }

@@ -1,0 +1,81 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
+
+// Tonight's planned dish above the library, for the cook who opens the app to start dinner.
+.tonight {
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-2);
+    inline-size: 100%;
+    max-inline-size: 720px;
+    padding-inline-end: var(--md-sys-space-3);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.link {
+    @include state-layer.host;
+    @include focus-ring.inward;
+
+    display: flex;
+    align-items: center;
+    gap: var(--md-sys-space-4);
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: 88px;
+    padding: var(--md-sys-space-3);
+    border-radius: inherit;
+    color: inherit;
+    text-decoration: none;
+}
+
+.photo {
+    position: relative;
+    flex: none;
+    inline-size: 64px;
+    block-size: 64px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-large);
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+}
+
+.meta {
+    @include type.role(body-medium);
+}
+
+.when {
+    @include type.role(body-medium, $emphasized: true);
+}
+
+.srOnly {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.title {
+    @include type.role(title-medium, $emphasized: true);
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.cook {
+    flex: none;
+}
