@@ -14,6 +14,7 @@ A household often shares one kitchen display (Echo Show, Nest Hub, an old tablet
 - Clips recipes from links, shares, a bookmarklet, or pasted text, and keeps the source.
 - Organizes them with favorites, collections and tags, with instant search.
 - Cooks one step at a time with timers, scaling, and an awake screen.
+- Plans the week's meals, leads with tonight's dish, and shops for the week at the planned servings.
 - Builds a grocery list from recipes, merged and grouped by aisle.
 - Puts a recipe on a paired kitchen display from the phone, and keeps the display in step with cook mode.
 - Lets people own their data: export, import, and self-hosting under the GPL.
