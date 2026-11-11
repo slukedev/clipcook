@@ -102,15 +102,22 @@ export class LocalStore implements Store {
         this.loadedStamp = await this.stamp()
     }
 
-    /** Serializes all access; `write` persists after `fn` succeeds. */
-    private run<T>(fn: (data: LocalData) => T | Promise<T>, write: boolean): Promise<T> {
+    /**
+     * Serializes all access. In write mode the file is saved after `fn` succeeds,
+     * unless `fn` called `unchanged()` and nothing expired: display pairing polls
+     * every few seconds and should not rewrite the whole file each time.
+     */
+    private run<T>(fn: (data: LocalData, unchanged: () => void) => T | Promise<T>, write: boolean): Promise<T> {
         const next = this.queue.then(async () => {
             const data = await this.load()
-            if (!write) return fn(data)
+            if (!write) return fn(data, () => undefined)
+            let dirty = true
             try {
-                const result = await fn(data)
-                pruneExpired(data, Date.now())
-                await this.save(data)
+                const result = await fn(data, () => {
+                    dirty = false
+                })
+                if (pruneExpired(data, Date.now())) dirty = true
+                if (dirty) await this.save(data)
                 return result
             } catch (err) {
                 // The mutation may have been partly applied in memory; reload from disk next time.
@@ -127,8 +134,9 @@ export class LocalStore implements Store {
         return this.run((d) => clone(fn(d)), false)
     }
 
-    private write<T>(fn: (data: LocalData) => T): Promise<T> {
-        return this.run((d) => clone(fn(d)), true)
+    /** `fn` calls `unchanged()` on paths that leave the data as it was. */
+    private write<T>(fn: (data: LocalData, unchanged: () => void) => T): Promise<T> {
+        return this.run((d, unchanged) => clone(fn(d, unchanged)), true)
     }
 
     // ---- recipes
@@ -302,9 +310,10 @@ export class LocalStore implements Store {
     }
 
     touchDisplay(id: string, at: number): Promise<void> {
-        return this.write((d) => {
+        return this.write((d, unchanged) => {
             const current = d.displays[id]
             if (current) current.lastSeenAt = at
+            else unchanged()
         })
     }
 
@@ -355,10 +364,13 @@ export class LocalStore implements Store {
         displayTokenHash: string,
         now: number,
     ): Promise<CollectPairingResult> {
-        return this.write((d): CollectPairingResult => {
+        return this.write((d, unchanged): CollectPairingResult => {
             const p = d.pairings[pairingId]
-            if (!p || p.pollTokenHash !== pollTokenHash) return { status: 'not_found' }
-            if (!p.claimedBy) return p.expiresAt <= now ? { status: 'expired' } : { status: 'pending' }
+            if (!p || p.pollTokenHash !== pollTokenHash || !p.claimedBy) {
+                unchanged()
+                if (!p || p.pollTokenHash !== pollTokenHash) return { status: 'not_found' }
+                return p.expiresAt <= now ? { status: 'expired' } : { status: 'pending' }
+            }
             const display = d.displays[p.claimedBy.displayId]
             delete d.pairings[pairingId]
             if (!display) return { status: 'not_found' }
@@ -389,9 +401,12 @@ export class LocalStore implements Store {
     }
 
     consumeCastToken(id: string, now: number): Promise<string | null> {
-        return this.write((d) => {
+        return this.write((d, unchanged) => {
             const token = d.castTokens[id]
-            if (!token) return null
+            if (!token) {
+                unchanged()
+                return null
+            }
             delete d.castTokens[id]
             return token.expiresAt > now ? token.uid : null
         })
@@ -405,9 +420,20 @@ function ownedRecipes(d: LocalData, uid: string): RecipeRecord[] {
         .sort(byNewest)
 }
 
-function pruneExpired(d: LocalData, now: number): void {
+/** Returns true when anything was removed. */
+function pruneExpired(d: LocalData, now: number): boolean {
+    let removed = false
+    const drop = <T>(table: Record<string, T>, expired: (x: T) => boolean) => {
+        for (const [id, x] of Object.entries(table)) {
+            if (expired(x)) {
+                delete table[id]
+                removed = true
+            }
+        }
+    }
     // Claimed pairings linger a little so a display that was offline can still collect its token.
-    for (const [id, p] of Object.entries(d.pairings)) if (p.expiresAt + 60 * 60_000 < now) delete d.pairings[id]
-    for (const [id, x] of Object.entries(d.drafts)) if (x.expiresAt < now) delete d.drafts[id]
-    for (const [id, x] of Object.entries(d.castTokens)) if (x.expiresAt < now) delete d.castTokens[id]
+    drop(d.pairings, (p) => p.expiresAt + 60 * 60_000 < now)
+    drop(d.drafts, (x) => x.expiresAt < now)
+    drop(d.castTokens, (x) => x.expiresAt < now)
+    return removed
 }

@@ -40,7 +40,7 @@ const FAILURES: Record<ClipFailureCode, ClipFailure> = {
 
 /** Unknown or missing codes (an unexpected throw) are worth another try. */
 export function classifyClipError(code: string | undefined): ClipFailure {
-    return (code && FAILURES[code as ClipFailureCode]) || 'retry'
+    return code && Object.hasOwn(FAILURES, code) ? FAILURES[code as ClipFailureCode] : 'retry'
 }
 
 export function offlineAwareError(): ClipResult {
