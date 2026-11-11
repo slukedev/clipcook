@@ -63,8 +63,13 @@ test('pair a kitchen display, send a recipe, follow cook mode, then unlink it', 
 
         // Cook mode with display sync on: the display follows each step.
         await page.getByRole('link', { name: 'Cook', exact: true }).click()
-        const counter = page.getByRole('banner').getByText(/^Step \d+ of \d+$/)
-        await expect(counter).toHaveText(/^Step 1 of /)
+        const counter = page.getByRole('banner').getByText(/^(Step \d+ of \d+|\d+ steps?)$/)
+        // A fresh cook opens on the overview; the first key can land before hydration, so retry it.
+        await expect(page.getByRole('heading', { name: 'Before You Start' })).toBeVisible()
+        await expect(async () => {
+            if (!/^Step 1 of /.test((await counter.textContent()) ?? '')) await page.keyboard.press('ArrowRight')
+            await expect(counter).toHaveText(/^Step 1 of /, { timeout: 1000 })
+        }).toPass()
         const sync = page
             .getByRole('button', { name: `Show on ${name}` })
             .or(page.getByRole('button', { name: 'Show on display' }))
