@@ -16,8 +16,12 @@ test('cook mode pages by keyboard, Done records the cook, Escape leaves', async 
     await expect(counter).toHaveText(`Step 1 of ${stepCount}`)
     await expect(page.getByRole('button', { name: 'Back' })).toBeDisabled()
 
-    await page.keyboard.press('ArrowRight')
-    await expect(counter).toHaveText(`Step 2 of ${stepCount}`)
+    // The server-rendered page shows step 1 before its key handler hydrates; a key pressed
+    // earlier is lost, so press until the first one lands (never twice once it has).
+    await expect(async () => {
+        if ((await counter.textContent()) !== `Step 2 of ${stepCount}`) await page.keyboard.press('ArrowRight')
+        await expect(counter).toHaveText(`Step 2 of ${stepCount}`, { timeout: 1000 })
+    }).toPass()
     await page.keyboard.press('ArrowLeft')
     await expect(counter).toHaveText(`Step 1 of ${stepCount}`)
     for (let step = 2; step <= stepCount; step++) {

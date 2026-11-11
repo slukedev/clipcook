@@ -95,6 +95,20 @@
     z-index: 1;
 }
 
+// Safari can miss the old page's view-transition-name (React works around the same bug),
+// leaving the old page in the root snapshot under the new one. On WebKit the root fades
+// through as well, so whatever Safari captures, only one page shows at a time.
+@supports (font: -apple-system-body) {
+    :root:not([data-vt-root])::view-transition-old(root) {
+        display: block;
+        animation: cc-vt-fade-out 90ms cubic-bezier(0.3, 0, 0.8, 0.15) both;
+    }
+
+    :root:not([data-vt-root])::view-transition-new(root) {
+        animation: cc-vt-fade-in 210ms cubic-bezier(0.05, 0.7, 0.1, 1) 90ms both;
+    }
+}
+
 // Opening cook mode: the old screen holds still under the growing container, and the
 // focus layout fades in behind it once the container has mostly arrived.
 :root:active-view-transition-type(cook)::view-transition-old(root) {
