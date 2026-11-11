@@ -1,6 +1,7 @@
 @use "../../../styles/mixins/typography" as type;
 @use "../../../styles/mixins/media";
 @use "../../../styles/mixins/focus-ring";
+@use "columns";
 
 .section {
     display: flex;
@@ -14,7 +15,9 @@
     color: var(--md-sys-color-on-surface);
 }
 
-// Bleeds to the window edges so items slide out of view rather than into a margin.
+// Phones and tablets: a swipeable row that bleeds to the window edges, so items slide
+// out of view rather than into a margin. From four columns up the row sits on the
+// grid below it: one tile per column, whole tiles only, and the arrows page through.
 .carousel {
     --md-carousel-height: 196px;
     --md-carousel-inset: var(--md-sys-layout-margin);
@@ -25,8 +28,21 @@
         --md-carousel-height: 228px;
     }
 
-    @include media.large-up {
-        --md-carousel-height: 260px;
+    @include columns.at(columns.$four) {
+        --md-carousel-height: var(--lib-col);
+        --md-carousel-inset: 0px;
+
+        margin-inline: 0;
+
+        // Doubled class: these override the carousel's own track and slide rules.
+        &.carousel > :first-child {
+            gap: var(--lib-gap-x);
+        }
+
+        &.carousel [aria-roledescription="slide"] {
+            flex-basis: var(--lib-col);
+            animation: none;
+        }
     }
 }
 

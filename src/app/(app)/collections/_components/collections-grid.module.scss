@@ -1,14 +1,16 @@
 @use "../../../../styles/mixins/typography" as type;
 @use "../../../../styles/mixins/media";
+@use "../../../../styles/mixins/page";
+@use "../../_library/columns";
 
 .page {
+    @include page.frame(wide);
+    @include columns.container;
+
     display: flex;
     flex-direction: column;
     gap: 20px;
-    inline-size: 100%;
-    max-inline-size: 1840px;
-    margin-inline: auto;
-    padding: calc(16px + var(--safe-top)) var(--md-sys-layout-margin) calc(64px + 56px + 32px);
+    padding-block: calc(16px + var(--safe-top)) calc(64px + 56px + 32px);
 
     @include media.medium-up {
         gap: 28px;
@@ -35,32 +37,24 @@
     }
 }
 
+// Collections are few and each one is a shelf, so they get fewer, larger tiles than
+// the recipe grid: at most four across, on the same gaps.
 .grid {
+    @include columns.vars;
+
     --_cols: 2;
 
     display: grid;
     grid-template-columns: repeat(var(--_cols), minmax(0, 1fr));
-    gap: 20px 12px;
+    gap: var(--lib-gap-y) var(--lib-gap-x);
     list-style: none;
 
-    @include media.medium-up {
+    @include columns.at(columns.$three) {
         --_cols: 3;
-
-        gap: 24px 16px;
     }
 
-    @include media.expanded-up {
+    @include columns.at(columns.$five) {
         --_cols: 4;
-    }
-
-    @include media.large-up {
-        --_cols: 5;
-
-        gap: 28px 20px;
-    }
-
-    @include media.extra-large-up {
-        --_cols: 6;
     }
 }
 
@@ -150,6 +144,14 @@
     z-index: 2;
     margin-block-start: -6px;
     margin-inline-end: -8px;
+}
+
+.mosaicSkeleton.mosaicSkeleton {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1;
+    border-radius: var(--md-sys-shape-corner-large-increased);
 }
 
 .empty {

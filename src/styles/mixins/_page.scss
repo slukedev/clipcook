@@ -19,7 +19,8 @@ $_widths: (
     inline-size: 100%;
     max-inline-size: calc(var(--cc-page-max) + 2 * var(--md-sys-layout-margin));
     margin-inline: auto;
-    padding-inline: max(var(--md-sys-layout-margin), var(--safe-left)) max(var(--md-sys-layout-margin), var(--safe-right));
+    padding-inline: max(var(--md-sys-layout-margin), var(--safe-left))
+        max(var(--md-sys-layout-margin), var(--safe-right));
 }
 
 // Only the custom property: for a wrapper that holds the TopAppBar but should stay
@@ -33,5 +34,6 @@ $_widths: (
     inline-size: 100%;
     max-inline-size: calc(var(--cc-page-max, 100%) + 2 * var(--md-sys-layout-margin));
     margin-inline: auto;
-    padding-inline: max(var(--md-sys-layout-margin), var(--safe-left)) max(var(--md-sys-layout-margin), var(--safe-right));
+    padding-inline: max(var(--md-sys-layout-margin), var(--safe-left))
+        max(var(--md-sys-layout-margin), var(--safe-right));
 }

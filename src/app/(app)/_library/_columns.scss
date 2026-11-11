@@ -1,0 +1,49 @@
+// Recipe columns follow the page's own width, not the window's, so the grid stays
+// comfortable whether the navigation drawer is open or collapsed. Pages that hold a
+// recipe grid declare `@include columns.container;` and anything inside can read
+// --lib-cols, --lib-gap-x, --lib-gap-y and --lib-col (one column's width).
+
+$name: library;
+
+// Content widths where another column fits without cards dropping under ~190px.
+$three: 560px;
+$four: 820px;
+$five: 1100px;
+$six: 1360px;
+
+@mixin container {
+    container: #{$name} / inline-size;
+}
+
+@mixin at($min) {
+    @container #{$name} (width >= #{$min}) {
+        @content;
+    }
+}
+
+@mixin vars {
+    --lib-cols: 2;
+    --lib-gap-x: 12px;
+    --lib-gap-y: 20px;
+    --lib-col: calc((100cqi - (var(--lib-cols) - 1) * var(--lib-gap-x)) / var(--lib-cols));
+
+    @include at($three) {
+        --lib-cols: 3;
+        --lib-gap-x: 16px;
+        --lib-gap-y: 24px;
+    }
+
+    @include at($four) {
+        --lib-cols: 4;
+    }
+
+    @include at($five) {
+        --lib-cols: 5;
+        --lib-gap-x: 20px;
+        --lib-gap-y: 28px;
+    }
+
+    @include at($six) {
+        --lib-cols: 6;
+    }
+}

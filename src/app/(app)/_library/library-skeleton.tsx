@@ -32,14 +32,14 @@ export function LibrarySkeleton({ view = 'grid' }: { view?: ViewMode }) {
     return (
         <div className={library.page} role="status" aria-busy="true" aria-label="Loading recipes">
             <div className={library.header}>
-                <div className={library.searchRow}>
+                <div className={library.bar}>
                     <Skeleton shape="pill" className={cx(library.search, styles.search)} />
+                    <ChipSet scroll bleed aria-hidden className={library.chips}>
+                        {[48, 96, 112, 120, 104, 72].map((w) => (
+                            <Skeleton key={w} shape="small" width={w} height={32} className={styles.chip} />
+                        ))}
+                    </ChipSet>
                 </div>
-                <ChipSet scroll bleed aria-hidden>
-                    {[48, 96, 112, 120, 104, 72].map((w) => (
-                        <Skeleton key={w} shape="small" width={w} height={32} className={styles.chip} />
-                    ))}
-                </ChipSet>
                 <div className={library.toolRow}>
                     <span className={library.count} />
                 </div>

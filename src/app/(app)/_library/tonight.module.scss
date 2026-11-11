@@ -2,6 +2,7 @@
 @use "../../../styles/mixins/media";
 @use "../../../styles/mixins/state-layer";
 @use "../../../styles/mixins/focus-ring";
+@use "columns";
 
 // Tonight's planned dish above the library, for the cook who opens the app to start dinner.
 .tonight {
@@ -9,11 +10,20 @@
     align-items: center;
     gap: var(--md-sys-space-2);
     inline-size: 100%;
-    max-inline-size: 720px;
     padding-inline-end: var(--md-sys-space-3);
     border-radius: var(--md-sys-shape-corner-extra-large);
     background-color: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
+
+    // Spans whole grid columns: three, or two on the widest pages where it then
+    // matches the search field above it.
+    @include columns.at(columns.$four) {
+        inline-size: calc(3 * var(--lib-col) + 2 * var(--lib-gap-x));
+    }
+
+    @include columns.at(columns.$six) {
+        inline-size: calc(2 * var(--lib-col) + var(--lib-gap-x));
+    }
 }
 
 .link {

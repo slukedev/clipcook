@@ -1,21 +1,25 @@
 @use "../../../styles/mixins/typography" as type;
 @use "../../../styles/mixins/media";
+@use "../../../styles/mixins/page";
+@use "columns";
 
 // Wraps everything below the header so filter changes can crossfade it as one piece.
 .results {
+    @include columns.vars;
+
     display: flex;
     flex-direction: column;
     gap: inherit;
 }
 
 .page {
+    @include page.frame(wide);
+    @include columns.container;
+
     display: flex;
     flex-direction: column;
     gap: 24px;
-    inline-size: 100%;
-    max-inline-size: 1840px;
-    margin-inline: auto;
-    padding: calc(12px + var(--safe-top)) var(--md-sys-layout-margin) calc(64px + 56px + 32px);
+    padding-block: calc(12px + var(--safe-top)) calc(64px + 56px + 32px);
 
     @include media.medium-up {
         gap: 28px;
@@ -33,25 +37,49 @@
 }
 
 .header {
+    @include columns.vars;
+
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.searchRow {
-    display: flex;
+// Search, filters and view tools. Phones stack search over the chips (tools drop to the
+// row below); wider pages put the tools beside search; the widest make it one bar where
+// search spans the first two grid columns and the chips start on the third.
+.bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "search"
+        "chips";
     align-items: center;
-    gap: 16px;
+    gap: 12px var(--lib-gap-x);
+
+    @include columns.at(columns.$four) {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "search tools"
+            "chips chips";
+    }
+
+    @include columns.at(columns.$six) {
+        grid-template-columns: calc(2 * var(--lib-col) + var(--lib-gap-x)) minmax(0, 1fr) auto;
+        grid-template-areas: "search chips tools";
+    }
 }
 
 .search {
     position: relative;
-    flex: 1 1 auto;
+    grid-area: search;
     min-inline-size: 0;
+}
 
-    @include media.expanded-up {
-        flex-basis: 720px;
-        flex-grow: 0;
+.chips {
+    grid-area: chips;
+
+    @include columns.at(columns.$six) {
+        --md-chip-set-bleed: 0px;
     }
 }
 
@@ -91,11 +119,13 @@
 
 .wideTools {
     display: none;
+    grid-area: tools;
     align-items: center;
     gap: 4px;
-    margin-inline-start: auto;
+    // The view toggle's icon sits on the grid's last column edge, not its touch zone.
+    margin-inline-end: -8px;
 
-    @include media.expanded-up {
+    @include columns.at(columns.$four) {
         display: flex;
     }
 }
@@ -109,7 +139,7 @@
     // Starts where the chips' 48dp touch zone ends, so the two never overlap.
     margin-block: 0 -8px;
 
-    @include media.expanded-up {
+    @include columns.at(columns.$four) {
         min-block-size: 0;
         margin-block: 0;
 
@@ -132,7 +162,7 @@
     gap: 4px;
     margin-inline-end: -8px;
 
-    @include media.expanded-up {
+    @include columns.at(columns.$four) {
         display: none;
     }
 }
@@ -180,4 +210,89 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
+}
+
+// First run: the empty state sits higher so the starter set below it is in view.
+.firstRun {
+    margin-block: clamp(8px, 4dvh, 40px) 0;
+}
+
+.starters {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    inline-size: 100%;
+    max-inline-size: 960px;
+    margin-inline: auto;
+}
+
+.startersHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+// A swipeable row on phones; five across once they fit.
+.starterList {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 148px;
+    gap: 12px;
+    margin-inline: calc(-1 * var(--md-sys-layout-margin));
+    padding-inline: var(--md-sys-layout-margin);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--md-sys-layout-margin);
+    scrollbar-width: none;
+    list-style: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    @include columns.at(columns.$three) {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+        margin-inline: 0;
+        padding-inline: 0;
+        overflow: visible;
+    }
+}
+
+.starter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-inline-size: 0;
+    scroll-snap-align: start;
+}
+
+.starterPhoto {
+    inline-size: 100%;
+    aspect-ratio: 1;
+    margin-block-end: 6px;
+    object-fit: cover;
+    border-radius: var(--md-sys-shape-corner-large-increased);
+    background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.starterTitle {
+    @include type.role(title-small);
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    color: var(--md-sys-color-on-surface);
+}
+
+.starterTime {
+    @include type.role(body-medium);
+    @include type.numeric;
+
+    color: var(--md-sys-color-on-surface-variant);
 }

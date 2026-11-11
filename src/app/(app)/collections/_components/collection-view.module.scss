@@ -1,14 +1,16 @@
 @use "../../../../styles/mixins/typography" as type;
 @use "../../../../styles/mixins/media";
+@use "../../../../styles/mixins/page";
+@use "../../_library/columns";
 
 .page {
+    @include page.frame(wide);
+    @include columns.container;
+
     display: flex;
     flex-direction: column;
     gap: 20px;
-    inline-size: 100%;
-    max-inline-size: 1840px;
-    margin-inline: auto;
-    padding: calc(8px + var(--safe-top)) var(--md-sys-layout-margin) calc(64px + 56px + 32px);
+    padding-block: calc(8px + var(--safe-top)) calc(64px + 56px + 32px);
 
     @include media.medium-up {
         gap: 28px;

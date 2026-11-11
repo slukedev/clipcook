@@ -1,50 +1,27 @@
 @use "../../../styles/mixins/typography" as type;
 @use "../../../styles/mixins/media";
+@use "columns";
 
-// 2 columns on compact, 3 on medium, 4 on expanded, 5 on large, up to 6 beyond.
+// Columns from the page's width: 2 on phones up to 6 on wide screens (see _columns.scss).
 .items {
-    --_cols: 2;
-    --_gap-x: 12px;
-    --_gap-y: 20px;
+    @include columns.vars;
 
     display: grid;
-    grid-template-columns: repeat(var(--_cols), minmax(0, 1fr));
-    gap: var(--_gap-y) var(--_gap-x);
+    grid-template-columns: repeat(var(--lib-cols), minmax(0, 1fr));
+    gap: var(--lib-gap-y) var(--lib-gap-x);
     list-style: none;
-
-    @include media.medium-up {
-        --_cols: 3;
-        --_gap-x: 16px;
-        --_gap-y: 24px;
-    }
-
-    @include media.expanded-up {
-        --_cols: 4;
-    }
-
-    @include media.large-up {
-        --_cols: 5;
-        --_gap-x: 20px;
-        --_gap-y: 28px;
-    }
-
-    @include media.extra-large-up {
-        --_cols: 6;
-    }
 
     > li {
         min-inline-size: 0;
     }
 
-    // Segmented list: rows 2dp apart. Two columns once the window can hold them.
+    // Segmented list: rows 2dp apart. Two columns once the page can hold them.
     &[data-view="list"] {
-        --_cols: 1;
-
+        grid-template-columns: minmax(0, 1fr);
         gap: 2px;
 
-        @include media.large-up {
-            --_cols: 2;
-
+        @include columns.at(columns.$four) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             column-gap: 16px;
         }
     }

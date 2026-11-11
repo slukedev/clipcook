@@ -58,6 +58,8 @@ interface LibraryProps {
     initialSearch?: { key: string; ids: string[] }
     /** Tonight's planned dish, shown above everything while nothing is filtered. */
     tonight?: React.ReactNode
+    /** The starter set an empty library can add in one step. */
+    starters?: { key: string; title: string; time: string }[]
 }
 
 /** 'all', 'fav', or 'c:<collection id>'. */
@@ -78,6 +80,7 @@ export function Library({
     icons,
     initialSearch,
     tonight,
+    starters,
 }: LibraryProps) {
     const params = useSearchParams()
     const user = useSessionUser()
@@ -241,7 +244,7 @@ export function Library({
                 <div className={styles.page}>
                     <h1 className={styles.srOnly}>Library</h1>
                     <EmptyState
-                        className={styles.empty}
+                        className={starters?.length ? styles.firstRun : styles.empty}
                         shape="cookie9"
                         icon={icons.book}
                         title="No Recipes Yet"
@@ -273,18 +276,43 @@ export function Library({
                                     >
                                         Write one
                                     </Button>
-                                    <Button
-                                        variant="text"
-                                        icon={icons.dish}
-                                        loading={addingStarters}
-                                        onClick={addStarters}
-                                    >
-                                        Add starter recipes
-                                    </Button>
                                 </div>
                             </div>
                         }
                     />
+                    {/* Shown rather than described: a new cook sees exactly what they would get. */}
+                    {starters && starters.length > 0 && (
+                        <section className={styles.starters} aria-labelledby="library-starters">
+                            <div className={styles.startersHead}>
+                                <h2 id="library-starters" className={styles.sectionTitle}>
+                                    Starter Recipes
+                                </h2>
+                                <Button
+                                    variant="tonal"
+                                    icon={icons.dish}
+                                    loading={addingStarters}
+                                    onClick={addStarters}
+                                >
+                                    Add all
+                                </Button>
+                            </div>
+                            <ul className={styles.starterList}>
+                                {starters.map((s) => (
+                                    <li key={s.key} className={styles.starter}>
+                                        {/* biome-ignore lint/performance/noImgElement: small static WebP served as is */}
+                                        <img
+                                            src={`/starter-photo/${s.key}`}
+                                            alt=""
+                                            className={styles.starterPhoto}
+                                            decoding="async"
+                                        />
+                                        <span className={styles.starterTitle}>{s.title}</span>
+                                        <span className={styles.starterTime}>{s.time}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
                 </div>
             </PageTransition>
         )
@@ -295,7 +323,7 @@ export function Library({
             <div className={styles.page}>
                 <h1 className={styles.srOnly}>Library</h1>
                 <header className={styles.header}>
-                    <div className={styles.searchRow}>
+                    <div className={styles.bar}>
                         {/* biome-ignore lint/a11y/noStaticElementInteractions: focus and Escape bubble up from the search field inside */}
                         <div
                             ref={searchRef}
@@ -346,6 +374,63 @@ export function Library({
                                 />
                             )}
                         </div>
+                        <ChipSet scroll bleed label="Filter recipes" className={styles.chips}>
+                            <FilterChip
+                                selected={validScope === 'all'}
+                                onSelectedChange={() => refilter(() => setScope('all'))}
+                            >
+                                All
+                            </FilterChip>
+                            <FilterChip
+                                selected={validScope === 'fav'}
+                                onSelectedChange={(on) => refilter(() => setScope(on ? 'fav' : 'all'))}
+                            >
+                                Favorites
+                            </FilterChip>
+                            {collections.map((c) => (
+                                <FilterChip
+                                    key={c.id}
+                                    selected={validScope === `c:${c.id}`}
+                                    onSelectedChange={(on) => refilter(() => setScope(on ? `c:${c.id}` : 'all'))}
+                                >
+                                    {c.name}
+                                </FilterChip>
+                            ))}
+                            {tags.length > 0 && (
+                                <Menu>
+                                    <MenuTrigger
+                                        render={
+                                            <FilterChip
+                                                selected={activeTags.length > 0}
+                                                trailing={<Glyph name="arrow_drop_down" />}
+                                                aria-label={
+                                                    activeTags.length > 0 ? `Tags: ${activeTags.join(', ')}` : 'Tags'
+                                                }
+                                            >
+                                                {tagLabel}
+                                            </FilterChip>
+                                        }
+                                    />
+                                    <MenuContent align="end">
+                                        {activeTags.length > 0 && (
+                                            <>
+                                                <MenuItem onClick={() => setActiveTags([])}>Clear tags</MenuItem>
+                                                <MenuSeparator />
+                                            </>
+                                        )}
+                                        {tags.map(({ tag }) => (
+                                            <MenuCheckboxItem
+                                                key={tag}
+                                                checked={activeTags.includes(tag)}
+                                                onCheckedChange={(on) => toggleTag(tag, on)}
+                                            >
+                                                {tag}
+                                            </MenuCheckboxItem>
+                                        ))}
+                                    </MenuContent>
+                                </Menu>
+                            )}
+                        </ChipSet>
                         {showTools && (
                             <div className={styles.wideTools}>
                                 {sortMenu}
@@ -353,63 +438,6 @@ export function Library({
                             </div>
                         )}
                     </div>
-                    <ChipSet scroll bleed label="Filter recipes">
-                        <FilterChip
-                            selected={validScope === 'all'}
-                            onSelectedChange={() => refilter(() => setScope('all'))}
-                        >
-                            All
-                        </FilterChip>
-                        <FilterChip
-                            selected={validScope === 'fav'}
-                            onSelectedChange={(on) => refilter(() => setScope(on ? 'fav' : 'all'))}
-                        >
-                            Favorites
-                        </FilterChip>
-                        {collections.map((c) => (
-                            <FilterChip
-                                key={c.id}
-                                selected={validScope === `c:${c.id}`}
-                                onSelectedChange={(on) => refilter(() => setScope(on ? `c:${c.id}` : 'all'))}
-                            >
-                                {c.name}
-                            </FilterChip>
-                        ))}
-                        {tags.length > 0 && (
-                            <Menu>
-                                <MenuTrigger
-                                    render={
-                                        <FilterChip
-                                            selected={activeTags.length > 0}
-                                            trailing={<Glyph name="arrow_drop_down" />}
-                                            aria-label={
-                                                activeTags.length > 0 ? `Tags: ${activeTags.join(', ')}` : 'Tags'
-                                            }
-                                        >
-                                            {tagLabel}
-                                        </FilterChip>
-                                    }
-                                />
-                                <MenuContent align="end">
-                                    {activeTags.length > 0 && (
-                                        <>
-                                            <MenuItem onClick={() => setActiveTags([])}>Clear tags</MenuItem>
-                                            <MenuSeparator />
-                                        </>
-                                    )}
-                                    {tags.map(({ tag }) => (
-                                        <MenuCheckboxItem
-                                            key={tag}
-                                            checked={activeTags.includes(tag)}
-                                            onCheckedChange={(on) => toggleTag(tag, on)}
-                                        >
-                                            {tag}
-                                        </MenuCheckboxItem>
-                                    ))}
-                                </MenuContent>
-                            </Menu>
-                        )}
-                    </ChipSet>
                     {showTools && (
                         <div className={styles.toolRow}>
                             <p className={styles.count} aria-live="polite">

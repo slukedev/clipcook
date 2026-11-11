@@ -12,7 +12,7 @@ export function CollectionMosaic({ name, thumbnails }: { name: string; thumbnail
                 tiles.map((src, index) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: thumbnails can repeat; position is the identity
                     <div key={index} className={styles.tile}>
-                        <RecipeMedia src={src} title={name} sizes="(width < 600px) 25vw, 160px" />
+                        <RecipeMedia src={src} title={name} sizes="(width < 600px) 25vw, 200px" />
                     </div>
                 ))
             )}

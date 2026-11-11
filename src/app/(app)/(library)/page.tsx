@@ -8,6 +8,7 @@ import { getStore } from '@/server/db'
 import { getPlanClock } from '@/server/plan-clock'
 import { getPlanEntries, listCollections, listRecipeCards, listTags } from '@/server/queries'
 import { searchRecipeIds } from '@/server/search'
+import { STARTER_RECIPES } from '@/server/starter'
 import { libraryIcons } from '../_library/icons'
 import { Library } from '../_library/library'
 import { LIBRARY_COOKIE, parseLibraryPrefs } from '../_library/library-data'
@@ -43,6 +44,11 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
             prefs={parseLibraryPrefs(jar.get(LIBRARY_COOKIE)?.value)}
             icons={libraryIcons()}
             initialSearch={{ key: searchKey, ids: deepIds }}
+            starters={
+                recipes.length === 0
+                    ? STARTER_RECIPES.map((r) => ({ key: r.key, title: r.title, time: r.totalTime }))
+                    : undefined
+            }
             tonight={
                 lead && leadRecipe ? (
                     <Tonight

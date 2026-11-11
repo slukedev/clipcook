@@ -10,7 +10,18 @@ export function CollectionsSkeleton() {
             <div className={grid.header}>
                 <Skeleton shape="text" className={grid.title} width={200} />
             </div>
-            <RecipeGridSkeleton count={8} />
+            <ul className={grid.grid} aria-hidden>
+                {Array.from({ length: 4 }, (_, i) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
+                    <li key={i} className={grid.card}>
+                        <Skeleton className={grid.mosaicSkeleton} />
+                        <div className={grid.text}>
+                            <Skeleton shape="text" className={grid.name} width="64%" />
+                            <Skeleton shape="text" className={grid.count} width="36%" />
+                        </div>
+                    </li>
+                ))}
+            </ul>
         </div>
     )
 }
