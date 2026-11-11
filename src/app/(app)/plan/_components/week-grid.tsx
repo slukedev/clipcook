@@ -44,7 +44,7 @@ export interface WeekGridProps {
  * The week. Compact windows stack the days; wider ones lay them out as columns with a
  * row per meal, like a calendar's hours, so the week's dinners line up. Every meal has a
  * row, so an empty week already shows where breakfast and lunch go; meals the week does
- * not use yet stay slim.
+ * not use yet stay slim, and fold away on short windows.
  */
 export function WeekGrid({ days, today, entries, recipes, icons, onAdd, onMove, onRemove, onServings }: WeekGridProps) {
     const draggable = useFinePointer()
@@ -55,7 +55,7 @@ export function WeekGrid({ days, today, entries, recipes, icons, onAdd, onMove, 
 
     const used = new Set(entries.map((e) => e.meal))
     const open = (slot: MealSlot) => slot === 'dinner' || used.has(slot)
-    const rows = MEAL_SLOTS.map((slot) => (open(slot) ? 'minmax(128px, auto)' : 'minmax(56px, auto)')).join(' ')
+    const rows = MEAL_SLOTS.map((slot) => (open(slot) ? 'var(--_open)' : 'var(--_slim)')).join(' ')
 
     const dropProps = (key: string, date: string, meal?: MealSlot) =>
         draggable

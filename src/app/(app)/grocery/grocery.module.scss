@@ -26,17 +26,25 @@
 .body {
     @include page.inner;
 
+    // Columns follow the list's own width, not the window's, so aisles pack the same
+    // whether the navigation drawer is open or not.
+    container: grocery / inline-size;
     display: grid;
     gap: var(--md-sys-space-6);
-    // Shared by the aisle columns and the add field, so the field ends on a column edge.
+}
+
+// Shared by the aisle columns and the add field, so the field ends on a column edge.
+// Each column stays wide enough for a row's text beside its checkbox and delete.
+.top,
+.groups {
     --_cols: 1;
     --_col-gap: var(--md-sys-space-6);
 
-    @include media.expanded-up {
+    @container grocery (width >= 640px) {
         --_cols: 2;
     }
 
-    @include media.large-up {
+    @container grocery (width >= 1000px) {
         --_cols: 3;
     }
 }
@@ -48,18 +56,15 @@
     min-inline-size: 0;
 }
 
-// One column short of the full width when there are three: room to type without a
-// field stretched across the whole list.
-.addArea {
-    @include media.large-up {
-        inline-size: calc((100% - (var(--_cols) - 1) * var(--_col-gap)) / var(--_cols) * 2 + var(--_col-gap));
-    }
-}
-
 // The add field and the things bought before that unfold under it while it has focus.
+// With three columns it spans two: room to type without a field across the whole list.
 .addArea {
     display: grid;
     min-inline-size: 0;
+
+    @container grocery (width >= 1000px) {
+        inline-size: calc((100% - (var(--_cols) - 1) * var(--_col-gap)) / var(--_cols) * 2 + var(--_col-gap));
+    }
 }
 
 .again {
@@ -182,7 +187,7 @@
     display: grid;
     gap: var(--md-sys-space-6);
 
-    @include media.expanded-up {
+    @container grocery (width >= 640px) {
         display: block;
         columns: var(--_cols);
         column-gap: var(--_col-gap);

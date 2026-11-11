@@ -78,10 +78,31 @@
 
     @include media.expanded-up {
         display: grid;
-        // Meal labels, then the days. Rows come from the grid: open meals tall, unused ones slim.
+        // Meal labels, then the days. Every meal has a row: dinner and meals in use are
+        // open slots that grow with the window's height, the rest slim strips. --_rows
+        // (set inline) picks var(--_open) or var(--_slim) per meal.
+        --_open-min: clamp(128px, 20dvh, 288px);
+        --_open: minmax(var(--_open-min), auto);
+        --_slim: minmax(56px, auto);
+
         grid-template-columns: max-content repeat(7, minmax(0, 1fr));
-        grid-template-rows: auto var(--_rows, repeat(var(--_lanes), minmax(128px, auto)));
+        grid-template-rows: auto var(--_rows);
         gap: var(--md-sys-space-2);
+
+        // Short windows (a landscape tablet) keep dinner above the fold: unused meals
+        // fold away and are still a tap away in the add dialog.
+        @media (height < 720px) {
+            --_slim: 0px;
+        }
+    }
+}
+
+@include media.expanded-up {
+    @media (height < 720px) {
+        .laneLabel[data-slim],
+        .cell[data-slim][data-empty] {
+            display: none;
+        }
     }
 }
 
@@ -316,17 +337,27 @@
         }
 
         // An open slot is always visible, so an empty week reads as places to put dinner.
+        // It keeps the row's base height, so a tall meal beside it does not stretch it.
         .cell[data-empty] & {
             flex: 1;
+            max-block-size: var(--_open-min);
+            margin-block-start: 0;
             border-radius: var(--md-sys-shape-corner-large);
-            background-color: var(--md-sys-color-surface-container-low);
+            // Dark surfaces sit closer together, so the slot steps up a tone there.
+            background-color: light-dark(
+                var(--md-sys-color-surface-container-low),
+                var(--md-sys-color-surface-container)
+            );
             opacity: 1;
         }
 
-        // A meal the week does not use yet: a quiet strip whose plus shows on hover.
+        // A meal the week does not use yet: an outlined strip whose plus shows on hover.
         .cell[data-empty][data-slim] & {
+            max-block-size: none;
             border-radius: var(--md-sys-shape-corner-medium);
-            background-color: color-mix(in srgb, var(--md-sys-color-surface-container-low) 60%, transparent);
+            background: none;
+            box-shadow: inset 0 0 0 1px
+                light-dark(var(--md-sys-color-surface-container-highest), var(--md-sys-color-outline-variant));
 
             > * {
                 opacity: 0;
@@ -344,6 +375,13 @@
                     opacity: 1;
                 }
             }
+        }
+
+        .day[data-today] .cell[data-empty]:not([data-slim]) & {
+            background-color: light-dark(
+                var(--md-sys-color-surface-container-low),
+                var(--md-sys-color-surface-container-high)
+            );
         }
     }
 }

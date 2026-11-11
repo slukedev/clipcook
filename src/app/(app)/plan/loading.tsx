@@ -9,7 +9,7 @@ import skeleton from './_components/skeleton.module.scss'
 // Which days hold a meal in the placeholder week, so it reads as a week and not a grid.
 const DAYS = [true, true, false, true, false, true, false]
 // The same rows the week draws when only dinner is in use.
-const ROWS = MEAL_SLOTS.map((slot) => (slot === 'dinner' ? 'minmax(128px, auto)' : 'minmax(56px, auto)')).join(' ')
+const ROWS = MEAL_SLOTS.map((slot) => (slot === 'dinner' ? 'var(--_open)' : 'var(--_slim)')).join(' ')
 const DINNER_ROW = MEAL_SLOTS.indexOf('dinner') + 2
 
 function PlanPlaceholder() {
@@ -35,6 +35,7 @@ function PlanPlaceholder() {
                             key={slot}
                             className={styles.laneLabel}
                             style={{ gridColumn: 1, gridRow: lane + 2 }}
+                            data-slim={slot === 'dinner' ? undefined : ''}
                             aria-hidden
                         >
                             {MEAL_LABELS[slot]}

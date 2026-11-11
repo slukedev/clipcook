@@ -38,7 +38,7 @@
                 grid-area: photo;
                 inline-size: 100%;
                 aspect-ratio: auto;
-                block-size: clamp(168px, 12vw, 240px);
+                block-size: clamp(144px, min(12vw, 28dvh), 240px);
             }
 
             .leadText {
