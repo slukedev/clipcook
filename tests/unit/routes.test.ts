@@ -94,8 +94,15 @@ describe('POST /api/clip', () => {
 
         const big = new FormData()
         big.set('html', 'a'.repeat(1_100_000))
+        // Serialized up front: Node's FormData body stream keeps writing after the route
+        // cancels it and throws once the test is over. A real upload comes off the socket.
+        const encoded = new Response(big)
         const tooBig = await r.clip.POST(
-            req('/api/clip?url=https%3A%2F%2Fcake.example%2Fc', { method: 'POST', body: big }),
+            req('/api/clip?url=https%3A%2F%2Fcake.example%2Fc', {
+                method: 'POST',
+                headers: { 'content-type': encoded.headers.get('content-type') ?? '' },
+                body: await encoded.arrayBuffer(),
+            }),
         )
         expect(tooBig.status).toBe(303)
         expect(tooBig.headers.get('location')).toContain('/clip?url=')
