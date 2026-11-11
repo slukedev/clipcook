@@ -20,7 +20,7 @@ jobs:
       CLIPCOOK_BACKEND: local
       LOCAL_AUTH_SECRET: ci-only-not-a-secret-0123456789abcdef
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
