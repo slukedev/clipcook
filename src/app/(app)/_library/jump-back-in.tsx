@@ -8,7 +8,7 @@ import { RecipeMedia } from './recipe-media'
 
 const MAX_ITEMS = 10
 /** Enough to fill the first view at every width, so returning to the library never paints them empty. */
-const EAGER_ITEMS = 4
+const EAGER_ITEMS = 6
 
 /** Recently cooked recipes, most recent first, in a multi-browse carousel. */
 export function JumpBackIn({ recipes }: { recipes: RecipeSummary[] }) {

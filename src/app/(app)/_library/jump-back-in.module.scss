@@ -41,6 +41,9 @@
 
         &.carousel [aria-roledescription="slide"] {
             flex-basis: var(--lib-col);
+            // The mask animation gave each slide its own stacking context; keep one so
+            // the tile's overlays stay under the carousel's arrows.
+            isolation: isolate;
             animation: none;
         }
     }

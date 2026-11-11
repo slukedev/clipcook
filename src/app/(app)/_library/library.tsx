@@ -374,6 +374,12 @@ export function Library({
                                 />
                             )}
                         </div>
+                        {showTools && (
+                            <div className={styles.wideTools}>
+                                {sortMenu}
+                                {viewToggle}
+                            </div>
+                        )}
                         <ChipSet scroll bleed label="Filter recipes" className={styles.chips}>
                             <FilterChip
                                 selected={validScope === 'all'}
@@ -431,8 +437,9 @@ export function Library({
                                 </Menu>
                             )}
                         </ChipSet>
+                        {/* The same tools again after the chips, for the one-bar layout, so Tab follows what you see. */}
                         {showTools && (
-                            <div className={styles.wideTools}>
+                            <div className={styles.endTools}>
                                 {sortMenu}
                                 {viewToggle}
                             </div>
