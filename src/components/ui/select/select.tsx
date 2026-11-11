@@ -75,7 +75,9 @@ export function Select<V extends string = string>({
                                     className={styles.item}
                                 >
                                     {option.icon}
-                                    <BaseSelect.ItemText className={styles.itemText}>{option.label}</BaseSelect.ItemText>
+                                    <BaseSelect.ItemText className={styles.itemText}>
+                                        {option.label}
+                                    </BaseSelect.ItemText>
                                     <BaseSelect.ItemIndicator className={styles.indicator}>
                                         <Glyph name="check" size={20} />
                                     </BaseSelect.ItemIndicator>

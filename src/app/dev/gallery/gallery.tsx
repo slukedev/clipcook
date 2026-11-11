@@ -127,6 +127,7 @@ export function Gallery() {
                         />
                     </div>
                     <Select
+                        className={styles.variantSelect}
                         label="Scheme"
                         variant="outlined"
                         value={variant}

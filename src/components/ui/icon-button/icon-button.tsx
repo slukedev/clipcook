@@ -61,7 +61,10 @@ export function IconButton(props: IconButtonProps) {
         'data-shape': shape,
     }
     if (props.selected !== undefined || props.defaultSelected !== undefined || props.onSelectedChange) {
-        const { selected, defaultSelected, onSelectedChange, ...toggleRest } = rest as Omit<ToggleProps, keyof CommonProps>
+        const { selected, defaultSelected, onSelectedChange, ...toggleRest } = rest as Omit<
+            ToggleProps,
+            keyof CommonProps
+        >
         return (
             <Toggle
                 {...toggleRest}

@@ -1,4 +1,4 @@
-@use '../../../styles/mixins/typography' as type;
+@use "../../../styles/mixins/typography" as type;
 
 // Text fields: 56dp. Filled sits on surfaceContainerHighest; outlined draws a
 // full 1dp outline that thickens to 2dp in primary on focus. Labels float.
@@ -35,35 +35,41 @@
     padding-inline: 16px;
     border-radius: var(--md-sys-shape-corner-medium);
     cursor: text;
-    transition: background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
 
     // Ring drawn inside so focus does not shift layout.
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         border-radius: inherit;
         box-shadow: inset 0 0 0 var(--_ring-width, 0px) var(--_ring-color, transparent);
         pointer-events: none;
-        transition: box-shadow var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+        transition: box-shadow var(--md-sys-motion-spring-effects-fast-duration)
+            var(--md-sys-motion-spring-effects-fast);
     }
 
-    [data-variant='filled'] & {
+    [data-variant="filled"] & {
         background-color: var(--md-sys-color-surface-container-highest);
 
         @media (hover: hover) {
             &:hover {
-                background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, var(--md-sys-color-surface-container-highest));
+                background-color: color-mix(
+                    in srgb,
+                    var(--md-sys-color-on-surface) 8%,
+                    var(--md-sys-color-surface-container-highest)
+                );
             }
         }
     }
 
-    [data-variant='filled'][data-invalid] & {
+    [data-variant="filled"][data-invalid] & {
         --_ring-width: 1px;
         --_ring-color: var(--_accent);
     }
 
-    [data-variant='outlined'] & {
+    [data-variant="outlined"] & {
         --_ring-width: 1px;
         --_ring-color: var(--_outline);
         border-radius: var(--md-sys-shape-corner-extra-small);
@@ -95,11 +101,11 @@
     align-self: stretch;
     padding-block: 8px;
 
-    [data-variant='outlined'] & {
+    [data-variant="outlined"] & {
         padding-block: 16px;
     }
 
-    [data-has-label][data-variant='filled'] & {
+    [data-has-label][data-variant="filled"] & {
         padding-block: 24px 8px;
     }
 }
@@ -107,6 +113,7 @@
 .label {
     @include type.role(body-large);
     position: absolute;
+    z-index: 1;
     inset-inline-start: 0;
     inset-block-start: 16px;
     max-inline-size: 100%;
@@ -129,7 +136,7 @@
         transform: translateY(-8px) scale(0.75);
     }
 
-    [data-variant='outlined'][data-floating] & {
+    [data-variant="outlined"][data-floating] & {
         transform: translateY(-24px) scale(0.75);
         padding-inline: 4px;
         margin-inline-start: -4px;
@@ -191,7 +198,7 @@ textarea.input {
     transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
 
     [data-floating] &,
-    :not([data-has-label]) > .inputArea & {
+    .field:not([data-has-label]) & {
         opacity: 1;
     }
 }

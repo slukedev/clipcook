@@ -1,10 +1,10 @@
-@use '../button/shared';
+@use "../button/shared";
 
 .split {
     display: inline-flex;
     gap: 2px;
 
-    &[data-size='xs'] {
+    &[data-size="xs"] {
         --_inner-rest: 4px;
         --_inner-active: 8px;
         --_lead-start: 12px;
@@ -12,7 +12,7 @@
         --_trail: 13px;
         --_trail-icon: 22px;
     }
-    &[data-size='s'] {
+    &[data-size="s"] {
         --_inner-rest: 4px;
         --_inner-active: 12px;
         --_lead-start: 16px;
@@ -20,7 +20,7 @@
         --_trail: 13px;
         --_trail-icon: 22px;
     }
-    &[data-size='m'] {
+    &[data-size="m"] {
         --_inner-rest: 4px;
         --_inner-active: 12px;
         --_lead-start: 24px;
@@ -28,7 +28,7 @@
         --_trail: 15px;
         --_trail-icon: 26px;
     }
-    &[data-size='l'] {
+    &[data-size="l"] {
         --_inner-rest: 8px;
         --_inner-active: 20px;
         --_lead-start: 48px;
@@ -36,7 +36,7 @@
         --_trail: 29px;
         --_trail-icon: 38px;
     }
-    &[data-size='xl'] {
+    &[data-size="xl"] {
         --_inner-rest: 12px;
         --_inner-active: 20px;
         --_lead-start: 64px;

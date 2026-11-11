@@ -1,4 +1,4 @@
-@use '../button/shared';
+@use "../button/shared";
 
 .button {
     @include shared.base;
@@ -8,34 +8,34 @@
     padding-inline: var(--_space);
     min-inline-size: var(--_h);
 
-    &[data-size='xs'] {
+    &[data-size="xs"] {
         --_wide: 10px;
         --_narrow: 4px;
     }
-    &[data-size='s'] {
+    &[data-size="s"] {
         --_icon: 24px;
         --_wide: 14px;
         --_narrow: 4px;
     }
-    &[data-size='m'] {
+    &[data-size="m"] {
         --_wide: 24px;
         --_narrow: 12px;
     }
-    &[data-size='l'] {
+    &[data-size="l"] {
         --_wide: 48px;
         --_narrow: 16px;
     }
-    &[data-size='xl'] {
+    &[data-size="xl"] {
         --_wide: 72px;
         --_narrow: 32px;
     }
 
-    &[data-width='narrow'] {
+    &[data-width="narrow"] {
         --_space: var(--_narrow);
         min-inline-size: 0;
     }
 
-    &[data-width='wide'] {
+    &[data-width="wide"] {
         --_space: var(--_wide);
     }
 
@@ -44,7 +44,7 @@
         --_radius: var(--_square);
     }
 
-    &[data-toggle][data-shape='square'][data-pressed] {
+    &[data-toggle][data-shape="square"][data-pressed] {
         --_radius: var(--_round);
     }
 }
@@ -100,5 +100,6 @@
     &:disabled,
     &[data-disabled] {
         --_container: transparent;
+        --_outline-color: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
     }
 }

@@ -41,7 +41,16 @@ export function useNavSelected(href: string, selected?: boolean): boolean {
     return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export function NavigationBarItem({ href, icon, selectedIcon, label, selected, badge, className, ...rest }: NavItemProps) {
+export function NavigationBarItem({
+    href,
+    icon,
+    selectedIcon,
+    label,
+    selected,
+    badge,
+    className,
+    ...rest
+}: NavItemProps) {
     const active = useNavSelected(href, selected)
     return (
         <Link href={href} aria-current={active ? 'page' : undefined} className={cx(styles.item, className)} {...rest}>

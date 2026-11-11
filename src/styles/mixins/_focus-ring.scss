@@ -1,7 +1,7 @@
 // M3 focus indicator: 3px secondary ring, 2px outside the shape, keyboard focus only.
 // It grows to 8px and settles back, as material-web's focus ring does.
 
-@mixin ring($offset: var(--md-focus-ring-offset), $selector: '&:focus-visible') {
+@mixin ring($offset: var(--md-focus-ring-offset), $selector: "&:focus-visible") {
     outline: none;
 
     #{$selector} {
@@ -12,6 +12,6 @@
 }
 
 // Rings drawn inside the edge, for fields and full-bleed rows.
-@mixin inward($selector: '&:focus-visible') {
+@mixin inward($selector: "&:focus-visible") {
     @include ring(calc(-1 * var(--md-focus-ring-width)), $selector);
 }

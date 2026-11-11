@@ -29,7 +29,15 @@ export interface SvgIconProps extends Omit<SVGProps<SVGSVGElement>, 'children' |
     label?: string
 }
 
-export function SvgIcon({ d, name, size, label, className, style, ...rest }: SvgIconProps & { d: string; name: string }) {
+export function SvgIcon({
+    d,
+    name,
+    size,
+    label,
+    className,
+    style,
+    ...rest
+}: SvgIconProps & { d: string; name: string }) {
     const sized = size ? ({ ...style, '--md-icon-size': `${size}px` } as CSSProperties) : style
     return (
         <svg

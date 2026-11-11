@@ -91,7 +91,16 @@ export function NavigationRail({
     )
 }
 
-export function NavigationRailItem({ href, icon, selectedIcon, label, selected, badge, className, ...rest }: NavItemProps) {
+export function NavigationRailItem({
+    href,
+    icon,
+    selectedIcon,
+    label,
+    selected,
+    badge,
+    className,
+    ...rest
+}: NavItemProps) {
     const active = useNavSelected(href, selected)
     return (
         <Link href={href} aria-current={active ? 'page' : undefined} className={cx(styles.item, className)} {...rest}>

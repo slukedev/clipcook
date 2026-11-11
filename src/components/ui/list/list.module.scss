@@ -1,6 +1,6 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
 
 .list {
     display: flex;
@@ -40,13 +40,14 @@
     text-decoration: none;
     transition:
         border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
-        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
 
-    &[data-lines='2'] {
+    &[data-lines="2"] {
         min-block-size: 72px;
     }
 
-    &[data-lines='3'] {
+    &[data-lines="3"] {
         min-block-size: 88px;
         align-items: flex-start;
     }

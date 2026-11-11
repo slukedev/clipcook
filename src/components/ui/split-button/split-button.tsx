@@ -37,7 +37,12 @@ export function SplitButton({
 }: SplitButtonProps) {
     return (
         <div className={cx(styles.split, className)} data-size={size}>
-            <BaseButton className={cx(styles.part, styles.leading, styles[variant])} data-size={size} disabled={disabled} {...rest}>
+            <BaseButton
+                className={cx(styles.part, styles.leading, styles[variant])}
+                data-size={size}
+                disabled={disabled}
+                {...rest}
+            >
                 <span data-touch-target aria-hidden />
                 <Ripple />
                 {icon && <span className={styles.icon}>{icon}</span>}

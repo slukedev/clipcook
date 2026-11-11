@@ -1,6 +1,6 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
 
 // Search bar: 56dp pill on surfaceContainerHigh, 16dp padding, 16dp icon gap.
 .bar {
@@ -170,4 +170,8 @@
     .results {
         padding-block: 8px;
     }
+}
+
+.landmark {
+    display: contents;
 }

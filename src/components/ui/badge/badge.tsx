@@ -17,9 +17,9 @@ export function Badge({ value, max = 999, label, className, ...rest }: BadgeProp
         <span
             className={cx(styles.badge, className)}
             data-large={text !== undefined || undefined}
+            role="img"
             aria-label={label}
             aria-hidden={label ? undefined : true}
-            role={label ? 'status' : undefined}
             {...rest}
         >
             {text}

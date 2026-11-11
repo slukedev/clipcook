@@ -2,8 +2,8 @@
  * Emphasized keeps size and line height and steps weight up one notch. */
 
 :root {
-    --md-ref-typeface-brand: var(--font-google-sans-flex), 'Google Sans Flex', system-ui, sans-serif;
-    --md-ref-typeface-plain: var(--font-google-sans-flex), 'Google Sans Flex', system-ui, sans-serif;
+    --md-ref-typeface-brand: var(--font-google-sans-flex), "Google Sans Flex", system-ui, sans-serif;
+    --md-ref-typeface-plain: var(--font-google-sans-flex), "Google Sans Flex", system-ui, sans-serif;
 
     --md-sys-typescale-display-large-font: var(--md-ref-typeface-brand);
     --md-sys-typescale-display-large-size: 3.5625rem;

@@ -7,32 +7,32 @@
     border-radius: var(--md-sys-shape-corner-small);
     background-color: var(--md-sys-color-surface-container-high);
 
-    &[data-shape='text'] {
+    &[data-shape="text"] {
         block-size: 0.8lh;
         margin-block: 0.1lh;
         border-radius: var(--md-sys-shape-corner-extra-small);
     }
-    &[data-shape='circle'] {
+    &[data-shape="circle"] {
         border-radius: 50%;
         aspect-ratio: 1;
         block-size: auto;
     }
-    &[data-shape='pill'] {
+    &[data-shape="pill"] {
         border-radius: 9999px;
     }
-    &[data-shape='medium'] {
+    &[data-shape="medium"] {
         border-radius: var(--md-sys-shape-corner-medium);
     }
-    &[data-shape='large'] {
+    &[data-shape="large"] {
         border-radius: var(--md-sys-shape-corner-large);
     }
-    &[data-shape='extra-large'] {
+    &[data-shape="extra-large"] {
         border-radius: var(--md-sys-shape-corner-extra-large);
     }
 
     // A soft band sweeps across on the compositor.
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         background: linear-gradient(

@@ -1,4 +1,4 @@
-@use '../../../styles/mixins/typography' as type;
+@use "../../../styles/mixins/typography" as type;
 
 .root {
     display: flex;
@@ -29,6 +29,7 @@
 }
 
 .icon {
+    position: relative;
     --md-icon-size: clamp(40px, 10vw, 56px);
     color: var(--md-sys-color-on-primary-container);
 }

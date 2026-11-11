@@ -50,24 +50,25 @@ function sizeStyle(size: number | string | undefined, style: CSSProperties | und
 export function Shape(props: ShapeProps) {
     if (props.children !== undefined) {
         const { name, size, label, className, style, children, ...rest } = props as ShapeContainerProps
-        return (
-            <div
-                role={label ? 'img' : undefined}
-                aria-label={label}
-                data-shape={name}
-                className={cx(styles.container, className)}
-                style={{ ...sizeStyle(size, style), mask: shapeMask(name), WebkitMask: shapeMask(name) }}
-                {...rest}
-            >
+        const shared = {
+            'data-shape': name,
+            className: cx(styles.container, className),
+            style: { ...sizeStyle(size, style), mask: shapeMask(name), WebkitMask: shapeMask(name) },
+            ...rest,
+        }
+        return label ? (
+            <div role="img" aria-label={label} {...shared}>
                 {children}
             </div>
+        ) : (
+            <div {...shared}>{children}</div>
         )
     }
     const { name, size, label, className, style, ...rest } = props as ShapeSvgProps
     return (
         <svg
             viewBox="0 0 100 100"
-            role={label ? 'img' : undefined}
+            role="img"
             aria-label={label}
             aria-hidden={label ? undefined : true}
             focusable="false"

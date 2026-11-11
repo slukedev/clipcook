@@ -70,7 +70,11 @@ export function TopAppBar({
             <div ref={rowRef} className={styles.row}>
                 {leading && <div className={styles.leading}>{leading}</div>}
                 <div className={styles.rowTitle} aria-hidden={small ? undefined : true}>
-                    {small ? <Heading className={styles.smallTitle}>{title}</Heading> : <div className={styles.smallTitle}>{title}</div>}
+                    {small ? (
+                        <Heading className={styles.smallTitle}>{title}</Heading>
+                    ) : (
+                        <div className={styles.smallTitle}>{title}</div>
+                    )}
                     {small && subtitle && <p className={styles.smallSubtitle}>{subtitle}</p>}
                 </div>
                 {trailing && <div className={styles.trailing}>{trailing}</div>}

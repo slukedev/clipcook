@@ -23,10 +23,23 @@ export interface MenuContentProps extends Omit<ComponentProps<typeof BaseMenu.Po
 }
 
 /** Portal, positioner and popup in one. Scales out of its trigger. */
-export function MenuContent({ side = 'bottom', align = 'start', sideOffset = 4, className, children, ...rest }: MenuContentProps) {
+export function MenuContent({
+    side = 'bottom',
+    align = 'start',
+    sideOffset = 4,
+    className,
+    children,
+    ...rest
+}: MenuContentProps) {
     return (
         <BaseMenu.Portal>
-            <BaseMenu.Positioner className={styles.positioner} side={side} align={align} sideOffset={sideOffset} collisionPadding={8}>
+            <BaseMenu.Positioner
+                className={styles.positioner}
+                side={side}
+                align={align}
+                sideOffset={sideOffset}
+                collisionPadding={8}
+            >
                 <BaseMenu.Popup className={cx(styles.popup, className)} {...rest}>
                     {children}
                 </BaseMenu.Popup>
@@ -69,7 +82,9 @@ export function MenuItem({ icon, trailing, selected, children, className, ...res
     )
 }
 
-export interface MenuLinkItemProps extends ItemSlots, Omit<ComponentProps<typeof BaseMenu.LinkItem>, 'children' | 'className'> {}
+export interface MenuLinkItemProps
+    extends ItemSlots,
+        Omit<ComponentProps<typeof BaseMenu.LinkItem>, 'children' | 'className'> {}
 
 /** A menu item that navigates. Use `render={<Link href="..." />}` for client routing. */
 export function MenuLinkItem({ icon, trailing, children, className, ...rest }: MenuLinkItemProps) {

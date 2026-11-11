@@ -86,7 +86,15 @@ export function ButtonGroup({ size = 's', label, className, children, ...rest }:
     }, [])
 
     return (
-        <div ref={ref} role="group" aria-label={label} data-size={size} className={cx(styles.group, className)} {...rest}>
+        // biome-ignore lint/a11y/useSemanticElements: a fieldset would put form semantics on a row of actions
+        <div
+            ref={ref}
+            role="group"
+            aria-label={label}
+            data-size={size}
+            className={cx(styles.group, className)}
+            {...rest}
+        >
             {Children.map(children, (child) => (child ? <div className={styles.slot}>{child}</div> : null))}
         </div>
     )

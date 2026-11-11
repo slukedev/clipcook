@@ -1,5 +1,5 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
 
 .positioner {
     z-index: 1000;
@@ -64,7 +64,8 @@
     user-select: none;
     transition:
         border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
-        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default);
 
     // Ends of the list follow the container's curve.
     &:first-child {

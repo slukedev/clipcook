@@ -1,5 +1,5 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/focus-ring";
 
 // Navigation rail (WideNavigationRail, 2025): collapsed 96dp with vertical items,
 // expanded 220 to 360dp with horizontal items. Expanding springs the width
@@ -79,7 +79,7 @@
 }
 
 .item {
-    @include focus-ring.inward('&:focus-visible');
+    @include focus-ring.inward("&:focus-visible");
 
     --md-icon-size: 24px;
 
@@ -95,7 +95,7 @@
     user-select: none;
     border-radius: 9999px;
 
-    &[aria-current='page'] {
+    &[aria-current="page"] {
         color: var(--md-sys-color-secondary);
     }
 
@@ -120,7 +120,7 @@
 
     &::after,
     &::before {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         border-radius: inherit;
@@ -143,7 +143,7 @@
         transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
     }
 
-    .item[aria-current='page'] & {
+    .item[aria-current="page"] & {
         color: var(--md-sys-color-on-secondary-container);
 
         &::after {
@@ -173,9 +173,10 @@
 .label {
     @include type.role(label-medium);
     white-space: nowrap;
-    animation: md-rail-label-a var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+    animation: md-rail-label-a var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
 
-    .item[aria-current='page'] > & {
+    .item[aria-current="page"] > & {
         @include type.role(label-medium, $emphasized: true);
     }
 }
@@ -183,7 +184,8 @@
 .innerLabel {
     display: none;
     @include type.role(label-large);
-    animation: md-rail-label-b var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+    animation: md-rail-label-b var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
 
     .rail[data-expanded] & {
         display: inline;

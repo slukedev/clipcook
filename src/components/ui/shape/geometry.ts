@@ -84,7 +84,9 @@ function orient(points: Points): Points {
     let area = 0
     for (let s = 0; s < SAMPLES; s++) {
         const n = (s + 1) % SAMPLES
-        area += (points[s * 2] as number) * (points[n * 2 + 1] as number) - (points[n * 2] as number) * (points[s * 2 + 1] as number)
+        area +=
+            (points[s * 2] as number) * (points[n * 2 + 1] as number) -
+            (points[n * 2] as number) * (points[s * 2 + 1] as number)
     }
     const order = area < 0 ? [...Array(SAMPLES).keys()].reverse() : [...Array(SAMPLES).keys()]
     let start = 0

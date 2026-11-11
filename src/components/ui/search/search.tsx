@@ -38,43 +38,53 @@ export interface SearchBarProps {
 }
 
 /** A plain inline search field in the M3 bar shape (filter-as-you-type lists). */
-export function SearchBar({ value, onValueChange, onSubmit, placeholder = 'Search', leading, trailing, label, className }: SearchBarProps) {
+export function SearchBar({
+    value,
+    onValueChange,
+    onSubmit,
+    placeholder = 'Search',
+    leading,
+    trailing,
+    label,
+    className,
+}: SearchBarProps) {
     const inputRef = useRef<HTMLInputElement>(null)
     return (
-        <form
-            role="search"
-            className={cx(styles.bar, className)}
-            onSubmit={(event) => {
-                event.preventDefault()
-                onSubmit?.(value)
-            }}
-        >
-            <span className={styles.leading}>{leading ?? <Glyph name="search" />}</span>
-            <input
-                ref={inputRef}
-                type="search"
-                className={styles.input}
-                value={value}
-                onChange={(event) => onValueChange(event.target.value)}
-                placeholder={placeholder}
-                aria-label={label ?? placeholder}
-                enterKeyHint="search"
-            />
-            <span className={styles.trailing}>
-                {value ? (
-                    <IconButton
-                        label="Clear"
-                        icon={<Glyph name="close" />}
-                        onClick={() => {
-                            onValueChange('')
-                            inputRef.current?.focus()
-                        }}
-                    />
-                ) : (
-                    trailing
-                )}
-            </span>
-        </form>
+        <search className={styles.landmark}>
+            <form
+                className={cx(styles.bar, className)}
+                onSubmit={(event) => {
+                    event.preventDefault()
+                    onSubmit?.(value)
+                }}
+            >
+                <span className={styles.leading}>{leading ?? <Glyph name="search" />}</span>
+                <input
+                    ref={inputRef}
+                    type="search"
+                    className={styles.input}
+                    value={value}
+                    onChange={(event) => onValueChange(event.target.value)}
+                    placeholder={placeholder}
+                    aria-label={label ?? placeholder}
+                    enterKeyHint="search"
+                />
+                <span className={styles.trailing}>
+                    {value ? (
+                        <IconButton
+                            label="Clear"
+                            icon={<Glyph name="close" />}
+                            onClick={() => {
+                                onValueChange('')
+                                inputRef.current?.focus()
+                            }}
+                        />
+                    ) : (
+                        trailing
+                    )}
+                </span>
+            </form>
+        </search>
     )
 }
 
@@ -197,7 +207,9 @@ export function Search({
                     <Dialog.Popup
                         className={styles.full}
                         initialFocus={inputRef}
-                        style={barTop !== undefined ? ({ '--_bar-top': `${barTop}px` } as React.CSSProperties) : undefined}
+                        style={
+                            barTop !== undefined ? ({ '--_bar-top': `${barTop}px` } as React.CSSProperties) : undefined
+                        }
                     >
                         <Dialog.Title render={<span hidden />}>{placeholder}</Dialog.Title>
                         <div className={styles.header}>

@@ -13,7 +13,14 @@ export interface ListProps extends HTMLAttributes<HTMLUListElement> {
 
 export function List({ segmented = false, label, className, children, ...rest }: ListProps) {
     return (
-        <ul role="list" aria-label={label} data-segmented={segmented || undefined} className={cx(styles.list, className)} {...rest}>
+        <ul
+            // biome-ignore lint/a11y/noRedundantRoles: Safari drops list semantics once list-style is none
+            role="list"
+            aria-label={label}
+            data-segmented={segmented || undefined}
+            className={cx(styles.list, className)}
+            {...rest}
+        >
             {children}
         </ul>
     )
@@ -39,7 +46,10 @@ interface ItemContent {
 }
 
 export type ListItemProps =
-    | (ItemContent & { href: string; onClick?: undefined; as?: undefined } & Omit<ComponentProps<typeof Link>, 'className' | 'children'>)
+    | (ItemContent & { href: string; onClick?: undefined; as?: undefined } & Omit<
+              ComponentProps<typeof Link>,
+              'className' | 'children'
+          >)
     | (ItemContent & { href?: undefined; onClick: ComponentProps<'button'>['onClick']; as?: undefined })
     | (ItemContent & {
           href?: undefined
@@ -66,7 +76,19 @@ function Content({ headline, supporting, overline, leading, trailing, trailingTe
 
 /** One-, two- or three-line list row. A link with `href`, a button with `onClick`. */
 export function ListItem(props: ListItemProps) {
-    const { headline, supporting, overline, leading, trailing, trailingText, lines, selected, disabled, className, itemProps } = props
+    const {
+        headline,
+        supporting,
+        overline,
+        leading,
+        trailing,
+        trailingText,
+        lines,
+        selected,
+        disabled,
+        className,
+        itemProps,
+    } = props
     const inferred = lines ?? (overline && supporting ? 3 : supporting || overline ? 2 : 1)
     const shared = {
         className: cx(styles.row, className),
@@ -87,8 +109,18 @@ export function ListItem(props: ListItemProps) {
     let row: ReactNode
     if (props.href !== undefined) {
         const {
-            headline: _h, supporting: _s, overline: _o, leading: _l, trailing: _t, trailingText: _tt,
-            lines: _li, selected: _se, disabled: _d, className: _c, itemProps: _ip, ...link
+            headline: _h,
+            supporting: _s,
+            overline: _o,
+            leading: _l,
+            trailing: _t,
+            trailingText: _tt,
+            lines: _li,
+            selected: _se,
+            disabled: _d,
+            className: _c,
+            itemProps: _ip,
+            ...link
         } = props
         row = (
             <Link {...link} {...shared} data-interactive="" aria-current={selected ? 'page' : undefined}>
@@ -98,7 +130,14 @@ export function ListItem(props: ListItemProps) {
         )
     } else if (props.onClick !== undefined) {
         row = (
-            <button type="button" {...shared} data-interactive="" onClick={props.onClick} disabled={disabled} aria-pressed={selected}>
+            <button
+                type="button"
+                {...shared}
+                data-interactive=""
+                onClick={props.onClick}
+                disabled={disabled}
+                aria-pressed={selected}
+            >
                 <Ripple />
                 {content}
             </button>

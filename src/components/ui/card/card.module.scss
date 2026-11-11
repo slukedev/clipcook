@@ -1,5 +1,5 @@
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
 
 // Cards: medium (12dp) corners. Elevated sits on surfaceContainerLow at level 1,
 // filled on surfaceContainerHighest, outlined on surface with outlineVariant.
@@ -14,7 +14,8 @@
     box-shadow: var(--_shadow, none);
     overflow: hidden;
     text-decoration: none;
-    transition: box-shadow var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+    transition: box-shadow var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
 }
 
 .elevated {
@@ -30,7 +31,7 @@
     --_container: var(--md-sys-color-surface);
 
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         z-index: 1;
