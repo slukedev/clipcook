@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, useId, useRef, useState } from 'react'
+import { type ReactNode, type RefObject, useEffect, useId, useRef, useState } from 'react'
 import { ChipSet, SuggestionChip } from '@/components/ui/chip'
 import { IconButton } from '@/components/ui/icon-button'
 import styles from './grocery.module.scss'
@@ -25,6 +25,7 @@ export function AddField({
     const [focused, setFocused] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
     const listId = useId()
+    const pressing = usePressing()
 
     function submit() {
         if (!value.trim()) return
@@ -43,7 +44,14 @@ export function AddField({
             className={styles.addArea}
             onFocus={() => setFocused(true)}
             onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)
+                if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+                // Folding the chips moves the list up. If a press moved focus away, wait for it to
+                // finish, or the release lands on a different row than the one pressed.
+                if (pressing.current) {
+                    const fold = () => setFocused(false)
+                    window.addEventListener('click', fold, { once: true })
+                    window.addEventListener('pointercancel', fold, { once: true })
+                } else setFocused(false)
             }}
         >
             <form
@@ -120,4 +128,26 @@ export function AddField({
             </div>
         </div>
     )
+}
+
+/** Whether a pointer is down anywhere on the page right now. */
+function usePressing(): RefObject<boolean> {
+    const pressing = useRef(false)
+    useEffect(() => {
+        const down = () => {
+            pressing.current = true
+        }
+        const up = () => {
+            pressing.current = false
+        }
+        window.addEventListener('pointerdown', down, true)
+        window.addEventListener('pointerup', up, true)
+        window.addEventListener('pointercancel', up, true)
+        return () => {
+            window.removeEventListener('pointerdown', down, true)
+            window.removeEventListener('pointerup', up, true)
+            window.removeEventListener('pointercancel', up, true)
+        }
+    }, [])
+    return pressing
 }

@@ -59,7 +59,7 @@ test('export downloads the library as JSON and importing it back reports counts'
     await page.getByRole('button', { name: /^Import/ }).click()
     await (await chooser).setFiles(changed)
     await expect(page.getByRole('region', { name: 'Notifications' })).toContainText(
-        `Imported 1 recipe, skipped ${exported.recipes.length - 1} already here`,
+        `Added 1 recipe. ${exported.recipes.length - 1} already here.`,
     )
 
     await page.goto(`/?q=${encodeURIComponent(title)}`)

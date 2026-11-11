@@ -62,11 +62,11 @@ test('checks made offline stay put and sync when the connection is back', async 
 
     await context.setOffline(true)
     await main.getByRole('checkbox', { name: item }).click()
-    await expect(page.getByText('Offline. Changes will sync.')).toBeVisible()
+    await expect(page.getByText('Offline', { exact: true })).toBeVisible()
     await expect(page.getByRole('region', { name: 'Done' }).getByRole('checkbox', { name: item })).toBeChecked()
 
     await context.setOffline(false)
-    await expect(page.getByText('Offline. Changes will sync.')).toBeHidden({ timeout: 20_000 })
+    await expect(page.getByText('Offline', { exact: true })).toBeHidden({ timeout: 20_000 })
     await page.reload()
     await expect(page.getByRole('region', { name: 'Done' }).getByRole('checkbox', { name: item })).toBeChecked()
 
