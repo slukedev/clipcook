@@ -14,7 +14,7 @@ const NOT_FOUND = 'That recipe no longer exists.'
 export async function createRecipe(formData: FormData): Promise<ActionResult<string>> {
     return withUser(async ({ user, store }) => {
         const parsed = parseRecipeFormData(formData)
-        if (!parsed.ok) return fail(parsed.error)
+        if (!parsed.ok) return fail(parsed.error, parsed.code)
         const record = await recipes.createRecipe(store, user.uid, parsed.input, parsed.photo)
         invalidateApp()
         return ok(record.id)
@@ -25,7 +25,7 @@ export async function updateRecipe(id: string, formData: FormData): Promise<Acti
     return withUser(async ({ user, store }) => {
         const recipeId = idSchema.parse(id)
         const parsed = parseRecipeFormData(formData)
-        if (!parsed.ok) return fail(parsed.error)
+        if (!parsed.ok) return fail(parsed.error, parsed.code)
         const { removedStorage } = await recipes.updateRecipe(store, user.uid, recipeId, parsed.input, parsed.photo)
         if (removedStorage) after(() => recipes.cleanupRecipeImages(user.uid, recipeId))
         invalidateApp()

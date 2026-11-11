@@ -5,7 +5,7 @@ import { unstable_rethrow } from 'next/navigation'
 import { ZodError } from 'zod'
 import type { ActionResult } from '@/lib/domain/types'
 import { AuthError, requireSession, type SessionUser } from './auth'
-import { ClipError, clipErrorMessage } from './clip/errors'
+import { ClipError, clipErrorMessage, clipFailureCode } from './clip/errors'
 import { getStore } from './db'
 import { StoreError, type Store } from './db/types'
 
@@ -13,8 +13,8 @@ export function ok<T>(data: T): ActionResult<T> {
     return { ok: true, data }
 }
 
-export function fail(error: string): ActionResult<never> {
-    return { ok: false, error }
+export function fail(error: string, code?: string): ActionResult<never> {
+    return code ? { ok: false, error, code } : { ok: false, error }
 }
 
 /** Maps any thrown error to one short sentence: what happened and what to do. */
@@ -34,6 +34,14 @@ export function errorMessage(err: unknown, notFound = 'That item no longer exist
     return 'Something went wrong. Try again.'
 }
 
+/** A stable code for the errors callers branch on; undefined for the rest. */
+export function errorCode(err: unknown): string | undefined {
+    if (err instanceof AuthError) return 'unauthenticated'
+    if (err instanceof ClipError) return clipFailureCode(err)
+    if (err instanceof StoreError && err.code === 'NOT_FOUND') return 'not_found'
+    return undefined
+}
+
 /**
  * Every action authenticates itself (actions are public endpoints) and never
  * throws to the client: failures come back as { ok: false, error }.
@@ -47,7 +55,7 @@ export async function withUser<T>(
         return await fn({ user, store })
     } catch (err) {
         unstable_rethrow(err)
-        return fail(errorMessage(err, notFound))
+        return fail(errorMessage(err, notFound), errorCode(err))
     }
 }
 

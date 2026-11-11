@@ -162,7 +162,7 @@ export function RecipeEditor({
                 }
             }
             if (!result.ok) {
-                if (result.error === 'Add a title.') setTitleError(result.error)
+                if (result.code === 'invalid_title') setTitleError(result.error)
                 snackbar({ message: result.error, urgent: true, action: 'Retry', onAction: save })
                 return
             }

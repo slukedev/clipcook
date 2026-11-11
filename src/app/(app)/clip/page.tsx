@@ -33,7 +33,7 @@ function jobFrom(params: Params): ClipJob | null {
 
 function run(job: ClipJob): Promise<ClipResult> {
     const action = job.kind === 'url' ? clipFromUrl : job.kind === 'text' ? clipFromText : claimClipDraft
-    return action(job.value).catch(() => ({ ok: false as const, error: 'Could not clip that page. Try again.' }))
+    return action(job.value).catch(() => ({ ok: false as const, error: 'Could not clip that page. Try again.', code: 'network' }))
 }
 
 export default async function ClipPage({ searchParams }: { searchParams: Promise<Params> }) {
@@ -50,7 +50,7 @@ export default async function ClipPage({ searchParams }: { searchParams: Promise
             <ClipFlow
                 initial={job && result ? { job, result } : null}
                 mode={mode}
-                library={recipes.map((r) => ({ id: r.id, title: r.title }))}
+                library={recipes.map((r) => ({ id: r.id, title: r.title, sourceUrl: r.sourceUrl }))}
                 tags={choices.tags}
                 collections={choices.collections}
                 icons={editorIcons()}

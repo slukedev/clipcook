@@ -97,6 +97,7 @@ export function summaryOf(r: RecipeRecord): RecipeSummary {
         totalMinutes: r.totalMinutes,
         totalTime: r.totalTime,
         sourceName: r.sourceName,
+        sourceUrl: r.sourceUrl,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
         lastCookedAt: r.lastCookedAt,

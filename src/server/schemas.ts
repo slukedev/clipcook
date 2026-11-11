@@ -97,7 +97,7 @@ function readOptional(formData: FormData, key: string): string | undefined {
  */
 export function parseRecipeFormData(
     formData: FormData,
-): { ok: true; input: RecipeInput; photo: PhotoChange } | { ok: false; error: string } {
+): { ok: true; input: RecipeInput; photo: PhotoChange } | { ok: false; error: string; code?: string } {
     const sourceUrl = readOptional(formData, 'sourceUrl')?.trim()
     const sourceName = readOptional(formData, 'sourceName')?.trim()
     const favorite = readOptional(formData, 'favorite')
@@ -117,8 +117,14 @@ export function parseRecipeFormData(
         sourceUrl: sourceUrl ? sourceUrl : null,
         sourceName: sourceName ? sourceName : null,
     })
-    if (!parsed.success)
-        return { ok: false, error: parsed.error.issues[0]?.message ?? 'Check the recipe and try again.' }
+    if (!parsed.success) {
+        const issue = parsed.error.issues[0]
+        return {
+            ok: false,
+            error: issue?.message ?? 'Check the recipe and try again.',
+            code: issue?.path[0] === 'title' ? 'invalid_title' : 'invalid_input',
+        }
+    }
 
     const photoEntry = formData.get('photo')
     if (photoEntry instanceof File && photoEntry.size > 0) {

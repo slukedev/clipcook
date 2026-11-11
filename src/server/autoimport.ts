@@ -9,7 +9,7 @@ import { clipImageDataUrl } from './images'
 export type { ImportedRecipe } from '@/lib/domain/types'
 
 export interface ClipOptions {
-    /** Tests only: lets a local fixture server stand in for the web. */
+    /** Tests only: lets a local fixture server stand in for the web. Ignored in production. */
     allowPrivate?: boolean
     /** Skip the photo download (used when the caller only needs text). */
     skipImage?: boolean

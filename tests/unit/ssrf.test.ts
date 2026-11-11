@@ -2,9 +2,9 @@ import http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import net from 'node:net'
 import zlib from 'node:zlib'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ClipError } from '@/server/clip/errors'
-import { createSafeLookup, decodeHtml, safeFetch, sniffImageType } from '@/server/clip/fetch'
+import { createSafeLookup, decodeHtml, privateHostsAllowed, safeFetch, sniffImageType } from '@/server/clip/fetch'
 import { isBlockedAddress } from '@/server/clip/ip'
 
 type Answer = Array<{ address: string; family: number }>
@@ -208,6 +208,40 @@ describe('safeFetch against a local server', () => {
     it('blocks localhost without the test flag', async () => {
         await expect(safeFetch(`${base}/recipe`, { maxBytes: 1024, kind: 'html' })).rejects.toMatchObject({
             code: 'BLOCKED_ADDRESS',
+        })
+    })
+
+    describe('CLIPCOOK_CLIP_ALLOW_PRIVATE', () => {
+        afterEach(() => {
+            vi.unstubAllEnvs()
+        })
+
+        it('lets development fetch localhost', async () => {
+            vi.stubEnv('NODE_ENV', 'development')
+            vi.stubEnv('CLIPCOOK_CLIP_ALLOW_PRIVATE', '1')
+            const res = await safeFetch(`${base}/recipe`, { maxBytes: 64 * 1024, kind: 'html' })
+            expect(res.status).toBe(200)
+        })
+
+        it('is ignored in production, and so is the explicit option', async () => {
+            vi.stubEnv('NODE_ENV', 'production')
+            vi.stubEnv('CLIPCOOK_CLIP_ALLOW_PRIVATE', '1')
+            await expect(safeFetch(`${base}/recipe`, { maxBytes: 1024, kind: 'html' })).rejects.toMatchObject({
+                code: 'BLOCKED_ADDRESS',
+            })
+            await expect(
+                safeFetch(`${base}/recipe`, { maxBytes: 1024, kind: 'html', allowPrivate: true }),
+            ).rejects.toMatchObject({ code: 'BLOCKED_ADDRESS' })
+        })
+
+        it('only accepts the value 1', () => {
+            expect(privateHostsAllowed(undefined, { NODE_ENV: 'development', CLIPCOOK_CLIP_ALLOW_PRIVATE: 'true' })).toBe(
+                false,
+            )
+            expect(privateHostsAllowed(undefined, { NODE_ENV: 'development' })).toBe(false)
+            expect(privateHostsAllowed(undefined, { NODE_ENV: 'production', CLIPCOOK_CLIP_ALLOW_PRIVATE: '1' })).toBe(
+                false,
+            )
         })
     })
 
