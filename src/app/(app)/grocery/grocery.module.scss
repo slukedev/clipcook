@@ -63,19 +63,19 @@
     }
 }
 
-// Offline: changes stay on screen and wait on this device.
+// Offline marker in the subtitle: changes stay on screen and wait on this device.
 .offline {
-    @include type.role(label-large);
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: var(--md-sys-space-2);
-    justify-self: start;
-    min-block-size: 32px;
-    padding-inline: var(--md-sys-space-3) var(--md-sys-space-4);
-    border-radius: var(--md-sys-shape-corner-full);
-    background-color: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
-    --md-icon-size: 18px;
+    gap: var(--md-sys-space-1);
+    color: var(--md-sys-color-tertiary);
+    --md-icon-size: 16px;
+
+    &:not(:first-child)::before {
+        content: "·";
+        margin-inline: var(--md-sys-space-1);
+        color: var(--md-sys-color-on-surface-variant);
+    }
 }
 
 .offlineIcon {

@@ -185,17 +185,39 @@ export function GroceryList({
     }, [uid])
 
     function wentOffline() {
+        if (!offline) setAnnouncement('Offline. Changes will sync when you reconnect.')
         setOffline(true)
     }
 
-    function run(op: GroceryOp, before?: () => void) {
+    // Rows added a moment ago carry temporary ids until the server answers. Changes to
+    // them wait for that answer, then follow the row to its real id.
+    const realIds = useRef(new Map<string, string>())
+    const addsInFlight = useRef(0)
+    const resolve = (id: string) => realIds.current.get(id) ?? id
+    const withRealId = (op: GroceryOp): GroceryOp => ('id' in op ? { ...op, id: resolve(op.id) } : op)
+    const remapSet = (set: ReadonlySet<string>, ids: ReadonlyMap<string, string>) =>
+        new Set([...set].map((id) => ids.get(id) ?? id))
+
+    function adopt(ids: ReadonlyMap<string, string>) {
+        if (ids.size === 0) return
+        for (const [tmp, real] of ids) realIds.current.set(tmp, real)
+        commitQueue(remapOps(queueRef.current, ids))
+        setHidden((current) => remapSet(current, ids))
+        setLingering((current) => remapSet(current, ids))
+    }
+
+    function run(raw: GroceryOp, before?: () => void) {
+        const op = withRealId(raw)
+        const waitsForAdd = 'id' in op && op.id.startsWith('tmp-') && addsInFlight.current > 0
         // Keep order: once something is waiting, everything after it waits too.
-        if (queueRef.current.length > 0 || isOffline()) {
+        if (queueRef.current.length > 0 || isOffline() || waitsForAdd) {
             before?.()
             enqueue(op)
             if (isOffline()) wentOffline()
             return
         }
+        const baseBefore = base
+        if (op.type === 'add') addsInFlight.current++
         startTransition(async () => {
             before?.()
             applyOptimistic(op)
@@ -203,24 +225,31 @@ export function GroceryList({
             try {
                 res = await send(op)
             } catch {
+                if (op.type === 'add') addsInFlight.current--
                 // No connection: the change stays on screen and syncs later.
                 startTransition(() => enqueue(op))
                 wentOffline()
                 return
             }
+            if (op.type === 'add') addsInFlight.current--
             if (!res.ok) {
                 if (op.type !== 'remove') snackbar(res.error)
+                setSent((n) => n + 1)
                 return
             }
             const data = res.data
-            startTransition(() => setBase((current) => settle(op, data, current)))
+            startTransition(() => {
+                if (op.type === 'add') adopt(idsAfterAdd(baseBefore, op, data as GroceryItem[]))
+                setBase((current) => settle(op, data, current))
+                setSent((n) => n + 1)
+            })
         })
     }
 
     /** Sends the oldest waiting change; the effect below calls again until the queue is empty. */
     function flush() {
         const op = queueRef.current[0]
-        if (!op || flushing.current || isOffline()) return
+        if (!op || flushing.current || addsInFlight.current > 0 || isOffline()) return
         flushing.current = true
         const before = base
         startTransition(async () => {
@@ -246,9 +275,7 @@ export function GroceryList({
             }
             const data = res.data
             startTransition(() => {
-                if (op.type === 'add') {
-                    commitQueue(remapOps(queueRef.current, idsAfterAdd(before, op, data as GroceryItem[])))
-                }
+                if (op.type === 'add') adopt(idsAfterAdd(before, op, data as GroceryItem[]))
                 setBase((current) => settle(op, data, current))
                 setSent((n) => n + 1)
             })
@@ -316,6 +343,7 @@ export function GroceryList({
         setHidden((current) => {
             const next = new Set(current)
             next.delete(id)
+            next.delete(resolve(id))
             return next
         })
     }
@@ -326,7 +354,7 @@ export function GroceryList({
     }
 
     function remove(item: GroceryItem) {
-        setHidden((current) => new Set(current).add(item.id))
+        setHidden((current) => new Set(current).add(resolve(item.id)))
         pendingDeletes.current.set(
             item.id,
             setTimeout(() => commitDelete(item.id), UNDO_MS),
@@ -393,7 +421,22 @@ export function GroceryList({
                 <TopAppBar
                     variant="medium"
                     title="Grocery List"
-                    subtitle={empty ? undefined : open.length === 0 ? 'All done' : `${open.length} left`}
+                    subtitle={
+                        empty && !offline ? undefined : (
+                            <>
+                                {!empty && <span>{open.length === 0 ? 'All done' : `${open.length} left`}</span>}
+                                {offline && (
+                                    // In the subtitle, not above the list, so nothing shifts under a thumb.
+                                    <span className={styles.offline}>
+                                        <span className={styles.offlineIcon} aria-hidden>
+                                            {icons.offline}
+                                        </span>
+                                        Offline
+                                    </span>
+                                )}
+                            </>
+                        )
+                    }
                     trailing={
                         <>
                             <IconButton
@@ -436,14 +479,6 @@ export function GroceryList({
 
                 <div className={styles.body}>
                     <div className={styles.top}>
-                        {offline && (
-                            <p className={styles.offline} role="status">
-                                <span className={styles.offlineIcon} aria-hidden>
-                                    {icons.offline}
-                                </span>
-                                {queue.length > 0 ? 'Offline. Changes will sync.' : 'Offline'}
-                            </p>
-                        )}
                         <AddField
                             onAdd={add}
                             suggest={(query) => suggestions(history, visible, query)}
