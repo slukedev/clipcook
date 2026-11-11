@@ -256,7 +256,9 @@
             "photo summary"
             "ingredients summary"
             "ingredients main";
-        grid-template-rows: auto auto 1fr;
+        // min-content, not auto: auto rows also absorb the tall sticky ingredients pane,
+        // which opened a gap between the summary and the steps.
+        grid-template-rows: min-content min-content 1fr;
         align-items: start;
         column-gap: var(--md-sys-layout-pane-spacer);
         row-gap: 32px;
