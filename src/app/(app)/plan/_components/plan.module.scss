@@ -4,6 +4,15 @@
 @use "../../../../styles/mixins/focus-ring";
 
 .page {
+    // Notes (Leftovers, Eat out) read as sticky notes in light; the bright tertiary
+    // container would glare in dark, so they sit on a tonal surface there instead.
+    --_note-container: light-dark(
+        var(--md-sys-color-tertiary-container),
+        var(--md-sys-color-surface-container-highest)
+    );
+    --_on-note-container: light-dark(var(--md-sys-color-on-tertiary-container), var(--md-sys-color-on-surface));
+    --_note-icon: light-dark(var(--md-sys-color-on-tertiary-container), var(--md-sys-color-tertiary));
+
     padding-block-end: calc(var(--md-sys-space-16) + var(--safe-bottom));
 }
 
@@ -345,8 +354,8 @@
 
         &[data-note] {
             border-radius: var(--md-sys-shape-corner-large);
-            background-color: var(--md-sys-color-tertiary-container);
-            color: var(--md-sys-color-on-tertiary-container);
+            background-color: var(--_note-container);
+            color: var(--_on-note-container);
         }
     }
 }
@@ -403,8 +412,8 @@
     &[data-note] {
         display: grid;
         place-items: center;
-        background-color: var(--md-sys-color-tertiary-container);
-        color: var(--md-sys-color-on-tertiary-container);
+        background-color: var(--_note-container);
+        color: var(--_note-icon);
     }
 
     .day[data-past] .entry & {
@@ -492,19 +501,15 @@
     @include type.role(body-medium);
 
     color: var(--md-sys-color-on-surface-variant);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 
     @include media.expanded-up {
         @include type.role(label-medium);
-
-        white-space: normal;
-
-        .entry[data-note] & {
-            color: inherit;
-        }
     }
+}
+
+// Each part of the meta line stays whole; lines break between them.
+.metaPart {
+    white-space: nowrap;
 }
 
 .entryMenu {
@@ -533,7 +538,7 @@
 
         .entry[data-note] & {
             background: none;
-            color: var(--md-sys-color-on-tertiary-container);
+            color: var(--_on-note-container);
         }
     }
 }

@@ -83,7 +83,16 @@ export function PlanEntryItem({
             </span>
             <span className={styles.entryText}>
                 <span className={styles.entryTitle}>{title}</span>
-                {meta.length > 0 && <span className={styles.entryMeta}>{meta.join(' · ')}</span>}
+                {meta.length > 0 && (
+                    <span className={styles.entryMeta}>
+                        {meta.map((part, i) => (
+                            <span key={part}>
+                                {i > 0 && ' · '}
+                                <span className={styles.metaPart}>{part}</span>
+                            </span>
+                        ))}
+                    </span>
+                )}
             </span>
         </>
     )
