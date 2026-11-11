@@ -3,6 +3,7 @@ import { getSession } from '@/server/auth'
 import { getStore } from '@/server/db'
 import { displayFromRequest } from '@/server/display-auth'
 import { decodeImageDataUrl, inlineImageVersion } from '@/server/inline-images'
+import { idSchema } from '@/server/schemas'
 
 /**
  * An inline (data URL) recipe photo as a real image response, for the signed-in
@@ -11,11 +12,12 @@ import { decodeImageDataUrl, inlineImageVersion } from '@/server/inline-images'
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string; kind: string }> }) {
     const { id, kind } = await params
-    if (kind !== 'thumb' && kind !== 'photo') return new Response(null, { status: 404 })
+    const recipeId = idSchema.safeParse(id)
+    if ((kind !== 'thumb' && kind !== 'photo') || !recipeId.success) return new Response(null, { status: 404 })
     const uid = (await getSession())?.uid ?? (await displayFromRequest(req))?.uid
     if (!uid) return new Response(null, { status: 401, headers: { 'Cache-Control': 'no-store' } })
 
-    const record = await (await getStore()).getRecipe(uid, id)
+    const record = await (await getStore()).getRecipe(uid, recipeId.data)
     const src = kind === 'thumb' ? record?.thumbnail || record?.image : record?.image
     const image = src ? decodeImageDataUrl(src) : null
     if (!src || !image) return new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } })
