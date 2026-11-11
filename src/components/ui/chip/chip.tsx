@@ -136,7 +136,11 @@ export function InputChip({
             data-has-trailing={onRemove ? '' : undefined}
             {...rest}
         >
-            {avatar ? <span className={styles.avatar}>{avatar}</span> : icon && <span className={styles.icon}>{icon}</span>}
+            {avatar ? (
+                <span className={styles.avatar}>{avatar}</span>
+            ) : (
+                icon && <span className={styles.icon}>{icon}</span>
+            )}
             {children}
             {onRemove && (
                 <button
@@ -162,6 +166,7 @@ export interface ChipSetProps extends HTMLAttributes<HTMLDivElement> {
 
 export function ChipSet({ scroll = false, label, className, children, ...rest }: ChipSetProps) {
     return (
+        // biome-ignore lint/a11y/useSemanticElements: chips are actions and filters, not a form fieldset
         <div
             role="group"
             aria-label={label}

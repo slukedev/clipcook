@@ -53,9 +53,7 @@ function Queue({ children }: { children: ReactNode }) {
             timeout: options.duration ?? (options.action ? 8000 : 4000),
             priority: options.urgent ? 'high' : 'low',
             data: { closable: options.closable ?? false },
-            actionProps: options.action
-                ? { children: options.action, onClick: () => options.onAction?.() }
-                : undefined,
+            actionProps: options.action ? { children: options.action, onClick: () => options.onAction?.() } : undefined,
             onRemove: next,
         })
     }

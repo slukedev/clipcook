@@ -13,9 +13,18 @@ interface Base {
 }
 
 export type CardProps =
-    | (Base & HTMLAttributes<HTMLElement> & { href?: undefined; onClick?: undefined; as?: 'div' | 'article' | 'section' | 'li' })
+    | (Base &
+          HTMLAttributes<HTMLElement> & {
+              href?: undefined
+              onClick?: undefined
+              as?: 'div' | 'article' | 'section' | 'li'
+          })
     | (Base & Omit<ComponentProps<typeof Link>, 'className' | 'children'> & { href: string })
-    | (Base & Omit<ComponentProps<'button'>, 'className' | 'children'> & { href?: undefined; onClick: ComponentProps<'button'>['onClick'] })
+    | (Base &
+          Omit<ComponentProps<'button'>, 'className' | 'children'> & {
+              href?: undefined
+              onClick: ComponentProps<'button'>['onClick']
+          })
 
 /**
  * M3 card. With `href` it is a link, with `onClick` a button: both get a state
@@ -23,7 +32,8 @@ export type CardProps =
  */
 export function Card(props: CardProps) {
     const { variant = 'filled', className, children } = props
-    const classes = (interactive: boolean) => cx(styles.card, styles[variant], interactive && styles.interactive, className)
+    const classes = (interactive: boolean) =>
+        cx(styles.card, styles[variant], interactive && styles.interactive, className)
     if (props.href !== undefined) {
         const { variant: _v, className: _c, children: _ch, ...link } = props as Extract<CardProps, { href: string }>
         return (
@@ -34,8 +44,12 @@ export function Card(props: CardProps) {
         )
     }
     if (props.onClick !== undefined) {
-        const { variant: _v, className: _c, children: _ch, ...button } = props as Extract<CardProps, { onClick: unknown }> &
-            ComponentProps<'button'>
+        const {
+            variant: _v,
+            className: _c,
+            children: _ch,
+            ...button
+        } = props as Extract<CardProps, { onClick: unknown }> & ComponentProps<'button'>
         return (
             <button type="button" {...button} className={classes(true)}>
                 <Ripple />
@@ -43,7 +57,13 @@ export function Card(props: CardProps) {
             </button>
         )
     }
-    const { variant: _v, className: _c, children: _ch, as: Tag = 'div', ...rest } = props as Extract<CardProps, { as?: string }>
+    const {
+        variant: _v,
+        className: _c,
+        children: _ch,
+        as: Tag = 'div',
+        ...rest
+    } = props as Extract<CardProps, { as?: string }>
     return (
         <Tag {...rest} className={classes(false)}>
             {children}

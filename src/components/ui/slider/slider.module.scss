@@ -1,4 +1,4 @@
-@use '../../../styles/mixins/typography' as type;
+@use "../../../styles/mixins/typography" as type;
 
 // Expressive slider sizes (MDC slider tokens): track 16/24/40/56/96,
 // outer corners 8/8/12/16/28, handle 44/44/44/68/108. A 4dp handle bar with
@@ -14,19 +14,19 @@
     inline-size: 100%;
     touch-action: pan-y;
 
-    &[data-size='s'] {
+    &[data-size="s"] {
         --_track: 24px;
     }
-    &[data-size='m'] {
+    &[data-size="m"] {
         --_track: 40px;
         --_outer: 12px;
     }
-    &[data-size='l'] {
+    &[data-size="l"] {
         --_track: 56px;
         --_outer: 16px;
         --_handle: 68px;
     }
-    &[data-size='xl'] {
+    &[data-size="xl"] {
         --_track: 96px;
         --_outer: 28px;
         --_handle: 108px;
@@ -61,7 +61,7 @@
 
     &::before,
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset-block: 0;
     }
@@ -79,8 +79,8 @@
         border-radius: var(--_half) var(--_outer) var(--_outer) var(--_half);
         // Stop indicator: a 4dp dot 6dp before the end.
         background:
-            radial-gradient(circle 2px, var(--md-sys-color-on-secondary-container) 99%, transparent)
-                right calc(var(--_track) / 2 - 2px) center / 4px 4px no-repeat,
+            radial-gradient(circle 2px, var(--md-sys-color-on-secondary-container) 99%, transparent) right
+                calc(var(--_track) / 2 - 2px) center / 4px 4px no-repeat,
             var(--md-sys-color-secondary-container);
     }
 }
@@ -92,7 +92,9 @@
 
     &::after {
         border-radius: var(--_outer) var(--_half) var(--_half) var(--_outer);
-        background-position: left calc(var(--_track) / 2 - 2px) center, 0 0;
+        background-position:
+            left calc(var(--_track) / 2 - 2px) center,
+            0 0;
     }
 }
 
@@ -106,12 +108,13 @@
 
     // The visible handle: a 4dp bar that thins to 2dp while dragging.
     &::before {
-        content: '';
+        content: "";
         inline-size: 4px;
         block-size: 100%;
         border-radius: 9999px;
         background-color: var(--md-sys-color-primary);
-        transition: inline-size var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+        transition: inline-size var(--md-sys-motion-spring-spatial-fast-duration)
+            var(--md-sys-motion-spring-spatial-fast);
     }
 
     &[data-dragging]::before {
@@ -170,7 +173,7 @@
     pointer-events: none;
     --md-icon-size: 24px;
 
-    [data-size='xl'] & {
+    [data-size="xl"] & {
         --md-icon-size: 32px;
     }
 }

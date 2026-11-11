@@ -91,7 +91,10 @@ export function Button(props: ButtonProps) {
     }
 
     if (toggle) {
-        const { selected, defaultSelected, onSelectedChange, ...toggleRest } = rest as Omit<ToggleProps, keyof CommonProps>
+        const { selected, defaultSelected, onSelectedChange, ...toggleRest } = rest as Omit<
+            ToggleProps,
+            keyof CommonProps
+        >
         return (
             <Toggle
                 {...toggleRest}
@@ -105,7 +108,9 @@ export function Button(props: ButtonProps) {
                         <span data-touch-target aria-hidden />
                         <Ripple disabled={loading} />
                         {(icon || selectedIcon) && (
-                            <span className={styles.icon}>{state.pressed && selectedIcon ? selectedIcon : leading}</span>
+                            <span className={styles.icon}>
+                                {state.pressed && selectedIcon ? selectedIcon : leading}
+                            </span>
                         )}
                         {children !== undefined && <span className={styles.label}>{children}</span>}
                         {loading && !icon && spinner}

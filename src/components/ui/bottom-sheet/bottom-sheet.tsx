@@ -28,7 +28,13 @@ export interface BottomSheetContentProps {
     className?: string
 }
 
-export function BottomSheetContent({ title, hideTitle = false, children, standard = false, className }: BottomSheetContentProps) {
+export function BottomSheetContent({
+    title,
+    hideTitle = false,
+    children,
+    standard = false,
+    className,
+}: BottomSheetContentProps) {
     return (
         <Drawer.Portal>
             {!standard && <Drawer.Backdrop className={styles.backdrop} />}

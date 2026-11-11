@@ -1,5 +1,5 @@
-@use 'sass:list';
-@use 'sass:map';
+@use "sass:list";
+@use "sass:map";
 
 // M3 type roles. `@include type.role(body-large)`; `$emphasized: true` for the
 // Expressive emphasized style. Emphasized display and headline roles also open up
@@ -19,12 +19,12 @@ $_rond: (
 
 @mixin role($role, $emphasized: false) {
     @if not list.index($roles, $role) {
-        @error 'Unknown type role #{$role}';
+        @error "Unknown type role #{$role}";
     }
-    $prefix: '';
+    $prefix: "";
     $rond: 0;
     @if $emphasized {
-        $prefix: 'emphasized-';
+        $prefix: "emphasized-";
         $rond: map.get($_rond, $role) or 0;
     }
     font-family: var(--md-sys-typescale-#{$role}-font);
@@ -32,11 +32,13 @@ $_rond: (
     line-height: var(--md-sys-typescale-#{$role}-line-height);
     font-weight: var(--md-sys-typescale-#{$prefix}#{$role}-weight);
     letter-spacing: var(--md-sys-typescale-#{$prefix}#{$role}-tracking);
-    font-variation-settings: 'ROND' #{$rond}, 'GRAD' var(--md-sys-typescale-grade, 0);
+    font-variation-settings:
+        "ROND" #{$rond},
+        "GRAD" var(--md-sys-typescale-grade, 0);
 }
 
 // Quantities, timers and anything that ticks: digits stop jittering.
 @mixin numeric {
     font-variant-numeric: tabular-nums;
-    font-feature-settings: 'tnum' 1;
+    font-feature-settings: "tnum" 1;
 }

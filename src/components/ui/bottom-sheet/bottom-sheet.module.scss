@@ -1,4 +1,4 @@
-@use '../../../styles/mixins/typography' as type;
+@use "../../../styles/mixins/typography" as type;
 
 // Bottom sheet: surfaceContainerLow, 28dp top corners, max 640dp wide, 32x4 drag
 // handle in a 48dp zone, scrim at 32%. Swipes follow the finger; releases spring.
@@ -49,7 +49,8 @@
     pointer-events: auto;
     touch-action: none;
     transform: translateY(calc(var(--drawer-snap-point-offset, 0px) + var(--drawer-swipe-movement-y, 0px)));
-    transition: transform var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default);
+    transition: transform var(--md-sys-motion-spring-spatial-default-duration)
+        var(--md-sys-motion-spring-spatial-default);
     will-change: transform;
 
     &[data-swiping] {
@@ -63,8 +64,8 @@
     }
 
     &[data-ending-style] {
-        transition:
-            transform calc(var(--drawer-swipe-strength, 1) * var(--md-sys-motion-spring-spatial-default-duration))
+        transition: transform
+            calc(var(--drawer-swipe-strength, 1) * var(--md-sys-motion-spring-spatial-default-duration))
             var(--md-sys-motion-spring-effects-default);
     }
 
@@ -82,7 +83,7 @@
     touch-action: none;
 
     &::before {
-        content: '';
+        content: "";
         inline-size: 32px;
         block-size: 4px;
         border-radius: 9999px;

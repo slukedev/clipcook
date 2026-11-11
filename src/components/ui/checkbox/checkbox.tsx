@@ -16,7 +16,11 @@ export interface CheckboxProps extends Omit<ComponentProps<typeof BaseCheckbox.R
 /** M3 checkbox. The check draws along its path; indeterminate shows a dash. */
 export function Checkbox({ label, invalid, className, ...rest }: CheckboxProps) {
     const control = (
-        <BaseCheckbox.Root className={cx(styles.root, !label && className)} data-invalid={invalid || undefined} {...rest}>
+        <BaseCheckbox.Root
+            className={cx(styles.root, !label && className)}
+            data-invalid={invalid || undefined}
+            {...rest}
+        >
             <span className={styles.box}>
                 <svg viewBox="0 0 18 18" className={styles.mark} aria-hidden focusable="false">
                     <path className={styles.check} d="M4.5 9.5l3 3 6-7" pathLength={14} />

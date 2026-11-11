@@ -213,7 +213,15 @@ export function LinearProgress({ value, wavy = false, label = 'Progress', classN
 }
 
 /** M3 circular progress indicator, flat (40dp) or wavy (48dp). */
-export function CircularProgress({ value, wavy = false, label = 'Progress', className, style, size, ...rest }: Shared & { size?: number }) {
+export function CircularProgress({
+    value,
+    wavy = false,
+    label = 'Progress',
+    className,
+    style,
+    size,
+    ...rest
+}: Shared & { size?: number }) {
     const root = useRef<HTMLDivElement>(null)
     const active = useRef<SVGPathElement>(null)
     const track = useRef<SVGPathElement>(null)

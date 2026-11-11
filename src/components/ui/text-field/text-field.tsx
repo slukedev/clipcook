@@ -65,13 +65,13 @@ export function TextField({
     useEffect(() => {
         const el = controlRef.current
         if (!multiline || !el || CSS.supports('field-sizing', 'content')) return
-        const fit = () => {
+        const grow = () => {
             el.style.height = 'auto'
             el.style.height = `${el.scrollHeight}px`
         }
-        fit()
-        el.addEventListener('input', fit)
-        return () => el.removeEventListener('input', fit)
+        grow()
+        el.addEventListener('input', grow)
+        return () => el.removeEventListener('input', grow)
     }, [multiline])
 
     const supporting = error ?? supportingText

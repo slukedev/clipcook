@@ -22,7 +22,9 @@ function colorCss(): string {
     const blocks: string[] = []
     for (const contrast of CONTRASTS) {
         const light = schemeDeclarations(schemeFromSeed(BRAND_SEED, { contrast, primaryChroma: BRAND_PRIMARY_CHROMA }))
-        const dark = schemeDeclarations(schemeFromSeed(BRAND_SEED, { dark: true, contrast, primaryChroma: BRAND_PRIMARY_CHROMA }))
+        const dark = schemeDeclarations(
+            schemeFromSeed(BRAND_SEED, { dark: true, contrast, primaryChroma: BRAND_PRIMARY_CHROMA }),
+        )
         const darkNested = dark.replaceAll('    --', '        --')
         const scope = (c: Contrast) => (c === 'standard' ? ':root' : `:root[data-contrast='${c}']`)
         const s = scope(contrast)
@@ -45,7 +47,12 @@ const LEGACY_EASING = {
     'emphasized-decelerate': 'cubic-bezier(0.05, 0.7, 0.1, 1)',
     legacy: 'cubic-bezier(0.4, 0, 0.2, 1)',
 }
-const LEGACY_DURATION = { short: [50, 100, 150, 200], medium: [250, 300, 350, 400], long: [450, 500, 550, 600], 'extra-long': [700, 800, 900, 1000] }
+const LEGACY_DURATION = {
+    short: [50, 100, 150, 200],
+    medium: [250, 300, 350, 400],
+    long: [450, 500, 550, 600],
+    'extra-long': [700, 800, 900, 1000],
+}
 
 function legacyDecl(): string {
     const lines = Object.entries(LEGACY_EASING).map(([k, v]) => `    --md-sys-motion-easing-${k}: ${v};`)

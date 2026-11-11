@@ -1,6 +1,6 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/focus-ring';
-@use '../../../styles/mixins/media';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/focus-ring";
+@use "../../../styles/mixins/media";
 
 // Flexible navigation bar (ShortNavigationBar): 64dp, surfaceContainer.
 // Compact: icon over label, equal widths. Medium: icon beside label, centered.
@@ -22,7 +22,7 @@
 }
 
 .item {
-    @include focus-ring.inward('&:focus-visible');
+    @include focus-ring.inward("&:focus-visible");
 
     --md-icon-size: 24px;
 
@@ -41,7 +41,7 @@
     user-select: none;
     transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
 
-    &[aria-current='page'] {
+    &[aria-current="page"] {
         color: var(--md-sys-color-secondary);
     }
 
@@ -64,7 +64,7 @@
 
     // Selected pill grows out from the icon's center.
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         z-index: -2;
@@ -78,7 +78,7 @@
     }
 
     &::before {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         z-index: -1;
@@ -88,7 +88,7 @@
         transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
     }
 
-    .item[aria-current='page'] & {
+    .item[aria-current="page"] & {
         color: var(--md-sys-color-on-secondary-container);
 
         &::after {
@@ -130,7 +130,7 @@
     @include type.role(label-medium);
     white-space: nowrap;
 
-    .item[aria-current='page'] & {
+    .item[aria-current="page"] & {
         @include type.role(label-medium, $emphasized: true);
     }
 
@@ -151,6 +151,12 @@
 
     @include media.medium-up {
         display: inline;
+    }
+}
+
+.icons:has(.badge) {
+    @include media.medium-up {
+        margin-inline-end: 8px;
     }
 }
 

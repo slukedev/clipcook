@@ -1,6 +1,6 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
 
 // Shared by Button, IconButton, SplitButton and the connected ButtonGroup.
 // Per-size custom properties (Compose Button*Tokens, Expressive sizes):
@@ -8,7 +8,7 @@
 //   --_square / --_pressed / --_selected corner radii, --_outline outline width.
 
 @mixin sizes {
-    &[data-size='xs'] {
+    &[data-size="xs"] {
         --_h: 32px;
         --_pad: 12px;
         --_gap: 4px;
@@ -19,7 +19,7 @@
         @include type.role(label-large);
     }
 
-    &[data-size='s'] {
+    &[data-size="s"] {
         --_h: 40px;
         --_pad: 16px;
         --_gap: 8px;
@@ -30,7 +30,7 @@
         @include type.role(label-large);
     }
 
-    &[data-size='m'] {
+    &[data-size="m"] {
         --_h: 56px;
         --_pad: 24px;
         --_gap: 8px;
@@ -41,7 +41,7 @@
         @include type.role(title-medium);
     }
 
-    &[data-size='l'] {
+    &[data-size="l"] {
         --_h: 96px;
         --_pad: 48px;
         --_gap: 12px;
@@ -52,7 +52,7 @@
         @include type.role(headline-small);
     }
 
-    &[data-size='xl'] {
+    &[data-size="xl"] {
         --_h: 136px;
         --_pad: 64px;
         --_gap: 16px;
@@ -93,18 +93,19 @@
     touch-action: manipulation;
     transition:
         border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
-        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
         color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
         box-shadow var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
         outline-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
 
-    &[data-shape='square'] {
+    &[data-shape="square"] {
         --_radius: var(--_square);
     }
 
     // Outline drawn inside the shape so it morphs with the radius.
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         border-radius: inherit;
@@ -139,11 +140,6 @@
             transparent
         );
         --_shadow: none;
-        --_outline-color: color-mix(
-            in srgb,
-            var(--md-sys-color-on-surface) calc(var(--md-sys-state-disabled-container-opacity) * 100%),
-            transparent
-        );
     }
 
     &[data-loading] {

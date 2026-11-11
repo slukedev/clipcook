@@ -1,12 +1,12 @@
-@use './theme/color.css';
-@use './theme/typescale.css';
-@use './theme/shape.css';
-@use './theme/motion.css';
-@use './theme/elevation.css';
-@use './theme/state.css';
-@use './theme/layout.css';
-@use './view-transitions';
-@use './mixins/typography' as type;
+@use "./theme/color.css";
+@use "./theme/typescale.css";
+@use "./theme/shape.css";
+@use "./theme/motion.css";
+@use "./theme/elevation.css";
+@use "./theme/state.css";
+@use "./theme/layout.css";
+@use "./view-transitions";
+@use "./mixins/typography" as type;
 
 *,
 *::before,
@@ -36,7 +36,7 @@
 }
 
 // High contrast leans on Google Sans Flex's grade axis: heavier strokes without reflow.
-:root[data-contrast='high'] {
+:root[data-contrast="high"] {
     --md-sys-typescale-grade: 100;
 }
 
@@ -75,8 +75,8 @@ figcaption {
     overflow-wrap: break-word;
 }
 
-ul[role='list'],
-ol[role='list'] {
+ul[role="list"],
+ol[role="list"] {
     list-style: none;
 }
 

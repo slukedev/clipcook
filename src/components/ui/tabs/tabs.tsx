@@ -83,6 +83,9 @@ export function Tab({ icon, children, className, ...rest }: TabProps) {
     )
 }
 
-export function TabPanel({ className, ...rest }: Omit<ComponentProps<typeof BaseTabs.Panel>, 'className'> & { className?: string }) {
+export function TabPanel({
+    className,
+    ...rest
+}: Omit<ComponentProps<typeof BaseTabs.Panel>, 'className'> & { className?: string }) {
     return <BaseTabs.Panel className={cx(styles.panel, className)} {...rest} />
 }

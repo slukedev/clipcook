@@ -66,7 +66,10 @@ export function Ripple({ disabled = false }: { disabled?: boolean }) {
             const wait = Math.max(0, MIN_PRESS_MS - (performance.now() - pressedAt))
             current
                 .animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE_MS, delay: wait, fill: 'forwards' })
-                .finished.then(() => current.remove(), () => current.remove())
+                .finished.then(
+                    () => current.remove(),
+                    () => current.remove(),
+                )
         }
 
         const onDown = (event: PointerEvent) => {

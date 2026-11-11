@@ -57,6 +57,7 @@ export function Carousel({ variant = 'multi-browse', label, className, children,
             {/* biome-ignore lint/a11y/noNoninteractiveTabindex: scroll region must be keyboard scrollable */}
             <div ref={trackRef} className={cx(styles.track, VARIANT[variant])} tabIndex={0}>
                 {items.map((item, index) => (
+                    // biome-ignore lint/a11y/useSemanticElements: APG carousel slides are role=group with a roledescription
                     <div
                         // biome-ignore lint/suspicious/noArrayIndexKey: children order is the identity
                         key={index}

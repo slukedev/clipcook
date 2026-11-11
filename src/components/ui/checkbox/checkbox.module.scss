@@ -1,4 +1,4 @@
-@use '../../../styles/mixins/typography' as type;
+@use "../../../styles/mixins/typography" as type;
 
 // Shared shape for checkbox, radio and switch rows: control plus label text.
 .field {
@@ -33,7 +33,7 @@
     --_outline: var(--md-sys-color-on-surface-variant);
 
     &::before {
-        content: '';
+        content: "";
         position: absolute;
         inset: 4px;
         z-index: -1;
@@ -102,10 +102,12 @@
 
     transition-property: background-color, box-shadow, scale;
     transition-duration:
-        var(--md-sys-motion-spring-effects-fast-duration), var(--md-sys-motion-spring-effects-fast-duration),
+        var(--md-sys-motion-spring-effects-fast-duration),
+        var(--md-sys-motion-spring-effects-fast-duration),
         var(--md-sys-motion-spring-spatial-fast-duration);
     transition-timing-function:
-        var(--md-sys-motion-spring-effects-fast), var(--md-sys-motion-spring-effects-fast),
+        var(--md-sys-motion-spring-effects-fast),
+        var(--md-sys-motion-spring-effects-fast),
         var(--md-sys-motion-spring-spatial-fast);
 }
 
@@ -124,7 +126,8 @@
 .check {
     stroke-dasharray: 14;
     stroke-dashoffset: 14;
-    transition: stroke-dashoffset var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-effects-default);
+    transition: stroke-dashoffset var(--md-sys-motion-spring-spatial-default-duration)
+        var(--md-sys-motion-spring-effects-default);
 
     .root[data-checked] & {
         stroke-dashoffset: 0;

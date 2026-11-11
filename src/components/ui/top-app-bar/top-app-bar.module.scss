@@ -1,4 +1,4 @@
-@use '../../../styles/mixins/typography' as type;
+@use "../../../styles/mixins/typography" as type;
 
 // Top app bars: small 64; medium flexible 112 (136 with subtitle); large flexible
 // 120 (152). The 64dp row pins; the expanded title scrolls away beneath it and the
@@ -60,12 +60,12 @@
         pointer-events: none;
     }
 
-    .root:not([data-variant='small']) & {
+    .root:not([data-variant="small"]) & {
         opacity: 0;
         transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
     }
 
-    .root:not([data-variant='small']) .row[data-collapsed] & {
+    .root:not([data-variant="small"]) .row[data-collapsed] & {
         opacity: 1;
     }
 }
@@ -95,19 +95,19 @@
     background-color: var(--md-sys-color-surface);
     transform-origin: left bottom;
 
-    .root[data-variant='medium'] & {
+    .root[data-variant="medium"] & {
         --_expanded: 48px;
     }
 
-    .root[data-variant='medium'][data-subtitle] & {
+    .root[data-variant="medium"][data-subtitle] & {
         --_expanded: 72px;
     }
 
-    .root[data-variant='large'] & {
+    .root[data-variant="large"] & {
         --_expanded: 56px;
     }
 
-    .root[data-variant='large'][data-subtitle] & {
+    .root[data-variant="large"][data-subtitle] & {
         --_expanded: 88px;
     }
 
@@ -123,11 +123,11 @@
 }
 
 .title {
-    .root[data-variant='medium'] & {
+    .root[data-variant="medium"] & {
         @include type.role(headline-medium, $emphasized: true);
     }
 
-    .root[data-variant='large'] & {
+    .root[data-variant="large"] & {
         @include type.role(display-small, $emphasized: true);
     }
 }
@@ -135,11 +135,11 @@
 .subtitle {
     color: var(--md-sys-color-on-surface-variant);
 
-    .root[data-variant='medium'] & {
+    .root[data-variant="medium"] & {
         @include type.role(label-large);
     }
 
-    .root[data-variant='large'] & {
+    .root[data-variant="large"] & {
         @include type.role(title-medium);
     }
 }
@@ -153,27 +153,27 @@
         transition: none;
     }
 
-    .root:not([data-variant='small']) .row {
+    .root:not([data-variant="small"]) .row {
         animation-range: calc(var(--_expanded-px, 56px) - 8px) var(--_expanded-px, 56px);
     }
 
-    .root[data-variant='medium'] {
+    .root[data-variant="medium"] {
         --_expanded-px: 48px;
     }
 
-    .root[data-variant='medium'][data-subtitle] {
+    .root[data-variant="medium"][data-subtitle] {
         --_expanded-px: 72px;
     }
 
-    .root[data-variant='large'] {
+    .root[data-variant="large"] {
         --_expanded-px: 56px;
     }
 
-    .root[data-variant='large'][data-subtitle] {
+    .root[data-variant="large"][data-subtitle] {
         --_expanded-px: 88px;
     }
 
-    .root:not([data-variant='small']) .rowTitle {
+    .root:not([data-variant="small"]) .rowTitle {
         animation: md-bar-title-in linear both;
         animation-timeline: scroll(root block);
         animation-range: calc(var(--_expanded-px) * 0.6) var(--_expanded-px);

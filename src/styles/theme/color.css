@@ -59,7 +59,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) {
+    :root:not([data-theme="light"]) {
         color-scheme: dark;
         --md-sys-color-background: #130d0b;
         --md-sys-color-on-background: #f9e0d9;
@@ -117,7 +117,7 @@
     }
 }
 
-:root[data-theme='dark'] {
+:root[data-theme="dark"] {
     color-scheme: dark;
     --md-sys-color-background: #130d0b;
     --md-sys-color-on-background: #f9e0d9;
@@ -174,7 +174,7 @@
     --md-sys-color-scrim: #000000;
 }
 
-:root[data-contrast='medium'] {
+:root[data-contrast="medium"] {
     color-scheme: light;
     --md-sys-color-background: #fff8f6;
     --md-sys-color-on-background: #2e211d;
@@ -232,7 +232,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    :root[data-contrast='medium']:not([data-theme='light']) {
+    :root[data-contrast="medium"]:not([data-theme="light"]) {
         color-scheme: dark;
         --md-sys-color-background: #130d0b;
         --md-sys-color-on-background: #ffffff;
@@ -290,7 +290,7 @@
     }
 }
 
-:root[data-contrast='medium'][data-theme='dark'] {
+:root[data-contrast="medium"][data-theme="dark"] {
     color-scheme: dark;
     --md-sys-color-background: #130d0b;
     --md-sys-color-on-background: #ffffff;
@@ -347,7 +347,7 @@
     --md-sys-color-scrim: #000000;
 }
 
-:root[data-contrast='high'] {
+:root[data-contrast="high"] {
     color-scheme: light;
     --md-sys-color-background: #fff8f6;
     --md-sys-color-on-background: #000000;
@@ -405,7 +405,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    :root[data-contrast='high']:not([data-theme='light']) {
+    :root[data-contrast="high"]:not([data-theme="light"]) {
         color-scheme: dark;
         --md-sys-color-background: #130d0b;
         --md-sys-color-on-background: #ffffff;
@@ -463,7 +463,7 @@
     }
 }
 
-:root[data-contrast='high'][data-theme='dark'] {
+:root[data-contrast="high"][data-theme="dark"] {
     color-scheme: dark;
     --md-sys-color-background: #130d0b;
     --md-sys-color-on-background: #ffffff;

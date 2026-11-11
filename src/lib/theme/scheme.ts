@@ -15,7 +15,7 @@ import { parseSeed, type Seed } from './seed'
 /**
  * `tonalSpot` is the app chrome (Material's default). `content` keeps the
  * source color's own chroma and is used for recipe pages, where the photo
- * should set the mood. See src/lib/theme/README.md for why.
+ * should set the mood. The comparison is in src/components/ui/README.md.
  */
 export type SchemeVariant = 'tonalSpot' | 'content' | 'vibrant' | 'expressive'
 

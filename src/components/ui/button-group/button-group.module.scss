@@ -1,13 +1,13 @@
-@use '../button/shared';
+@use "../button/shared";
 
 .group {
     display: inline-flex;
     align-items: center;
     gap: var(--_between, 12px);
 
-    &[data-size='m'],
-    &[data-size='l'],
-    &[data-size='xl'] {
+    &[data-size="m"],
+    &[data-size="l"],
+    &[data-size="xl"] {
         --_between: 8px;
     }
 }
@@ -45,13 +45,14 @@
 
     --_inner: var(--md-sys-shape-corner-small);
     --_outer: var(--_round);
-    --_container: var(--md-sys-color-surface-container);
+    --_container: var(--md-sys-color-surface-container-high);
     --_content: var(--md-sys-color-on-surface-variant);
 
     border-radius: var(--_inner);
     transition:
         border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
-        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
         color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
 
     &:first-child {
@@ -76,18 +77,18 @@
     }
 }
 
-.connected[data-variant='filled'] .item[data-pressed] {
+.connected[data-variant="filled"] .item[data-pressed] {
     --_container: var(--md-sys-color-primary);
     --_content: var(--md-sys-color-on-primary);
 }
 
-.connected[data-variant='outlined'] .item {
+.connected[data-variant="outlined"] .item {
     --_container: transparent;
     --_outline-color: var(--md-sys-color-outline-variant);
 
     &[data-pressed] {
-        --_container: var(--md-sys-color-inverse-surface);
-        --_content: var(--md-sys-color-inverse-on-surface);
+        --_container: var(--md-sys-color-secondary-container);
+        --_content: var(--md-sys-color-on-secondary-container);
         --_outline-color: transparent;
     }
 }

@@ -28,7 +28,16 @@ export interface FabProps extends FabBase {
 }
 
 /** M3 FAB. Small is deprecated in Expressive; prefer default, medium or large. */
-export function Fab({ icon, label, color = 'primary', vibrant, lowered, size = 'default', className, ...rest }: FabProps) {
+export function Fab({
+    icon,
+    label,
+    color = 'primary',
+    vibrant,
+    lowered,
+    size = 'default',
+    className,
+    ...rest
+}: FabProps) {
     return (
         <BaseButton
             aria-label={label}

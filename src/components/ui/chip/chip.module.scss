@@ -1,6 +1,6 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
 
 // Chips: 32dp, label-large, 18dp icons, 1dp outline unless elevated or selected.
 // Expressive filter chips morph: rest 12, pressed 8, selected full.
@@ -34,11 +34,12 @@
     transition:
         border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
         padding var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
-        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
         color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
 
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         border-radius: inherit;
@@ -191,7 +192,7 @@
     cursor: pointer;
 
     &::before {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         border-radius: inherit;
@@ -207,7 +208,7 @@
 
     // A 48dp target that does not change the chip's size.
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: -12px;
     }
@@ -242,13 +243,13 @@
 }
 
 @property --md-fade-start {
-    syntax: '<length>';
+    syntax: "<length>";
     inherits: false;
     initial-value: 0px;
 }
 
 @property --md-fade-end {
-    syntax: '<length>';
+    syntax: "<length>";
     inherits: false;
     initial-value: 24px;
 }

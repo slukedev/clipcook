@@ -194,7 +194,11 @@ function Shapes() {
             <Panel title="Morph (spring)">
                 <div className={styles.morphStage}>
                     <MorphShape shape={MORPH_CYCLE[index % MORPH_CYCLE.length] as ShapeName} size={120} />
-                    <MorphShape shape={MORPH_CYCLE[(index + 3) % MORPH_CYCLE.length] as ShapeName} size={72} spring="spatial-fast" />
+                    <MorphShape
+                        shape={MORPH_CYCLE[(index + 3) % MORPH_CYCLE.length] as ShapeName}
+                        size={72}
+                        spring="spatial-fast"
+                    />
                     <Button variant="tonal" onClick={() => setIndex((i) => i + 1)} icon={<Icon name="refresh" />}>
                         Next shape
                     </Button>
@@ -207,7 +211,10 @@ function Shapes() {
                             key={name}
                             name={name}
                             size={96}
-                            style={{ background: 'var(--md-sys-color-secondary-container)', color: 'var(--md-sys-color-on-secondary-container)' }}
+                            style={{
+                                background: 'var(--md-sys-color-secondary-container)',
+                                color: 'var(--md-sys-color-on-secondary-container)',
+                            }}
                         >
                             <Icon name="restaurant" size={40} />
                         </Shape>
@@ -235,7 +242,12 @@ function Buttons() {
                         <Button variant={variant} shape="square">
                             Square
                         </Button>
-                        <Button variant={variant} defaultSelected={false} icon={<Icon name="bookmark" />} selectedIcon={<Icon name="bookmark" filled />}>
+                        <Button
+                            variant={variant}
+                            defaultSelected={false}
+                            icon={<Icon name="bookmark" />}
+                            selectedIcon={<Icon name="bookmark" filled />}
+                        >
                             Toggle
                         </Button>
                         <Button variant={variant} disabled>
@@ -276,7 +288,13 @@ function IconButtons() {
                 <Panel key={variant} title={variant}>
                     <div className={styles.row}>
                         {SIZES.map((size) => (
-                            <IconButton key={size} variant={variant} size={size} label="Favorite" icon={<Icon name="favorite" />} />
+                            <IconButton
+                                key={size}
+                                variant={variant}
+                                size={size}
+                                label="Favorite"
+                                icon={<Icon name="favorite" />}
+                            />
                         ))}
                         <IconButton variant={variant} width="narrow" label="Narrow" icon={<Icon name="edit" />} />
                         <IconButton variant={variant} width="wide" label="Wide" icon={<Icon name="edit" />} />
@@ -323,7 +341,14 @@ function Groups() {
                     <ConnectedButtonGroupItem value="az">A to Z</ConnectedButtonGroupItem>
                     <ConnectedButtonGroupItem value="quick">Quickest</ConnectedButtonGroupItem>
                 </ConnectedButtonGroup>
-                <ConnectedButtonGroup label="Diet" multiple value={filters} onValueChange={setFilters} variant="filled" size="m">
+                <ConnectedButtonGroup
+                    label="Diet"
+                    multiple
+                    value={filters}
+                    onValueChange={setFilters}
+                    variant="filled"
+                    size="m"
+                >
                     <ConnectedButtonGroupItem size="m" value="veg" check>
                         Veggie
                     </ConnectedButtonGroupItem>
@@ -442,7 +467,12 @@ function Progress() {
                     <CircularProgress />
                     <CircularProgress wavy />
                 </div>
-                <Slider label="Progress" value={value * 100} onValueChange={(v) => setValue(v / 100)} format={(v) => `${v}%`} />
+                <Slider
+                    label="Progress"
+                    value={value * 100}
+                    onValueChange={(v) => setValue(v / 100)}
+                    format={(v) => `${v}%`}
+                />
             </Panel>
         </>
     )
@@ -454,15 +484,28 @@ function Bars() {
             <Panel title="Floating toolbar">
                 <div className={styles.row}>
                     <Toolbar label="Recipe actions" fab={<Fab label="Cook" icon={<Icon name="skillet" />} />}>
-                        <ToolbarButton label="Favorite" icon={<Icon name="favorite" />} selectedIcon={<Icon name="favorite" filled />} defaultSelected={false} />
+                        <ToolbarButton
+                            label="Favorite"
+                            icon={<Icon name="favorite" />}
+                            selectedIcon={<Icon name="favorite" filled />}
+                            defaultSelected={false}
+                        />
                         <ToolbarButton label="Share" icon={<Icon name="share" />} />
                         <ToolbarButton label="Cast" icon={<Icon name="cast" />} />
                         <ToolbarSeparator />
                         <ToolbarButton label="Edit" icon={<Icon name="edit" />} />
                     </Toolbar>
-                    <Toolbar label="Vibrant" color="vibrant" fab={<Fab label="Add" color="tertiary" icon={<Icon name="add" />} />}>
+                    <Toolbar
+                        label="Vibrant"
+                        color="vibrant"
+                        fab={<Fab label="Add" color="tertiary" icon={<Icon name="add" />} />}
+                    >
                         <ToolbarButton label="Bold" icon={<Icon name="format_list_bulleted" />} defaultSelected />
-                        <ToolbarButton label="Numbered" icon={<Icon name="format_list_numbered" />} defaultSelected={false} />
+                        <ToolbarButton
+                            label="Numbered"
+                            icon={<Icon name="format_list_numbered" />}
+                            defaultSelected={false}
+                        />
                         <ToolbarButton label="Timer" icon={<Icon name="timer" />} />
                     </Toolbar>
                 </div>
@@ -498,27 +541,77 @@ function Bars() {
                         </div>
                     ))}
                     <div className={styles.frame}>
-                        <TopAppBar centered titleAs="div" title="Cook mode" leading={<IconButton label="Close" icon={<Icon name="close" />} />} />
+                        <TopAppBar
+                            centered
+                            titleAs="div"
+                            title="Cook mode"
+                            leading={<IconButton label="Close" icon={<Icon name="close" />} />}
+                        />
                     </div>
                 </div>
             </Panel>
             <Panel title="Navigation bar">
                 <div className={styles.navFrame}>
                     <NavigationBar>
-                        <NavigationBarItem href="/dev/gallery" selected icon={<Icon name="home" />} selectedIcon={<Icon name="home" filled />} label="Library" />
-                        <NavigationBarItem href="/collections" selected={false} icon={<Icon name="collections_bookmark" />} label="Collections" />
-                        <NavigationBarItem href="/grocery" selected={false} icon={<Icon name="grocery" />} label="Grocery" badge={3} />
-                        <NavigationBarItem href="/settings" selected={false} icon={<Icon name="settings" />} label="Settings" badge />
+                        <NavigationBarItem
+                            href="/dev/gallery"
+                            selected
+                            icon={<Icon name="home" />}
+                            selectedIcon={<Icon name="home" filled />}
+                            label="Library"
+                        />
+                        <NavigationBarItem
+                            href="/collections"
+                            selected={false}
+                            icon={<Icon name="collections_bookmark" />}
+                            label="Collections"
+                        />
+                        <NavigationBarItem
+                            href="/grocery"
+                            selected={false}
+                            icon={<Icon name="grocery" />}
+                            label="Grocery"
+                            badge={3}
+                        />
+                        <NavigationBarItem
+                            href="/settings"
+                            selected={false}
+                            icon={<Icon name="settings" />}
+                            label="Settings"
+                            badge
+                        />
                     </NavigationBar>
                 </div>
             </Panel>
             <Panel title="Navigation rail">
                 <div className={styles.railFrame}>
                     <NavigationRail fab={<RailFab icon={<Icon name="add_link" />} label="Clip recipe" />}>
-                        <NavigationRailItem href="/dev/gallery" selected icon={<Icon name="home" />} selectedIcon={<Icon name="home" filled />} label="Library" />
-                        <NavigationRailItem href="/collections" selected={false} icon={<Icon name="collections_bookmark" />} label="Collections" />
-                        <NavigationRailItem href="/grocery" selected={false} icon={<Icon name="grocery" />} label="Grocery" badge={2} />
-                        <NavigationRailItem href="/settings" selected={false} icon={<Icon name="settings" />} label="Settings" />
+                        <NavigationRailItem
+                            href="/dev/gallery"
+                            selected
+                            icon={<Icon name="home" />}
+                            selectedIcon={<Icon name="home" filled />}
+                            label="Library"
+                        />
+                        <NavigationRailItem
+                            href="/collections"
+                            selected={false}
+                            icon={<Icon name="collections_bookmark" />}
+                            label="Collections"
+                        />
+                        <NavigationRailItem
+                            href="/grocery"
+                            selected={false}
+                            icon={<Icon name="grocery" />}
+                            label="Grocery"
+                            badge={2}
+                        />
+                        <NavigationRailItem
+                            href="/settings"
+                            selected={false}
+                            icon={<Icon name="settings" />}
+                            label="Settings"
+                        />
                     </NavigationRail>
                     <div className={styles.frameBody} style={{ flex: 1 }}>
                         <Skeleton lines={6} />
@@ -532,10 +625,17 @@ function Bars() {
 function SearchSection() {
     const [q, setQ] = useState('')
     const [q2, setQ2] = useState('')
-    const results = ['Shakshuka', 'Short rib ragu', 'Shortbread', 'Shrimp tacos'].filter((r) => r.toLowerCase().includes(q.toLowerCase()))
+    const results = ['Shakshuka', 'Short rib ragu', 'Shortbread', 'Shrimp tacos'].filter((r) =>
+        r.toLowerCase().includes(q.toLowerCase()),
+    )
     return (
         <Panel>
-            <Search value={q} onValueChange={setQ} placeholder="Search recipes" trailing={<Avatar name="Demo Cook" size={30} />}>
+            <Search
+                value={q}
+                onValueChange={setQ}
+                placeholder="Search recipes"
+                trailing={<Avatar name="Demo Cook" size={30} />}
+            >
                 <List>
                     {results.map((r) => (
                         <ListItem key={r} headline={r} leading={<Icon name="history" />} onClick={() => setQ(r)} />
@@ -624,7 +724,11 @@ function Lists() {
                             key={id}
                             headline={title}
                             supporting="Serious Eats"
-                            leading={<span className={styles.thumb}><Icon name="restaurant" /></span>}
+                            leading={
+                                <span className={styles.thumb}>
+                                    <Icon name="restaurant" />
+                                </span>
+                            }
                             trailingText={time}
                             selected={selected === id}
                             onClick={() => setSelected(id ?? '')}
@@ -636,8 +740,18 @@ function Lists() {
                 <List>
                     <ListItem as="label" headline="2 eggs" leading={<Checkbox aria-label="2 eggs" defaultChecked />} />
                     <ListItem as="label" headline="1 cup flour" leading={<Checkbox aria-label="1 cup flour" />} />
-                    <ListItem headline="Keep screen on" supporting="While cooking" trailing={<Switch aria-label="Keep screen on" defaultChecked />} />
-                    <ListItem overline="Collection" headline="Weeknight" supporting="12 recipes, updated today" trailing={<Icon name="chevron_right" />} href="#lists" />
+                    <ListItem
+                        headline="Keep screen on"
+                        supporting="While cooking"
+                        trailing={<Switch aria-label="Keep screen on" defaultChecked />}
+                    />
+                    <ListItem
+                        overline="Collection"
+                        headline="Weeknight"
+                        supporting="12 recipes, updated today"
+                        trailing={<Icon name="chevron_right" />}
+                        href="#lists"
+                    />
                 </List>
             </Panel>
         </div>
@@ -678,7 +792,13 @@ function Sliders() {
             <Slider label="Spice" size="s" defaultValue={30} />
             <Slider label="Volume" size="m" defaultValue={60} icon={<Icon name="volume_up" />} />
             <Slider label="Brightness" size="l" defaultValue={45} icon={<Icon name="light_mode" />} />
-            <Slider label="Scale" size="xl" defaultValue={70} icon={<Icon name="scale" />} format={(v) => `${v / 10}×`} />
+            <Slider
+                label="Scale"
+                size="xl"
+                defaultValue={70}
+                icon={<Icon name="scale" />}
+                format={(v) => `${v / 10}×`}
+            />
             <Slider label="Disabled" disabled defaultValue={20} />
         </Panel>
     )
@@ -690,11 +810,41 @@ function Fields() {
         <div className={styles.grid}>
             {(['filled', 'outlined'] as const).map((variant) => (
                 <Panel key={variant} title={variant}>
-                    <TextField variant={variant} label="Title" defaultValue="Shakshuka" surfaceColor="var(--md-sys-color-surface-container-low)" />
-                    <TextField variant={variant} label="Source" placeholder="https://" leadingIcon={<Icon name="link" />} surfaceColor="var(--md-sys-color-surface-container-low)" />
-                    <TextField variant={variant} label="Prep time" suffix="min" inputMode="numeric" supportingText="Hands-on time" surfaceColor="var(--md-sys-color-surface-container-low)" />
-                    <TextField variant={variant} label="Price" prefix="$" defaultValue="12" surfaceColor="var(--md-sys-color-surface-container-low)" />
-                    <TextField variant={variant} label="Servings" error="Enter a number" defaultValue="a few" surfaceColor="var(--md-sys-color-surface-container-low)" />
+                    <TextField
+                        variant={variant}
+                        label="Title"
+                        defaultValue="Shakshuka"
+                        surfaceColor="var(--md-sys-color-surface)"
+                    />
+                    <TextField
+                        variant={variant}
+                        label="Source"
+                        placeholder="https://"
+                        leadingIcon={<Icon name="link" />}
+                        surfaceColor="var(--md-sys-color-surface)"
+                    />
+                    <TextField
+                        variant={variant}
+                        label="Prep time"
+                        suffix="min"
+                        inputMode="numeric"
+                        supportingText="Hands-on time"
+                        surfaceColor="var(--md-sys-color-surface)"
+                    />
+                    <TextField
+                        variant={variant}
+                        label="Price"
+                        prefix="$"
+                        defaultValue="12"
+                        surfaceColor="var(--md-sys-color-surface)"
+                    />
+                    <TextField
+                        variant={variant}
+                        label="Servings"
+                        error="Enter a number"
+                        defaultValue="a few"
+                        surfaceColor="var(--md-sys-color-surface)"
+                    />
                     <TextField
                         variant={variant}
                         label="Notes"
@@ -703,7 +853,7 @@ function Fields() {
                         counter
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        surfaceColor="var(--md-sys-color-surface-container-low)"
+                        surfaceColor="var(--md-sys-color-surface)"
                     />
                     <TextField variant={variant} label="Disabled" disabled defaultValue="Locked" />
                 </Panel>
@@ -722,7 +872,14 @@ function Fields() {
                         { value: 'dessert', label: 'Dessert', icon: <Icon name="cake" /> },
                     ]}
                 />
-                <Select label="Units" variant="outlined" options={[{ value: 'm', label: 'Metric' }, { value: 'us', label: 'US' }]} />
+                <Select
+                    label="Units"
+                    variant="outlined"
+                    options={[
+                        { value: 'm', label: 'Metric' },
+                        { value: 'us', label: 'US' },
+                    ]}
+                />
             </Panel>
         </div>
     )
@@ -751,7 +908,9 @@ function Menus() {
                     </MenuContent>
                 </Menu>
                 <Menu>
-                    <MenuTrigger render={<Button variant="tonal" trailingIcon={<Icon name="arrow_drop_down" />} />}>Sort</MenuTrigger>
+                    <MenuTrigger render={<Button variant="tonal" trailingIcon={<Icon name="arrow_drop_down" />} />}>
+                        Sort
+                    </MenuTrigger>
                     <MenuContent>
                         <MenuGroup label="Sort by">
                             <MenuRadioGroup value={sort} onValueChange={(v) => setSort(String(v))}>
@@ -807,7 +966,11 @@ function Overlays() {
                             </>
                         }
                     >
-                        <TextField label="Name" variant="outlined" surfaceColor="var(--md-sys-color-surface-container-high)" />
+                        <TextField
+                            label="Name"
+                            variant="outlined"
+                            surfaceColor="var(--md-sys-color-surface-container-high)"
+                        />
                     </DialogContent>
                 </Dialog>
                 <AlertDialog>
@@ -838,7 +1001,9 @@ function Overlays() {
                     </BottomSheetContent>
                 </BottomSheet>
                 <BottomSheet snapPoints={['220px', 1]}>
-                    <BottomSheetTrigger render={<Button variant="outlined" />}>Sheet with snap points</BottomSheetTrigger>
+                    <BottomSheetTrigger render={<Button variant="outlined" />}>
+                        Sheet with snap points
+                    </BottomSheetTrigger>
                     <BottomSheetContent title="Ingredients">
                         <Skeleton lines={24} />
                     </BottomSheetContent>
@@ -860,14 +1025,24 @@ function Overlays() {
                 </Button>
                 <Button
                     variant="text"
-                    onClick={() => snackbar({ message: 'Removed from grocery list', action: 'Undo', onAction: () => snackbar('Restored') })}
+                    onClick={() =>
+                        snackbar({
+                            message: 'Removed from grocery list',
+                            action: 'Undo',
+                            onAction: () => snackbar('Restored'),
+                        })
+                    }
                 >
                     With action
                 </Button>
                 <Button
                     variant="text"
                     onClick={() =>
-                        snackbar({ message: 'Could not clip that page. Check the link and try again.', closable: true, urgent: true })
+                        snackbar({
+                            message: 'Could not clip that page. Check the link and try again.',
+                            closable: true,
+                            urgent: true,
+                        })
                     }
                 >
                     Two lines, closable
@@ -941,7 +1116,10 @@ function Carousels() {
         <div
             key={icon}
             className={styles.carouselTile}
-            style={{ background: `var(--md-sys-color-${role}-container)`, color: `var(--md-sys-color-on-${role}-container)` }}
+            style={{
+                background: `var(--md-sys-color-${role}-container)`,
+                color: `var(--md-sys-color-on-${role}-container)`,
+            }}
         >
             <Icon name={icon} />
         </div>

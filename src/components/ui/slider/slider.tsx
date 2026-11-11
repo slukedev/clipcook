@@ -68,7 +68,11 @@ export function Slider({
                 <BaseSlider.Track className={styles.track}>
                     {icon && size !== 'xs' && size !== 's' && <span className={styles.insetIcon}>{icon}</span>}
                     <BaseSlider.Indicator className={styles.indicator} />
-                    <BaseSlider.Thumb className={styles.thumb} aria-label={label} getAriaValueText={(_text, v) => format(v)}>
+                    <BaseSlider.Thumb
+                        className={styles.thumb}
+                        aria-label={label}
+                        getAriaValueText={(_text, v) => format(v)}
+                    >
                         <span className={styles.value} aria-hidden>
                             {format(current)}
                         </span>

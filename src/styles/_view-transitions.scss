@@ -24,36 +24,41 @@
 }
 
 ::view-transition-old(.cc-fade) {
-    animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast) both;
+    animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
+        both;
 }
 
 ::view-transition-new(.cc-fade) {
-    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
-        var(--md-sys-motion-spring-effects-fast-duration) both;
+    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) var(--md-sys-motion-spring-effects-fast-duration) both;
 }
 
 ::view-transition-old(.cc-forward) {
     animation:
-        cc-vt-slide-out-start var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default) both,
+        cc-vt-slide-out-start var(--md-sys-motion-spring-spatial-default-duration)
+            var(--md-sys-motion-spring-spatial-default) both,
         cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast) both;
 }
 
 ::view-transition-new(.cc-forward) {
     animation:
-        cc-vt-slide-in-end var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default) both,
+        cc-vt-slide-in-end var(--md-sys-motion-spring-spatial-default-duration)
+            var(--md-sys-motion-spring-spatial-default) both,
         cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
             var(--md-sys-motion-spring-effects-fast-duration) both;
 }
 
 ::view-transition-old(.cc-back) {
     animation:
-        cc-vt-slide-out-end var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default) both,
+        cc-vt-slide-out-end var(--md-sys-motion-spring-spatial-default-duration)
+            var(--md-sys-motion-spring-spatial-default) both,
         cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast) both;
 }
 
 ::view-transition-new(.cc-back) {
     animation:
-        cc-vt-slide-in-start var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default) both,
+        cc-vt-slide-in-start var(--md-sys-motion-spring-spatial-default-duration)
+            var(--md-sys-motion-spring-spatial-default) both,
         cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
             var(--md-sys-motion-spring-effects-fast-duration) both;
 }
@@ -111,6 +116,6 @@
     }
 }
 
-:root[dir='rtl'] {
+:root[dir="rtl"] {
     --cc-dir: -1;
 }

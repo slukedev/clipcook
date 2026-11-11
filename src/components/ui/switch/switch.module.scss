@@ -1,5 +1,3 @@
-
-
 // Track 52x32. Thumb 16 off, 24 on or with icons, 28 while pressed; drawn as one
 // 28dp circle scaled so the change runs on the compositor.
 .root {
@@ -20,7 +18,7 @@
         box-shadow var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
 
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: -8px -4px;
     }
@@ -61,7 +59,7 @@
 
     // State layer: a 40dp halo around the thumb.
     &::before {
-        content: '';
+        content: "";
         position: absolute;
         inset: calc((28px - 40px) / 2);
         border-radius: 50%;

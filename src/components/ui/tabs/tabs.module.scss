@@ -1,6 +1,6 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
 
 .root {
     display: flex;
@@ -56,7 +56,7 @@
         color: var(--md-sys-color-primary);
     }
 
-    [data-variant='secondary'] & {
+    [data-variant="secondary"] & {
         flex-direction: row;
         gap: 8px;
 
@@ -93,7 +93,7 @@
         translate var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
         inline-size var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default);
 
-    [data-variant='secondary'] & {
+    [data-variant="secondary"] & {
         --_inset: 0px;
         block-size: 2px;
         border-radius: 0;

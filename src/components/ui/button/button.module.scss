@@ -1,4 +1,4 @@
-@use './shared';
+@use "./shared";
 
 .button {
     @include shared.base;
@@ -43,6 +43,7 @@
     &:disabled,
     &[data-disabled] {
         --_container: transparent;
+        --_outline-color: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
     }
 }
 
@@ -67,7 +68,7 @@
     --_content: var(--md-sys-color-primary);
     --_pad: 12px;
 
-    &[data-size='xs'] {
+    &[data-size="xs"] {
         --_pad: 10px;
     }
 
@@ -91,7 +92,7 @@
     --_radius: var(--_square);
 }
 
-.button[data-toggle][data-shape='square'][data-pressed] {
+.button[data-toggle][data-shape="square"][data-pressed] {
     --_radius: var(--_round);
 }
 

@@ -1,5 +1,5 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
 
 .root {
     display: flex;
@@ -25,7 +25,7 @@
     --md-icon-size: 24px;
 
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         border-radius: inherit;
@@ -33,11 +33,11 @@
         pointer-events: none;
     }
 
-    &[data-variant='filled'] {
+    &[data-variant="filled"] {
         background-color: var(--md-sys-color-surface-container-highest);
     }
 
-    &[data-variant='outlined'] {
+    &[data-variant="outlined"] {
         border-radius: var(--md-sys-shape-corner-extra-small);
         --_ring-width: 1px;
         --_ring-color: var(--md-sys-color-outline);
@@ -117,7 +117,7 @@
         transform: scale(0.94);
     }
 
-    &[data-side='none'] {
+    &[data-side="none"] {
         transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
 
         &[data-starting-style],

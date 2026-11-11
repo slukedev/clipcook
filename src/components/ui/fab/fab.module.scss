@@ -1,6 +1,6 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
 
 // FloatingActionButton tokens: small 40/12/24, default 56/16/24, medium 80/20/28, large 96/28/36.
 .fab {
@@ -34,7 +34,8 @@
         block-size var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
         padding var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
         gap var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
-        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
         color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
         box-shadow var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
 
@@ -54,18 +55,18 @@
         }
     }
 
-    &[data-size='small'] {
+    &[data-size="small"] {
         --_h: 40px;
         --_radius: var(--md-sys-shape-corner-medium);
     }
 
-    &[data-size='medium'] {
+    &[data-size="medium"] {
         --_h: 80px;
         --_radius: var(--md-sys-shape-corner-large-increased);
         --md-icon-size: 28px;
     }
 
-    &[data-size='large'] {
+    &[data-size="large"] {
         --_h: 96px;
         --_radius: var(--md-sys-shape-corner-extra-large);
         --md-icon-size: 36px;
@@ -112,13 +113,13 @@
     --_gap: 8px;
     @include type.role(title-medium);
 
-    &[data-size='medium'] {
+    &[data-size="medium"] {
         --_pad: 26px;
         --_gap: 12px;
         @include type.role(title-large);
     }
 
-    &[data-size='large'] {
+    &[data-size="large"] {
         --_pad: 28px;
         --_gap: 16px;
         --md-icon-size: 32px;

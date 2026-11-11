@@ -51,7 +51,10 @@ export function MorphShape({ shape, size, spring = 'spatial-default', className,
         return () => cancelAnimationFrame(frame)
     }, [shape, spec, reduce])
 
-    const sized = size === undefined ? style : ({ ...style, '--md-shape-size': typeof size === 'number' ? `${size}px` : size } as CSSProperties)
+    const sized =
+        size === undefined
+            ? style
+            : ({ ...style, '--md-shape-size': typeof size === 'number' ? `${size}px` : size } as CSSProperties)
     return (
         <svg
             viewBox="0 0 100 100"

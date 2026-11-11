@@ -33,13 +33,25 @@ export interface DialogContentProps {
 }
 
 /** Basic M3 dialog (or full-screen on compact). Put it inside `Dialog`. */
-export function DialogContent({ headline, icon, children, actions, fullScreen, fullScreenAction, className }: DialogContentProps) {
+export function DialogContent({
+    headline,
+    icon,
+    children,
+    actions,
+    fullScreen,
+    fullScreenAction,
+    className,
+}: DialogContentProps) {
     const fs = fullScreen || undefined
     return (
         <BaseDialog.Portal>
             <BaseDialog.Backdrop className={styles.backdrop} />
             <BaseDialog.Viewport className={styles.viewport} data-fullscreen={fs}>
-                <BaseDialog.Popup className={cx(styles.popup, className)} data-fullscreen={fs} data-centered={icon ? '' : undefined}>
+                <BaseDialog.Popup
+                    className={cx(styles.popup, className)}
+                    data-fullscreen={fs}
+                    data-centered={icon ? '' : undefined}
+                >
                     {fullScreen && (
                         <div className={styles.header}>
                             <BaseDialog.Close render={<IconButton label="Close" icon={<Glyph name="close" />} />} />
@@ -78,7 +90,9 @@ export function AlertDialogContent({ headline, icon, children, actions, classNam
                 <BaseAlertDialog.Popup className={cx(styles.popup, className)} data-centered={icon ? '' : undefined}>
                     {icon && <span className={styles.icon}>{icon}</span>}
                     <BaseAlertDialog.Title className={styles.headline}>{headline}</BaseAlertDialog.Title>
-                    {children && <BaseAlertDialog.Description className={styles.body}>{children}</BaseAlertDialog.Description>}
+                    {children && (
+                        <BaseAlertDialog.Description className={styles.body}>{children}</BaseAlertDialog.Description>
+                    )}
                     <div className={styles.actions}>{actions}</div>
                 </BaseAlertDialog.Popup>
             </BaseAlertDialog.Viewport>
