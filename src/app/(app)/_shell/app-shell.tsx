@@ -8,6 +8,7 @@ import { ExtendedFab, FabMenu, FabMenuItem } from '@/components/ui/fab'
 import { Menu, MenuContent, MenuLinkItem, MenuTrigger } from '@/components/ui/menu'
 import { NavigationBar, NavigationBarItem } from '@/components/ui/navigation-bar'
 import { NavigationRail, NavigationRailItem, useRailExpanded } from '@/components/ui/navigation-rail'
+import { useFreshVtName } from '@/components/ui/view-transition'
 import { prefetchPage, whenIdle } from '@/lib/navigation/prefetch'
 import styles from './app-shell.module.scss'
 import { captureInstallPrompt } from './install-prompt'
@@ -167,7 +168,7 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
                 )}
             </div>
             {showsFab(pathname) && (
-                <div className={`${styles.fab} cc-vt-fab`} data-clip-fab="">
+                <CompactFab className={styles.fab}>
                     <FabMenu label="Clip a recipe" icon={clipIcon}>
                         {clipActions.map((action) => (
                             <FabMenuItem key={action.href} icon={action.icon} onClick={() => router.push(action.href)}>
@@ -175,8 +176,18 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
                             </FabMenuItem>
                         ))}
                     </FabMenu>
-                </div>
+                </CompactFab>
             )}
+        </div>
+    )
+}
+
+/** The compact FAB's slot. Its view-transition-name changes with every transition (see view-transition/generation). */
+function CompactFab({ className, children }: { className?: string; children: ReactNode }) {
+    const name = useFreshVtName('cc-fab')
+    return (
+        <div className={`${className ?? ''} cc-vt-fab`} style={{ viewTransitionName: name }} data-clip-fab="">
+            {children}
         </div>
     )
 }

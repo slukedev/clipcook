@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { startTransition, useDeferredValue, useEffect, useRef, useState, useTransition, ViewTransition } from 'react'
+import { type ReactNode, startTransition, useDeferredValue, useEffect, useRef, useState, useTransition, ViewTransition } from 'react'
 import { addStarterRecipes, searchRecipes } from '@/actions/recipes'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/menu'
 import { SearchBar } from '@/components/ui/search'
 import { useSnackbar } from '@/components/ui/snackbar'
-import { PageTransition } from '@/components/ui/view-transition'
+import { PageTransition, useFreshVtName } from '@/components/ui/view-transition'
 import type { RecipeSummary, TagCount } from '@/lib/domain/types'
 import { writeCookie } from '../_shell/preferences'
 import { useSessionUser } from '../_shell/session-context'
@@ -423,7 +423,7 @@ export function Library({
                     )}
                 </header>
 
-                <ViewTransition key={resultsKey} enter="cc-results" exit="cc-results" default="none">
+                <ResultsTransition key={resultsKey} id={resultsKey}>
                     <div className={styles.results}>
                         {!filtering && tonight}
                         {cooked.length > 0 && <JumpBackIn recipes={cooked} />}
@@ -466,8 +466,18 @@ export function Library({
                             />
                         )}
                     </div>
-                </ViewTransition>
+                </ResultsTransition>
             </div>
         </PageTransition>
+    )
+}
+
+/** One set of results; a new key crossfades from the old set. Named per set and generation (see view-transition/generation). */
+function ResultsTransition({ id, children }: { id: string; children: ReactNode }) {
+    const name = useFreshVtName(`results-${id}`)
+    return (
+        <ViewTransition name={name} enter="cc-results" exit="cc-results" share="none" default="none">
+            {children}
+        </ViewTransition>
     )
 }

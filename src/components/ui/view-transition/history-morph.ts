@@ -1,4 +1,5 @@
 import { vtName } from '@/lib/theme/view-transition'
+import { freshVtName } from './generation'
 
 /**
  * Shared elements that `goBackWithMorph` can pair across a history traversal. React's
@@ -27,7 +28,7 @@ function tag(id: string, kinds: readonly MorphKind[]): HTMLElement[] {
     for (const kind of kinds) {
         const el = document.querySelector<HTMLElement>(`[data-vt-${kind}="${CSS.escape(id)}"]`)
         if (!el || !visible(el)) continue
-        el.style.setProperty('view-transition-name', vtName(KINDS[kind].name, id))
+        el.style.setProperty('view-transition-name', freshVtName(vtName(KINDS[kind].name, id)))
         el.style.setProperty('view-transition-class', KINDS[kind].className)
         tagged.push(el)
     }

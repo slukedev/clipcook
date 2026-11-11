@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { type CSSProperties, ViewTransition } from 'react'
+import type { CSSProperties } from 'react'
 import { CastButton } from '@/components/kitchen/cast-button'
 import { Button } from '@/components/ui/button'
 import { AssistChip, ChipSet } from '@/components/ui/chip'
@@ -144,7 +144,7 @@ export function RecipeScreen({
                                     </dl>
                                 )}
                                 {hasSteps && (
-                                    <ViewTransition name={vtName('cook', recipe.id)} share="cc-cook" default="none">
+                                    <SharedElement name={vtName('cook', recipe.id)} share="cc-cook">
                                         <Button
                                             className={styles.cook}
                                             {...morphTarget('cook', recipe.id)}
@@ -161,7 +161,7 @@ export function RecipeScreen({
                                         >
                                             Cook
                                         </Button>
-                                    </ViewTransition>
+                                    </SharedElement>
                                 )}
                                 {(recipe.tags.length > 0 || memberOf.length > 0) && (
                                     <ChipSet className={styles.chips} label="Tags and collections">
