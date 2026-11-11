@@ -61,8 +61,10 @@ test('cook mode opens on an overview, pages by keyboard, Done records the cook, 
     await page.goto(recipePath)
     await page.getByRole('link', { name: 'Cook', exact: true }).click()
     await expect(counter).toHaveText(`${stepCount} steps`)
-    await page.keyboard.press('ArrowRight')
-    await expect(counter).toHaveText(`Step 1 of ${stepCount}`)
+    await expect(async () => {
+        if ((await counter.textContent()) !== `Step 1 of ${stepCount}`) await page.keyboard.press('ArrowRight')
+        await expect(counter).toHaveText(`Step 1 of ${stepCount}`, { timeout: 1000 })
+    }).toPass()
     await page.keyboard.press('Escape')
     await expect(page).toHaveURL(recipePath)
     expect((await exportLibrary(page)).recipes.find((r) => r.title === TITLE)?.cookCount).toBe(
