@@ -15,12 +15,15 @@ export function IngredientChecklist({
     recipeId,
     sections,
     highlight,
+    uses,
     className,
 }: {
     recipeId: string
     sections: IngredientSection[]
     /** Ingredient indices to emphasize (the ones the current step uses). */
     highlight?: readonly number[]
+    /** Ingredients the step being read uses; marked only where the list sits beside the steps. */
+    uses?: readonly number[]
     className?: string
 }) {
     const checked = useRecipeState(checkedIngredients, recipeId)
@@ -39,7 +42,12 @@ export function IngredientChecklist({
                                     as="label"
                                     className={styles.row}
                                     selected={isHighlighted && !isChecked}
-                                    itemProps={{ 'data-checked': isChecked ? '' : undefined } as object}
+                                    itemProps={
+                                        {
+                                            'data-checked': isChecked ? '' : undefined,
+                                            'data-uses': uses?.includes(item.index) && !isChecked ? '' : undefined,
+                                        } as object
+                                    }
                                     leading={
                                         <Checkbox
                                             aria-label={item.text}

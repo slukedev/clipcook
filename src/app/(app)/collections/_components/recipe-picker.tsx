@@ -1,13 +1,14 @@
 'use client'
 
-import { type ReactNode, useDeferredValue, useState, useTransition } from 'react'
+import { type ReactNode, Suspense, use, useDeferredValue, useState, useTransition } from 'react'
 import { addToCollection, removeFromCollection } from '@/actions/collections'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
 import { SearchBar } from '@/components/ui/search'
 import { useSnackbar } from '@/components/ui/snackbar'
-import type { RecipeSummary } from '@/lib/domain/types'
+import { LoadingIndicator } from '@/components/ui/loading-indicator'
+import type { ActionResult, RecipeSummary } from '@/lib/domain/types'
 import type { CollectionRef } from '../../_library/collection-dialog'
 import { matches, queryTokens, searchable } from '../../_library/library-data'
 import { RecipeMedia } from '../../_library/recipe-media'
@@ -15,18 +16,19 @@ import styles from './recipe-picker.module.scss'
 
 export interface PickerTarget {
     key: number
+    /** Started when the picker opens, so the library arrives while the dialog animates in. */
+    recipes: Promise<ActionResult<RecipeSummary[]>>
 }
 
 interface RecipePickerProps {
     target: PickerTarget | null
     onClose: () => void
     collection: CollectionRef
-    recipes: RecipeSummary[]
     searchIcon: ReactNode
 }
 
 /** Check recipes in or out of a collection, with search over the whole library. */
-export function RecipePicker({ target, onClose, collection, recipes, searchIcon }: RecipePickerProps) {
+export function RecipePicker({ target, onClose, collection, searchIcon }: RecipePickerProps) {
     const [shown, setShown] = useState(target)
     if (target && target !== shown) setShown(target)
     return (
@@ -35,7 +37,7 @@ export function RecipePicker({ target, onClose, collection, recipes, searchIcon 
                 <Picker
                     key={shown.key}
                     collection={collection}
-                    recipes={recipes}
+                    recipes={shown.recipes}
                     onClose={onClose}
                     searchIcon={searchIcon}
                 />
@@ -44,33 +46,28 @@ export function RecipePicker({ target, onClose, collection, recipes, searchIcon 
     )
 }
 
-function Picker({ collection, recipes, onClose, searchIcon }: Omit<RecipePickerProps, 'target'>) {
+interface PickerProps {
+    collection: CollectionRef
+    recipes: PickerTarget['recipes']
+    onClose: () => void
+    searchIcon: ReactNode
+}
+
+function Picker({ collection, recipes, onClose, searchIcon }: PickerProps) {
     const snackbar = useSnackbar()
-    const [initial] = useState(
-        () => new Set(recipes.filter((r) => r.collectionIds.includes(collection.id)).map((r) => r.id)),
-    )
-    const [checked, setChecked] = useState<ReadonlySet<string>>(initial)
+    /** Recipe id to wanted membership, only where it differs from the saved state. */
+    const [changes, setChanges] = useState<ReadonlyMap<string, boolean>>(new Map())
     const [query, setQuery] = useState('')
     const [pending, startTransition] = useTransition()
-    const tokens = queryTokens(useDeferredValue(query))
-    // Members first, then the rest, each alphabetical, so the current state reads at a glance.
-    const ordered = searchable(recipes)
-        .filter((r) => matches(r, tokens))
-        .toSorted(
-            (a, b) =>
-                Number(initial.has(b.id)) - Number(initial.has(a.id)) ||
-                a.title.localeCompare(b.title, undefined, { numeric: true }),
-        )
+    const added = [...changes].filter(([, on]) => on).map(([id]) => id)
+    const removed = [...changes].filter(([, on]) => !on).map(([id]) => id)
+    const dirty = changes.size > 0
 
-    const added = [...checked].filter((id) => !initial.has(id))
-    const removed = [...initial].filter((id) => !checked.has(id))
-    const dirty = added.length > 0 || removed.length > 0
-
-    const toggle = (id: string, on: boolean) => {
-        const next = new Set(checked)
-        if (on) next.add(id)
-        else next.delete(id)
-        setChecked(next)
+    const toggle = (id: string, on: boolean, member: boolean) => {
+        const next = new Map(changes)
+        if (on === member) next.delete(id)
+        else next.set(id, on)
+        setChanges(next)
     }
 
     const save = () => {
@@ -116,29 +113,69 @@ function Picker({ collection, recipes, onClose, searchIcon }: Omit<RecipePickerP
             <div className={styles.search}>
                 <SearchBar value={query} onValueChange={setQuery} placeholder="Search recipes" leading={searchIcon} />
             </div>
-            {ordered.length === 0 ? (
-                <p className={styles.none}>No matches</p>
-            ) : (
-                <ul className={styles.list} aria-label="Recipes">
-                    {ordered.map((recipe) => (
-                        <li key={recipe.id} className={styles.item}>
-                            <Checkbox
-                                className={styles.row}
-                                checked={checked.has(recipe.id)}
-                                onCheckedChange={(on) => toggle(recipe.id, on)}
-                                label={
-                                    <>
-                                        <span className={styles.thumb}>
-                                            <RecipeMedia src={recipe.thumbnail} title={recipe.title} sizes="40px" />
-                                        </span>
-                                        <span className={styles.title}>{recipe.title}</span>
-                                    </>
-                                }
-                            />
-                        </li>
-                    ))}
-                </ul>
-            )}
+            <Suspense
+                fallback={
+                    <div className={styles.loading}>
+                        <LoadingIndicator label="Loading recipes" />
+                    </div>
+                }
+            >
+                <PickerList
+                    collectionId={collection.id}
+                    recipes={recipes}
+                    query={query}
+                    changes={changes}
+                    onToggle={toggle}
+                />
+            </Suspense>
         </DialogContent>
+    )
+}
+
+interface PickerListProps {
+    collectionId: string
+    recipes: PickerTarget['recipes']
+    query: string
+    changes: ReadonlyMap<string, boolean>
+    onToggle: (id: string, on: boolean, member: boolean) => void
+}
+
+function PickerList({ collectionId, recipes, query, changes, onToggle }: PickerListProps) {
+    const result = use(recipes)
+    const tokens = queryTokens(useDeferredValue(query))
+    if (!result.ok) return <p className={styles.none}>{result.error}</p>
+    const isMember = (r: RecipeSummary) => r.collectionIds.includes(collectionId)
+    // Members first, then the rest, each alphabetical, so the current state reads at a glance.
+    const ordered = searchable(result.data)
+        .filter((r) => matches(r, tokens))
+        .toSorted(
+            (a, b) =>
+                Number(isMember(b)) - Number(isMember(a)) ||
+                a.title.localeCompare(b.title, undefined, { numeric: true }),
+        )
+    if (ordered.length === 0) return <p className={styles.none}>No matches</p>
+    return (
+        <ul className={styles.list} aria-label="Recipes">
+            {ordered.map((recipe) => {
+                const member = isMember(recipe)
+                return (
+                    <li key={recipe.id} className={styles.item}>
+                        <Checkbox
+                            className={styles.row}
+                            checked={changes.get(recipe.id) ?? member}
+                            onCheckedChange={(on) => onToggle(recipe.id, on, member)}
+                            label={
+                                <>
+                                    <span className={styles.thumb}>
+                                        <RecipeMedia src={recipe.thumbnail} title={recipe.title} sizes="40px" />
+                                    </span>
+                                    <span className={styles.title}>{recipe.title}</span>
+                                </>
+                            }
+                        />
+                    </li>
+                )
+            })}
+        </ul>
     )
 }

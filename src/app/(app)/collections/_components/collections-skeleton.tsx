@@ -1,7 +1,8 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import type { ViewMode } from '../../_library/library-data'
 import { RecipeGridSkeleton } from '../../_library/library-skeleton'
 import grid from './collections-grid.module.scss'
-import view from './collection-view.module.scss'
+import page from './collection-view.module.scss'
 
 export function CollectionsSkeleton() {
     return (
@@ -14,14 +15,14 @@ export function CollectionsSkeleton() {
     )
 }
 
-export function CollectionSkeleton() {
+export function CollectionSkeleton({ view = 'grid' }: { view?: ViewMode }) {
     return (
-        <div className={view.page} role="status" aria-busy="true" aria-label="Loading collection">
-            <div className={view.header}>
+        <div className={page.page} role="status" aria-busy="true" aria-label="Loading collection">
+            <div className={page.header}>
                 <Skeleton shape="circle" width={40} height={40} />
-                <Skeleton shape="text" className={view.title} width="min(60%, 280px)" />
+                <Skeleton shape="text" className={page.title} width="min(60%, 280px)" />
             </div>
-            <RecipeGridSkeleton />
+            <RecipeGridSkeleton view={view} />
         </div>
     )
 }

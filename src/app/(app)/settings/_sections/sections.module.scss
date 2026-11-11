@@ -108,10 +108,22 @@
     svg {
         fill: currentcolor;
     }
+
+    // 48dp target around the 40dp pill.
+    &::after {
+        content: "";
+        position: absolute;
+        inset: -4px 0;
+    }
+
+    // Nothing to drag it to on a touch screen; Copy is the way there.
+    @media (pointer: coarse), (hover: none) {
+        display: none;
+    }
 }
 
 .pointerFine {
-    @media (pointer: coarse) {
+    @media (pointer: coarse), (hover: none) {
         display: none;
     }
 }
@@ -119,7 +131,7 @@
 .pointerCoarse {
     display: none;
 
-    @media (pointer: coarse) {
+    @media (pointer: coarse), (hover: none) {
         display: inline;
     }
 }

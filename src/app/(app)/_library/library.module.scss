@@ -38,6 +38,7 @@
 }
 
 .search {
+    position: relative;
     flex: 1 1 auto;
     min-inline-size: 0;
 
@@ -92,20 +93,14 @@
     }
 }
 
-// Bleeds to the window edges so chips scroll out of view rather than into a margin.
-.chips {
-    margin-inline: calc(-1 * var(--md-sys-layout-margin));
-    padding-inline: var(--md-sys-layout-margin);
-    scroll-padding-inline: var(--md-sys-layout-margin);
-}
-
 .toolRow {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     min-block-size: 40px;
-    margin-block: -4px -8px;
+    // Starts where the chips' 48dp touch zone ends, so the two never overlap.
+    margin-block: 0 -8px;
 
     @include media.expanded-up {
         min-block-size: 0;
@@ -145,6 +140,21 @@
     @include type.role(title-large);
 
     color: var(--md-sys-color-on-surface);
+}
+
+.searching {
+    display: grid;
+    place-items: center;
+    min-block-size: 160px;
+    // Most searches answer before this shows.
+    animation: library-searching-in var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) 300ms both;
+}
+
+@keyframes library-searching-in {
+    from {
+        opacity: 0;
+    }
 }
 
 .empty {

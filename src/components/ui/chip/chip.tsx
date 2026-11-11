@@ -163,11 +163,17 @@ export function InputChip({
 export interface ChipSetProps extends HTMLAttributes<HTMLDivElement> {
     /** One scrolling row with fading edges instead of wrapping. */
     scroll?: boolean
+    /**
+     * With `scroll`: the row runs into the page margin so chips scroll out to the
+     * window edge, while the first chip still lines up with the content. The margin
+     * is `--md-sys-layout-margin` unless `--md-chip-set-bleed` says otherwise.
+     */
+    bleed?: boolean
     /** Accessible name for the group. */
     label?: string
 }
 
-export function ChipSet({ scroll = false, label, className, children, ...rest }: ChipSetProps) {
+export function ChipSet({ scroll = false, bleed = false, label, className, children, ...rest }: ChipSetProps) {
     return (
         // biome-ignore lint/a11y/useSemanticElements: chips are actions and filters, not a form fieldset
         <div
@@ -175,6 +181,7 @@ export function ChipSet({ scroll = false, label, className, children, ...rest }:
             aria-label={label}
             className={cx(styles.set, className)}
             data-scroll={scroll || undefined}
+            data-bleed={(scroll && bleed) || undefined}
             {...rest}
         >
             {children}

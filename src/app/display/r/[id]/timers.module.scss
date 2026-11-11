@@ -1,0 +1,254 @@
+@use "../../../../styles/mixins/typography" as type;
+@use "../../../../styles/mixins/state-layer";
+@use "../../../../styles/mixins/focus-ring";
+
+// The step view's row of timers.
+.timers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    list-style: none;
+}
+
+.timer {
+    display: flex;
+    align-items: center;
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
+
+    &[data-paused] {
+        background-color: var(--md-sys-color-surface-container-highest);
+        color: var(--md-sys-color-on-surface);
+    }
+
+    &[data-done] {
+        background-color: var(--md-sys-color-tertiary);
+        color: var(--md-sys-color-on-tertiary);
+        animation: timer-done 1.2s var(--md-sys-motion-easing-standard) infinite alternate;
+    }
+}
+
+.timerMain {
+    @include state-layer.host;
+    @include focus-ring.ring;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: 64px;
+    padding-inline: 18px 8px;
+    border-radius: inherit;
+    font-size: 1.5rem;
+    font-weight: 600;
+    @include type.numeric;
+}
+
+.timerIcon {
+    display: grid;
+    --md-icon-size: 28px;
+}
+
+.timerClock {
+    @include type.numeric;
+}
+
+.timerClose {
+    @include state-layer.host;
+    @include focus-ring.ring;
+    display: grid;
+    place-items: center;
+    inline-size: 64px;
+    block-size: 64px;
+    border-radius: var(--md-sys-shape-corner-full);
+    --md-icon-size: 24px;
+}
+
+// A ringing timer breathes in tone; opacity only, so it costs nothing to run.
+@keyframes timer-done {
+    to {
+        opacity: 0.72;
+    }
+}
+
+// Away from the step view, timers live in a pill above the content, bottom corner, like an
+// extended FAB. The step view has its own row, so the pill steps aside there.
+.timersPill {
+    @include state-layer.host(var(--md-sys-color-on-tertiary-container));
+    @include focus-ring.ring;
+    position: fixed;
+    inset-block-end: max(var(--display-edge), var(--safe-bottom));
+    inset-inline-end: max(var(--display-edge), var(--safe-right));
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-block-size: 64px;
+    padding-inline: 20px 24px;
+    border-radius: var(--md-sys-shape-corner-large);
+    background-color: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+    box-shadow: var(--md-sys-elevation-level3);
+    font-size: 1.5rem;
+    font-weight: 600;
+    transition:
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
+        color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    @starting-style {
+        scale: 0.8;
+        opacity: 0;
+    }
+
+    &:active {
+        scale: 0.96;
+    }
+
+    &[data-ringing] {
+        background-color: var(--md-sys-color-tertiary);
+        color: var(--md-sys-color-on-tertiary);
+    }
+
+    :global([data-display-root]:has([data-mode="step"])) & {
+        display: none;
+    }
+}
+
+.pillCount {
+    display: grid;
+    place-items: center;
+    min-inline-size: 28px;
+    block-size: 28px;
+    padding-inline: 6px;
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-on-tertiary-container);
+    color: var(--md-sys-color-tertiary-container);
+    font-size: 1rem;
+    @include type.numeric;
+
+    .timersPill[data-ringing] & {
+        background-color: var(--md-sys-color-on-tertiary);
+        color: var(--md-sys-color-tertiary);
+    }
+}
+
+// When a timer ends the whole screen's edge glows in tertiary, so it is seen from across
+// the kitchen with the sound off. Opacity only.
+.pulse {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 clamp(8px, 1.6vmin, 16px) var(--md-sys-color-tertiary);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--md-sys-motion-spring-effects-slow-duration) var(--md-sys-motion-spring-effects-slow);
+
+    &[data-ringing] {
+        animation: ring-pulse 1.6s var(--md-sys-motion-easing-standard) infinite;
+    }
+}
+
+@keyframes ring-pulse {
+    0%,
+    100% {
+        opacity: 0.25;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+// The all-timers sheet: clocks readable from across the room, 64dp controls.
+.timersSheet {
+    inline-size: min(92vw, 720px);
+    max-inline-size: none;
+}
+
+.sheetList {
+    display: grid;
+    gap: 8px;
+    list-style: none;
+}
+
+.sheetTimer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-block-size: 88px;
+    padding-inline: 24px 8px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
+
+    &[data-done] {
+        background-color: var(--md-sys-color-tertiary);
+        color: var(--md-sys-color-on-tertiary);
+        animation: timer-done 1.2s var(--md-sys-motion-easing-standard) infinite alternate;
+    }
+}
+
+.sheetText {
+    display: grid;
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.sheetClock {
+    font-size: clamp(2.25rem, 1.5rem + 4vmin, 3.5rem);
+    line-height: 1.1;
+    font-weight: 500;
+    font-variation-settings: "ROND" 100;
+    @include type.numeric;
+
+    .sheetTimer[data-paused] & {
+        opacity: 0.72;
+    }
+}
+
+.sheetDetail {
+    overflow: hidden;
+    font-size: 1.125rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.8;
+}
+
+.sheetButton {
+    @include state-layer.host;
+    @include focus-ring.ring;
+    display: grid;
+    flex: none;
+    place-items: center;
+    min-inline-size: 64px;
+    block-size: 64px;
+    padding-inline: 12px;
+    border-radius: var(--md-sys-shape-corner-full);
+    font-size: 1.125rem;
+    font-weight: 600;
+    --md-icon-size: 28px;
+    @include type.numeric;
+}
+
+.sheetAction[data-size] {
+    --_h: 64px;
+    --_pad: 32px;
+    min-inline-size: 160px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pulse[data-ringing] {
+        animation: none;
+        opacity: 1;
+    }
+
+    .timer[data-done],
+    .sheetTimer[data-done] {
+        animation: none;
+    }
+}

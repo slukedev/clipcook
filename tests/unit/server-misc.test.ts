@@ -8,6 +8,7 @@ import { LocalStore } from '@/server/db/local'
 import { clientIp, rateLimit, resetRateLimits } from '@/server/rate-limit'
 import { saveClipDraft, loadClipDraft, CLIP_DRAFT_TTL_MS } from '@/server/clip-drafts'
 import { pickSeedColor } from '@/server/images'
+import { decodeImageDataUrl, inlineImageUrl, inlineImageVersion } from '@/server/inline-images'
 
 describe('local session cookie', () => {
     const secret = 's'.repeat(32)
@@ -225,5 +226,29 @@ describe('pickSeedColor', () => {
             [argb('#202020'), 1000],
         ])
         expect(hex(pickSeedColor(gray))).toBe('#808080')
+    })
+})
+
+describe('inline image URLs', () => {
+    const png = `data:image/png;base64,${Buffer.from('fake-bytes').toString('base64')}`
+
+    it('swaps a data URL for a short versioned route and leaves hosted URLs alone', () => {
+        const url = inlineImageUrl('abc_123', 'thumb', png)
+        expect(url).toBe(`/api/images/abc_123/thumb?v=${inlineImageVersion(png)}`)
+        expect(url.length).toBeLessThan(60)
+        expect(inlineImageUrl('abc', 'thumb', 'https://example.com/a.webp')).toBe('https://example.com/a.webp')
+        expect(inlineImageUrl('abc', 'thumb', '')).toBe('')
+    })
+
+    it('changes the version when the photo changes', () => {
+        const other = `data:image/png;base64,${Buffer.from('other-bytes').toString('base64')}`
+        expect(inlineImageVersion(png)).not.toBe(inlineImageVersion(other))
+    })
+
+    it('decodes only image data URLs', () => {
+        expect(decodeImageDataUrl(png)?.type).toBe('image/png')
+        expect(decodeImageDataUrl(png)?.bytes.toString()).toBe('fake-bytes')
+        expect(decodeImageDataUrl('data:text/html;base64,PGI+')).toBeNull()
+        expect(decodeImageDataUrl('https://example.com/x.png')).toBeNull()
     })
 })

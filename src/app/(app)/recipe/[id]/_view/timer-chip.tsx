@@ -72,6 +72,9 @@ export function TimerChip({
     )
 }
 
+/** Punctuation that belongs to the words before it and must not wrap away from a chip. */
+const TRAILING = /^[.,;:!?)\]]+/
+
 /** Step text with every duration turned into a TimerChip. */
 export function StepText({ text, ctx, icon }: { text: string; ctx: TimerContext; icon: ReactNode }) {
     const found = findTimers(text)
@@ -80,8 +83,19 @@ export function StepText({ text, ctx, icon }: { text: string; ctx: TimerContext;
     let cursor = 0
     for (const timer of found) {
         if (timer.start > cursor) parts.push(text.slice(cursor, timer.start))
-        parts.push(<TimerChip key={timer.start} timer={timer} ctx={ctx} icon={icon} />)
-        cursor = timer.end
+        const chip = <TimerChip key={timer.start} timer={timer} ctx={ctx} icon={icon} />
+        const tail = TRAILING.exec(text.slice(timer.end))?.[0] ?? ''
+        parts.push(
+            tail ? (
+                <span key={timer.start} className={styles.run}>
+                    {chip}
+                    {tail}
+                </span>
+            ) : (
+                chip
+            ),
+        )
+        cursor = timer.end + tail.length
     }
     if (cursor < text.length) parts.push(text.slice(cursor))
     return <>{parts}</>

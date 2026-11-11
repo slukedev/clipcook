@@ -1,17 +1,18 @@
 'use client'
 
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { RecipeImage } from '@/components/recipe-image'
 import { Button } from '@/components/ui/button'
 import type { Recipe } from '@/lib/domain/types'
 import { formatIngredient } from '@/lib/recipe/ingredients'
 import { headingText, isHeadingLine } from '@/lib/recipe/text'
-import { findTimers } from '@/lib/recipe/timers'
+import { useFitText } from '@/lib/cook/use-fit-text'
 import { useSpring } from '@/lib/motion'
+import { findTimers } from '@/lib/recipe/timers'
 import { useDisplay } from '../../display-provider'
 import styles from './display-recipe.module.scss'
-import { TimerTray, useTimers } from './timers'
+import { TimerTray } from './timers'
 
 export interface RecipeIcons {
     next: ReactNode
@@ -45,7 +46,7 @@ function toSteps(lines: string[]): Step[] {
 const SWIPE_PX = 60
 
 export function DisplayRecipe({ recipe, icons }: { recipe: Recipe; icons: RecipeIcons }) {
-    const { state } = useDisplay()
+    const { state, timers } = useDisplay()
     const steps = toSteps(recipe.instructions)
     const last = Math.max(0, steps.length - 1)
     const remote = state?.current?.recipeId === recipe.id ? state.current : null
@@ -55,7 +56,9 @@ export function DisplayRecipe({ recipe, icons }: { recipe: Recipe; icons: Recipe
     const [step, setStep] = useState(Math.min(remote?.step ?? 0, last))
     const [direction, setDirection] = useState(1)
     const [checked, setChecked] = useState<ReadonlySet<number>>(() => new Set())
-    const timers = useTimers()
+    const viewportRef = useRef<HTMLDivElement>(null)
+    const stepTextRef = useRef<HTMLParagraphElement>(null)
+    useFitText(viewportRef, stepTextRef, `${mode}:${step}`, 22)
 
     // The phone drives: each new version it sends replaces whatever was tapped here.
     const [seenVersion, setSeenVersion] = useState<number | null>(null)
@@ -246,9 +249,9 @@ export function DisplayRecipe({ recipe, icons }: { recipe: Recipe; icons: Recipe
                             </ol>
                         </div>
 
-                        <TimerTray timers={timers} icons={icons} />
+                        {timers && <TimerTray timers={timers} icons={icons} />}
 
-                        <div className={styles.stepViewport} aria-live="polite">
+                        <div ref={viewportRef} className={styles.stepViewport} aria-live="polite">
                             <AnimatePresence mode="popLayout" initial={false} custom={direction}>
                                 <motion.div
                                     key={step}
@@ -265,13 +268,18 @@ export function DisplayRecipe({ recipe, icons }: { recipe: Recipe; icons: Recipe
                                     transition={{ transform: spatial, opacity: effects }}
                                 >
                                     {current?.section && <p className={styles.stepSection}>{current.section}</p>}
-                                    <p className={styles.stepText}>
+                                    <p ref={stepTextRef} className={styles.stepText}>
                                         {current && (
                                             <StepText
                                                 text={current.text}
                                                 timerIcon={icons.timer}
                                                 onTimer={(label, seconds) =>
-                                                    timers.start(`${step}:${label}`, label, seconds)
+                                                    timers?.start(
+                                                        `${recipe.id}:${step}:${label}`,
+                                                        label,
+                                                        `step ${step + 1}, ${recipe.title}`,
+                                                        seconds,
+                                                    )
                                                 }
                                             />
                                         )}
@@ -281,7 +289,13 @@ export function DisplayRecipe({ recipe, icons }: { recipe: Recipe; icons: Recipe
                         </div>
 
                         <div className={styles.controls}>
-                            <Button variant="text" size="l" icon={icons.overview} onClick={() => setMode('overview')}>
+                            <Button
+                                variant="text"
+                                size="l"
+                                className={styles.overviewButton}
+                                icon={icons.overview}
+                                onClick={() => setMode('overview')}
+                            >
                                 Overview
                             </Button>
                             <div className={styles.navButtons}>
@@ -312,6 +326,9 @@ export function DisplayRecipe({ recipe, icons }: { recipe: Recipe; icons: Recipe
     )
 }
 
+/** Punctuation that belongs to the words before it and must not wrap away from a chip. */
+const TRAILING = /^[.,;:!?)\]]+/
+
 /** Step text with every duration turned into a tap-to-start timer. */
 function StepText({
     text,
@@ -328,22 +345,25 @@ function StepText({
     let cursor = 0
     for (const timer of found) {
         if (timer.start > cursor) parts.push(text.slice(cursor, timer.start))
+        const tail = TRAILING.exec(text.slice(timer.end))?.[0] ?? ''
         parts.push(
-            <button
-                key={timer.start}
-                type="button"
-                className={styles.inlineTimer}
-                onClick={(event) => {
-                    event.stopPropagation()
-                    onTimer(timer.label, timer.seconds)
-                }}
-                aria-label={`Start a ${timer.label} timer`}
-            >
-                {timerIcon}
-                {text.slice(timer.start, timer.end)}
-            </button>,
+            <span key={timer.start} className={styles.timerRun}>
+                <button
+                    type="button"
+                    className={styles.inlineTimer}
+                    onClick={(event) => {
+                        event.stopPropagation()
+                        onTimer(timer.label, timer.seconds)
+                    }}
+                    aria-label={`Start a ${timer.label} timer`}
+                >
+                    {timerIcon}
+                    {text.slice(timer.start, timer.end)}
+                </button>
+                {tail}
+            </span>,
         )
-        cursor = timer.end
+        cursor = timer.end + tail.length
     }
     if (cursor < text.length) parts.push(text.slice(cursor))
     return <>{parts}</>

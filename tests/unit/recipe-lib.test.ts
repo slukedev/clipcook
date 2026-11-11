@@ -3,6 +3,7 @@ import type { GroceryItem } from '@/lib/domain/types'
 import { addGroceryLines, categorizeIngredient, normalizeGroceryName } from '@/lib/recipe/grocery'
 import { formatQuantity, parseIngredient, prettifyFractions, scaleIngredient } from '@/lib/recipe/ingredients'
 import { parseRecipeText } from '@/lib/recipe/text-import'
+import { reviewChecks } from '@/lib/recipe/review-checks'
 import { cleanText, decodeEntities, normalizeFractions } from '@/lib/recipe/text'
 import { deriveTotalMinutes, formatMinutes, parseDurationToMinutes } from '@/lib/recipe/time'
 import { findTimers } from '@/lib/recipe/timers'
@@ -259,6 +260,48 @@ Chop everything into bite size pieces and toss with olive oil and salt before se
         expect(r.instructions).toEqual(['Toast it.', 'Butter it.'])
     })
 
+    it('reads a combined header sentence as servings and times', () => {
+        const r = parseRecipeText(`Chicken Tikka Masala
+Serves 4. Prep 30 min, cook 40 min.
+
+Ingredients
+1 lb chicken`)
+        expect(r.servings).toBe('4')
+        expect(r.prepTime).toBe('30 min')
+        expect(r.cookTime).toBe('40 min')
+        expect(r.description).toBeUndefined()
+    })
+
+    it.each([
+        ['Serves 6; prep 15 minutes; cook 1 hour', { servings: '6', prepTime: '15 min', cookTime: '1 hr' }],
+        ['Makes 24 cookies. Bake 12 min.', { servings: '24 cookies', cookTime: '12 min' }],
+        ['Prep 10 min and cook 20 min', { prepTime: '10 min', cookTime: '20 min' }],
+        ['Yield: 1 loaf, Total time: 1 hr 30 min', { servings: '1 loaf', totalTime: '1 hr 30 min' }],
+        ['Servings: 4 to 6 · Ready in 45 minutes', { servings: '4 to 6', totalTime: '45 min' }],
+    ])('reads the header line %j', (line, expected) => {
+        const r = parseRecipeText(`Title\n${line}\n\nIngredients\n1 egg`)
+        expect({
+            servings: r.servings,
+            prepTime: r.prepTime,
+            cookTime: r.cookTime,
+            totalTime: r.totalTime,
+        }).toEqual({ servings: undefined, prepTime: undefined, cookTime: undefined, totalTime: undefined, ...expected })
+        expect(r.description).toBeUndefined()
+    })
+
+    it('keeps prose that starts like a header in the description', () => {
+        const r = parseRecipeText(`Soup
+Serves a crowd on cold nights, especially with good bread and a lot of butter on the side.
+Cook the onions slowly.
+
+Ingredients
+1 onion`)
+        expect(r.servings).toBeUndefined()
+        expect(r.cookTime).toBeUndefined()
+        expect(r.description).toContain('Serves a crowd')
+        expect(r.description).toContain('Cook the onions slowly.')
+    })
+
     it('returns an empty-ish result for blank input', () => {
         expect(parseRecipeText('   \n\n')).toEqual({})
     })
@@ -314,5 +357,40 @@ describe('grocery', () => {
     it('caps the list size', () => {
         const lines = Array.from({ length: 600 }, (_, i) => `item${i}`)
         expect(addGroceryLines([], lines, opts)).toHaveLength(500)
+    })
+})
+
+describe('reviewChecks', () => {
+    const good = {
+        title: 'Shakshuka',
+        servings: '4',
+        prepTime: '10 min',
+        cookTime: '30 min',
+        totalTime: '40 min',
+        ingredients: ['# Sauce', '2 cans tomatoes', '6 eggs'],
+        instructions: ['Simmer the sauce.', 'Crack in the eggs.'],
+    }
+
+    it('flags nothing on a clean clip', () => {
+        expect([...reviewChecks(good)]).toEqual([])
+    })
+
+    it('flags the fields a parser likely got wrong', () => {
+        const checks = reviewChecks({
+            ...good,
+            title: '',
+            servings: '4. Prep 30 min, cook 40 min.',
+            prepTime: 'overnight',
+            totalTime: '15 min',
+            ingredients: ['# Sauce'],
+            instructions: ['x'.repeat(700)],
+        })
+        expect([...checks].sort()).toEqual(['ingredients', 'prepTime', 'servings', 'steps', 'title', 'totalTime'])
+    })
+
+    it('accepts worded servings and long but real ingredient lists', () => {
+        expect(reviewChecks({ ...good, servings: 'Makes about 24' }).has('servings')).toBe(true)
+        expect(reviewChecks({ ...good, servings: 'about 24 cookies' }).has('servings')).toBe(false)
+        expect(reviewChecks({ ...good, servings: 'two loaves' }).has('servings')).toBe(false)
     })
 })

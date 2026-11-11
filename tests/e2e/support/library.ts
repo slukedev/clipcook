@@ -29,9 +29,9 @@ export function recipeGrid(page: Page): Locator {
     return page.getByRole('list', { name: 'Recipes' })
 }
 
-/** Card titles in display order. */
+/** Card titles in display order. textContent, because off-screen cards skip rendering. */
 export async function cardTitles(page: Page): Promise<string[]> {
-    return (await recipeGrid(page).getByRole('heading', { level: 3 }).allInnerTexts()).map((t) => t.trim())
+    return (await recipeGrid(page).getByRole('heading', { level: 3 }).allTextContents()).map((t) => t.trim())
 }
 
 export function sorted(titles: string[]): string[] {

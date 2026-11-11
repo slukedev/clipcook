@@ -33,6 +33,10 @@ export async function claimDisplayCode(code: string, name: string): Promise<Acti
     })
 }
 
+/**
+ * A name another display already uses gets a number ("Kitchen 2"); the refreshed
+ * list shows the saved name.
+ */
 export async function renameDisplay(id: string, name: string): Promise<ActionResult> {
     return withUser(async ({ user, store }) => {
         await displays.renameDisplay(store, user.uid, idSchema.parse(id), displayNameSchema.parse(name))
@@ -53,15 +57,18 @@ export async function removeDisplay(id: string): Promise<ActionResult> {
 /**
  * Shows a recipe (and optionally a step and scale) on a display. Cheap enough to call
  * on every step change: one transaction, no page invalidation, no write when nothing changed.
+ * `presence` says whether anything is there to show it: 'unlinked' means the display never
+ * finished linking, 'offline' that it has not checked in for a few minutes. The send is
+ * saved either way and appears when the display next polls.
  */
 export async function sendToDisplay(
     id: string,
     content: { recipeId: string; step?: number | null; scale?: number },
-): Promise<ActionResult<{ version: number }>> {
+): Promise<ActionResult<{ version: number; name: string; presence: displays.DisplayPresence }>> {
     return withUser(async ({ user, store }) => {
         const parsed = displayContentSchema.parse(content)
         const saved = await displays.sendToDisplay(store, user.uid, idSchema.parse(id), parsed)
-        return ok({ version: saved.version })
+        return ok({ version: saved.version, name: saved.name, presence: displays.displayPresence(saved) })
     }, NOT_FOUND)
 }
 

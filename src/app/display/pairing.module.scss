@@ -9,15 +9,19 @@
     gap: clamp(24px, 5vw, 80px);
     min-block-size: 100dvh;
     padding: clamp(32px, 7vmin, 72px) clamp(32px, 7vw, 96px);
-    padding-inline-end: max(clamp(32px, 7vw, 96px), 96px);
+    // Clear of the 64dp corner menu.
+    padding-inline-end: max(clamp(32px, 7vw, 96px), calc(var(--display-edge) + 64px + 16px));
 
+    // Portrait tablets and phones: the QR on top, the words centered under it, with even
+    // side margins and the top kept clear of the corner menu.
     @media (orientation: portrait) {
+        --_qr: min(50vmin, 320px);
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto auto;
-        justify-items: center;
         align-content: center;
+        gap: clamp(24px, 4vmin, 48px);
+        padding: calc(var(--display-edge) + 64px + 8px) clamp(24px, 6vw, 64px) clamp(32px, 6vmin, 64px);
         text-align: center;
-        --_qr: min(56vmin, 360px);
 
         .visual {
             order: -1;
@@ -26,10 +30,20 @@
 }
 
 .text {
+    // Inline-size container: the code scales with the column. The column needs a definite
+    // width for that, so it stretches instead of shrinking to its (container) content.
     container-type: inline-size;
     display: grid;
     gap: clamp(16px, 3.5vmin, 32px);
+    justify-self: stretch;
     min-inline-size: 0;
+
+    @media (orientation: portrait) {
+        justify-items: center;
+        inline-size: 100%;
+        max-inline-size: 36rem;
+        margin-inline: auto;
+    }
 }
 
 .title {
@@ -98,10 +112,6 @@
 .progress {
     inline-size: min(100%, 420px);
     min-block-size: 10px;
-
-    @media (orientation: portrait) {
-        justify-self: center;
-    }
 }
 
 .error {
@@ -110,7 +120,14 @@
     gap: 12px;
     font-size: clamp(1rem, 0.75rem + 1.5vmin, 1.375rem);
     color: var(--md-sys-color-on-surface-variant);
+    text-align: start;
     --md-icon-size: 28px;
+}
+
+.wait {
+    @include type.numeric;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
 }
 
 .srOnly {
@@ -163,10 +180,15 @@
     color: var(--md-sys-color-inverse-on-surface);
     transition:
         opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
         scale var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default);
 
-    &[data-hidden] {
-        opacity: 0.4;
+    // No code yet: a smaller tonal tile with the loading indicator, not an empty white card.
+    &[data-waiting] {
+        scale: 0.72;
+        background-color: var(--md-sys-color-surface-container-high);
+        color: var(--md-sys-color-primary);
     }
 
     .root[data-phase="claimed"] & {

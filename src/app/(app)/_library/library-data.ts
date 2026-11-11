@@ -1,4 +1,5 @@
 import type { RecipeSummary } from '@/lib/domain/types'
+import { fold, queryTokens } from '@/lib/recipe/search'
 import { formatMinutes } from '@/lib/recipe/time'
 
 export type SortKey = 'recent' | 'az' | 'cooked' | 'quickest'
@@ -30,14 +31,7 @@ export function serializeLibraryPrefs(prefs: LibraryPrefs): string {
     return `${prefs.view}.${prefs.sort}`
 }
 
-/** Lowercase without accents, so "creme" finds "Crème". */
-export function fold(text: string): string {
-    return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
-}
-
-export function queryTokens(query: string): string[] {
-    return fold(query).split(/\s+/).filter(Boolean)
-}
+export { fold, queryTokens }
 
 /** Every token must appear in the title, a tag or the source. */
 export function matches(recipe: SearchableRecipe, tokens: string[]): boolean {

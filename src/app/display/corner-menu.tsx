@@ -93,10 +93,13 @@ export function CornerMenu({
                     headline="Unlink this display?"
                     actions={
                         <>
-                            <AlertDialogClose render={<Button variant="text" size="m" />}>Cancel</AlertDialogClose>
+                            <AlertDialogClose render={<Button variant="text" size="m" className={styles.dialogButton} />}>
+                                Cancel
+                            </AlertDialogClose>
                             <Button
                                 variant="text"
                                 size="m"
+                                className={styles.dialogButton}
                                 loading={unlinking}
                                 onClick={async () => {
                                     setUnlinking(true)

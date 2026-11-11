@@ -1,5 +1,5 @@
-import { exportLibrary, openRecipe } from './support/library'
 import { expect, test } from './support/fixtures'
+import { exportLibrary, openRecipe } from './support/library'
 
 const TITLE = 'Crispy Tofu and Broccoli Stir-Fry'
 
@@ -42,7 +42,10 @@ test('cook mode pages by keyboard, Done records the cook, Escape leaves', async 
     // The library leads "Jump back in" with what was just cooked.
     await page.goto('/')
     await expect(
-        page.getByRole('region', { name: 'Jump back in' }).getByRole('group', { name: /^1 of / }).getByRole('link'),
+        page
+            .getByRole('region', { name: 'Jump back in' })
+            .getByRole('group', { name: /^1 of / })
+            .getByRole('link'),
     ).toHaveAccessibleName(TITLE)
 
     // A finished cook starts again from the top; Escape leaves without marking anything.

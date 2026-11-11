@@ -5,7 +5,9 @@ import { z } from 'zod'
 import type { ActionResult } from '@/lib/domain/types'
 import { fail, invalidateApp, ok, withUser } from '@/server/action-utils'
 import { normalizeTags } from '@/server/db/normalize'
+import { queryTokens } from '@/lib/recipe/search'
 import * as recipes from '@/server/recipes'
+import { searchRecipeIds } from '@/server/search'
 import { idSchema, parseRecipeFormData, tagsSchema } from '@/server/schemas'
 
 const NOT_FOUND = 'That recipe no longer exists.'
@@ -97,4 +99,18 @@ export async function duplicateRecipe(id: string): Promise<ActionResult<string>>
         invalidateApp()
         return ok(copy.id)
     }, NOT_FOUND)
+}
+
+const searchQuerySchema = z.string().max(200)
+
+/**
+ * Recipes matching a library search, ingredients included ("chickpeas"). The library
+ * already matches titles and tags locally; this adds what only the full recipe knows,
+ * and returns ids so the page stays small.
+ */
+export async function searchRecipes(query: string): Promise<ActionResult<string[]>> {
+    return withUser(async ({ user, store }) => {
+        const tokens = queryTokens(searchQuerySchema.parse(query)).slice(0, 8)
+        return ok(await searchRecipeIds(store, user.uid, tokens))
+    })
 }

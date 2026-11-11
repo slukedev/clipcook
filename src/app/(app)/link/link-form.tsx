@@ -13,6 +13,17 @@ import { CODE_LENGTH, normalizeCode } from './code'
 import styles from './link.module.scss'
 
 const SUGGESTIONS = ['Kitchen', 'Counter', 'Fridge', 'Living room']
+
+const sameName = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase()
+
+/** 'Kitchen', or 'Kitchen 2' when a display already has that name, so every name picks one screen. */
+function freeName(base: string, taken: readonly string[]): string {
+    if (!taken.some((t) => sameName(t, base))) return base
+    for (let n = 2; ; n++) {
+        const candidate = `${base} ${n}`
+        if (!taken.some((t) => sameName(t, candidate))) return candidate
+    }
+}
 const SLOTS = Array.from({ length: CODE_LENGTH }, (_, i) => i)
 
 interface Icons {
@@ -22,18 +33,28 @@ interface Icons {
     error: ReactNode
 }
 
-export function LinkForm({ initialCode, icons }: { initialCode: string; icons: Icons }) {
+export function LinkForm({
+    initialCode,
+    taken,
+    icons,
+}: {
+    initialCode: string
+    /** Names already on this account's displays. */
+    taken: readonly string[]
+    icons: Icons
+}) {
     const [code, setCode] = useState(initialCode)
-    const [name, setName] = useState('Kitchen')
+    const [name, setName] = useState(() => freeName('Kitchen', taken))
     const [error, setError] = useState<string | null>(null)
     const [linked, setLinked] = useState<KitchenDisplay | null>(null)
     const [focused, setFocused] = useState(false)
     const [pending, startTransition] = useTransition()
     const inputRef = useRef<HTMLInputElement>(null)
     const complete = code.length === CODE_LENGTH
+    const clash = taken.some((t) => sameName(t, name.trim() || 'Kitchen'))
 
     function submit() {
-        if (!complete || pending) return
+        if (!complete || pending || clash) return
         setError(null)
         startTransition(async () => {
             const res = await claimDisplayCode(code, name.trim() || 'Kitchen')
@@ -161,21 +182,31 @@ export function LinkForm({ initialCode, icons }: { initialCode: string; icons: I
                             maxLength={LIMITS.displayName}
                             autoComplete="off"
                             enterKeyHint="go"
+                            error={clash ? `Taken. Try ${freeName(name.trim(), taken)}.` : undefined}
                         />
                         <ChipSet label="Name suggestions">
-                            {SUGGESTIONS.map((suggestion) => (
-                                <FilterChip
-                                    key={suggestion}
-                                    selected={name === suggestion}
-                                    onSelectedChange={() => setName(suggestion)}
-                                >
-                                    {suggestion}
-                                </FilterChip>
-                            ))}
+                            {SUGGESTIONS.map((base) => {
+                                const suggestion = freeName(base, taken)
+                                return (
+                                    <FilterChip
+                                        key={base}
+                                        selected={name === suggestion}
+                                        onSelectedChange={() => setName(suggestion)}
+                                    >
+                                        {suggestion}
+                                    </FilterChip>
+                                )
+                            })}
                         </ChipSet>
                     </div>
 
-                    <Button type="submit" size="m" className={styles.submit} disabled={!complete} loading={pending}>
+                    <Button
+                        type="submit"
+                        size="m"
+                        className={styles.submit}
+                        disabled={!complete || clash}
+                        loading={pending}
+                    >
                         Link display
                     </Button>
                 </form>

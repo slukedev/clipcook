@@ -4,6 +4,7 @@ import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 import type { Page } from '@playwright/test'
 import { expect, test, unique } from './support/fixtures'
+import { exportLibrary } from './support/library'
 
 const fixture = (name: string) => readFileSync(path.resolve(__dirname, '../fixtures/clip', name), 'utf8')
 
@@ -40,17 +41,22 @@ async function expectReview(page: Page, title: string, ingredient: string, step:
     await expect(steps.getByRole('listitem').filter({ hasText: step })).toHaveCount(1)
 }
 
-/** Saves the reviewed clip and checks the recipe page that opens shows the same recipe. */
+/**
+ * Saves the reviewed clip and checks the recipe page that opens shows the same recipe.
+ * A title already in the library is flagged, and saving it makes a copy.
+ */
 async function saveAndExpectRecipe(page: Page, title: string, ingredient: string, step: string) {
-    await page.getByRole('button', { name: 'Save', exact: true }).click()
+    const known = (await exportLibrary(page)).recipes.some((r) => r.title === title)
+    await expect(page.getByRole('status').filter({ hasText: 'Already in your library' })).toHaveCount(known ? 1 : 0)
+    await page.getByRole('button', { name: known ? 'Save copy' : 'Save', exact: true }).click()
     await expect(page).toHaveURL(/\/recipe\/[\w-]+$/)
     await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible()
     await expect(
         page.getByRole('region', { name: 'Ingredients' }).getByRole('checkbox', { name: ingredient }),
     ).toBeVisible()
-    await expect(page.getByRole('region', { name: 'Steps' }).getByRole('listitem').filter({ hasText: step })).toHaveCount(
-        1,
-    )
+    await expect(
+        page.getByRole('region', { name: 'Steps' }).getByRole('listitem').filter({ hasText: step }),
+    ).toHaveCount(1)
 }
 
 test.describe('signed out', () => {

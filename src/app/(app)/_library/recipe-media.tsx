@@ -26,9 +26,10 @@ export function RecipeMedia({
     className,
 }: RecipeMediaProps) {
     if (!src) return <RecipePlaceholder title={title} className={className} />
-    if (src.startsWith('data:')) {
+    // Inline photos (served from /api/images, already small WebP) skip the optimizer.
+    if (src.startsWith('data:') || src.startsWith('/api/images/')) {
         return (
-            // biome-ignore lint/performance/noImgElement: inline data URLs gain nothing from next/image
+            // biome-ignore lint/performance/noImgElement: these are already-sized WebP thumbnails
             <img
                 src={src}
                 alt=""

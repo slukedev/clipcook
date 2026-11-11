@@ -99,16 +99,20 @@
     inset-block-start: 50%;
     translate: 0 -50%;
     opacity: 0;
+    // Invisible buttons must not catch taps meant for the items under them.
+    pointer-events: none;
     transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
 
     @media (hover: hover) and (pointer: fine) {
         .root:hover &:not([data-hidden]) {
             opacity: 1;
+            pointer-events: auto;
         }
     }
 
     &:focus-within {
         opacity: 1;
+        pointer-events: auto;
     }
 
     &[data-hidden] {

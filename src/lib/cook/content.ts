@@ -165,13 +165,66 @@ function words(text: string): string[] {
         .map(stem)
 }
 
-/** The words that name an ingredient: 'extra-virgin olive oil' gives ['olive', 'oil'] and the key 'oil'. */
-function ingredientKeys(line: string): string[][] {
-    const name = parseIngredient(line).name.replace(/\(.*?\)/g, ' ')
-    return name
-        .split(/\s+(?:and|or|&)\s+|,/i)
-        .map((part) => words(part).filter((w) => w.length > 2 && !STOP.has(w)))
-        .filter((part) => part.length > 0)
+// The part or form of an ingredient: the word before it names the ingredient too
+// ('chicken thighs', 'garlic cloves', 'lemon juice').
+const PART = new Set([
+    'thigh',
+    'breast',
+    'leg',
+    'wing',
+    'drumstick',
+    'fillet',
+    'filet',
+    'loin',
+    'chop',
+    'shoulder',
+    'clove',
+    'stalk',
+    'sprig',
+    'leave',
+    'bulb',
+    'juice',
+    'zest',
+    'piece',
+    'floret',
+    'kernel',
+    'strip',
+    'slice',
+    'wedge',
+    'stick',
+])
+
+function keyWords(text: string): string[] {
+    return words(text).filter((w) => w.length > 2 && !STOP.has(w))
+}
+
+interface IngredientName {
+    /** Words that alone name it: the head noun, plus the word before a part ('chicken' thighs). */
+    keys: string[]
+    /** The other naming words ('bell' in bell pepper), used to tell same-head ingredients apart. */
+    modifiers: string[]
+}
+
+/**
+ * The names in an ingredient line: 'extra-virgin olive oil' is keyed by 'oil', 'chicken
+ * thighs' by 'thigh' and 'chicken', 'salt and pepper' gives two names. Only the first comma
+ * segment that names something counts; later ones are prep notes ('cut into pieces').
+ */
+function ingredientNames(line: string): IngredientName[] {
+    const parsed = parseIngredient(line)
+    // The parser stops the name at the first comma, so 'boneless, skinless chicken' needs its note.
+    const name = `${parsed.name},${parsed.note ?? ''}`.replace(/\(.*?\)/g, ' ')
+    const segment = name.split(',').find((part) => keyWords(part).length > 0) ?? ''
+    const names: IngredientName[] = []
+    for (const part of segment.split(/\s+(?:and|or|&)\s+/i)) {
+        const ws = keyWords(part)
+        const head = ws[ws.length - 1]
+        if (!head) continue
+        const before = ws[ws.length - 2]
+        const keys = before && PART.has(head) ? [head, before] : [head]
+        names.push({ keys, modifiers: ws.filter((w) => !keys.includes(w)) })
+    }
+    return names
 }
 
 /** A plain-text version for sharing and copying. */
@@ -204,16 +257,26 @@ export function recipeText(
 }
 
 /**
- * Indices of the ingredients a step mentions. A match is the head noun of the
- * ingredient name ('oil' for olive oil, 'egg' for 'large eggs') appearing in the step.
+ * Indices of the ingredients a step mentions. A match is the head noun of the ingredient
+ * name ('oil' for olive oil, 'egg' for 'large eggs'), or the name before a part ('chicken'
+ * for chicken thighs), appearing in the step. When several ingredients share the matched
+ * word, the ones whose other words are in the step win: 'bell pepper' picks the bell
+ * pepper, not the cayenne.
  */
 export function mentionedIngredients(step: string, lines: readonly string[]): number[] {
     const stepWords = new Set(words(step))
-    const out: number[] = []
+    const hits: { index: number; key: string; specific: boolean }[] = []
     lines.forEach((line, index) => {
         if (isHeadingLine(line)) return
-        const parts = ingredientKeys(line)
-        if (parts.some((part) => stepWords.has(part[part.length - 1] ?? ''))) out.push(index)
+        let best: { key: string; specific: boolean } | null = null
+        for (const name of ingredientNames(line)) {
+            const key = name.keys.find((k) => stepWords.has(k))
+            if (!key) continue
+            const specific = name.modifiers.some((m) => stepWords.has(m))
+            if (!best || (specific && !best.specific)) best = { key, specific }
+        }
+        if (best) hits.push({ index, ...best })
     })
-    return out
+    const specificKeys = new Set(hits.filter((h) => h.specific).map((h) => h.key))
+    return hits.filter((h) => h.specific || !specificKeys.has(h.key)).map((h) => h.index)
 }

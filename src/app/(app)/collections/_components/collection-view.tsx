@@ -1,6 +1,7 @@
 'use client'
 
 import { type ReactNode, useState } from 'react'
+import { listPickerRecipes } from '@/actions/collections'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { IconButton } from '@/components/ui/icon-button'
@@ -19,8 +20,10 @@ import styles from './collection-view.module.scss'
 
 interface CollectionViewProps {
     collection: CollectionRef
-    /** The whole library: members render here, the rest feed the picker. */
+    /** The collection's recipes. */
     recipes: RecipeSummary[]
+    /** Recipes in the whole library; the picker loads them when it opens. */
+    libraryCount: number
     collections: CollectionRef[]
     prefs: LibraryPrefs
     icons: LibraryIcons
@@ -31,6 +34,7 @@ interface CollectionViewProps {
 export function CollectionView({
     collection,
     recipes: serverRecipes,
+    libraryCount,
     collections,
     prefs: initialPrefs,
     icons,
@@ -47,7 +51,11 @@ export function CollectionView({
         recipes.filter((r) => r.collectionIds.includes(collection.id)),
         prefs.sort,
     )
-    const openPicker = () => setPicker({ key: Date.now() })
+    const openPicker = () =>
+        setPicker({
+            key: Date.now(),
+            recipes: listPickerRecipes().catch(() => ({ ok: false, error: 'Could not load recipes. Try again.' })),
+        })
 
     const toggleView = () => {
         const next = { ...prefs, view: prefs.view === 'grid' ? ('list' as const) : ('grid' as const) }
@@ -128,7 +136,7 @@ export function CollectionView({
                         title="Nothing here yet"
                         titleAs="h2"
                         action={
-                            <Button icon={icons.add} onClick={openPicker} disabled={recipes.length === 0}>
+                            <Button icon={icons.add} onClick={openPicker} disabled={libraryCount === 0}>
                                 Add recipes
                             </Button>
                         }
@@ -139,7 +147,6 @@ export function CollectionView({
                 target={picker}
                 onClose={() => setPicker(null)}
                 collection={collection}
-                recipes={recipes}
                 searchIcon={searchIcon}
             />
             <CollectionNameDialog target={nameTarget} onClose={() => setNameTarget(null)} />

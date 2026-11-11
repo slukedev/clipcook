@@ -69,7 +69,6 @@ export function DataSection({ icons }: DataProps) {
                 <ListItem
                     leading={icons.export}
                     headline="Export"
-                    supporting="Download every recipe as a JSON file"
                     onClick={() => {
                         const link = document.createElement('a')
                         link.href = '/api/export'

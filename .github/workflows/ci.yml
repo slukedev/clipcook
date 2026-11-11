@@ -35,9 +35,6 @@ jobs:
     name: End-to-end
     runs-on: ubuntu-latest
     needs: check
-    env:
-      CLIPCOOK_BACKEND: local
-      LOCAL_AUTH_SECRET: ci-only-not-a-secret-0123456789abcdef
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -46,7 +43,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run build
+      # Builds the app, starts it on port 3130 with the local backend in .data-e2e,
+      # seeds the demo cook and runs both projects (playwright.config.ts).
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v5
         if: always()

@@ -132,11 +132,13 @@
     }
 
     // Floated: 16 to 12px type, up to the top padding (filled) or onto the outline.
-    [data-floating] & {
+    // Focus and typed or autofilled values float it in CSS, which also covers a
+    // field focused before hydration.
+    .field:where([data-floating], :focus-within, :has(.input:not(:placeholder-shown))) & {
         transform: translateY(-8px) scale(0.75);
     }
 
-    [data-variant="outlined"][data-floating] & {
+    .field[data-variant="outlined"]:where([data-floating], :focus-within, :has(.input:not(:placeholder-shown))) & {
         transform: translateY(-24px) scale(0.75);
         padding-inline: 4px;
         margin-inline-start: -4px;
@@ -198,6 +200,7 @@ textarea.input {
     transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
 
     [data-floating] &,
+    .field:focus-within &,
     .field:not([data-has-label]) & {
         opacity: 1;
     }

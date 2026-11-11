@@ -72,6 +72,12 @@
     overflow: hidden;
 }
 
+.loading {
+    display: grid;
+    place-items: center;
+    min-block-size: 160px;
+}
+
 .none {
     @include type.role(body-large);
 

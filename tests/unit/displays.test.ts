@@ -11,6 +11,8 @@ import {
     claimDisplayCode,
     clearDisplay,
     createCastToken,
+    DISPLAY_OFFLINE_AFTER_MS,
+    displayPresence,
     needsHeartbeat,
     PAIRING_TTL_MS,
     pollPairing,
@@ -18,6 +20,7 @@ import {
     renameDisplay,
     sendToDisplay,
     startPairing,
+    uniqueDisplayName,
 } from '@/server/displays'
 
 let dir: string
@@ -187,5 +190,67 @@ describe('cast tokens', () => {
 
         const late = await createCastToken(store, 'alice', T0)
         expect(await claimCastToken(store, late.token, null, null, T0 + CAST_TOKEN_TTL_MS + 1)).toBeNull()
+    })
+})
+
+describe('display names', () => {
+    it('numbers a name that is already taken, ignoring case', () => {
+        expect(uniqueDisplayName('Kitchen', [])).toBe('Kitchen')
+        expect(uniqueDisplayName('Kitchen', ['kitchen'])).toBe('Kitchen 2')
+        expect(uniqueDisplayName('Kitchen', ['Kitchen', 'Kitchen 2'])).toBe('Kitchen 3')
+        expect(uniqueDisplayName('Kitchen 2', ['Kitchen', 'Kitchen 2'])).toBe('Kitchen 3')
+        expect(uniqueDisplayName('  Hall  ', ['Kitchen'])).toBe('Hall')
+    })
+
+    it('keeps a numbered name within the length limit', () => {
+        const long = 'x'.repeat(40)
+        const name = uniqueDisplayName(long, [long], 40)
+        expect(name).toHaveLength(40)
+        expect(name.endsWith(' 2')).toBe(true)
+    })
+
+    it('pairing the same name twice gives Kitchen and Kitchen 2', async () => {
+        const first = await pairedDisplay()
+        const second = await pairedDisplay()
+        const names = (await store.listDisplays('alice')).map((d) => d.name).sort()
+        expect(names).toEqual(['Kitchen', 'Kitchen 2'])
+        expect(first.id).not.toBe(second.id)
+    })
+
+    it('rename returns the final name and never collides with another display', async () => {
+        const a = await pairedDisplay()
+        const b = await pairedDisplay()
+        await renameDisplay(store, 'alice', a.id, 'Hall')
+        const saved = await renameDisplay(store, 'alice', b.id, 'hall')
+        expect(saved.name).toBe('hall 2')
+        // Renaming a display to its own name is not a collision.
+        expect((await renameDisplay(store, 'alice', a.id, 'Hall')).name).toBe('Hall')
+    })
+
+    it('names are unique per cook, not across cooks', async () => {
+        await pairedDisplay('alice')
+        await pairedDisplay('bob')
+        expect((await store.listDisplays('bob'))[0]?.name).toBe('Kitchen')
+    })
+})
+
+describe('display presence', () => {
+    it('tells unlinked, online and offline displays apart', async () => {
+        const start = await startPairing(store, T0)
+        const claim = await claimDisplayCode(store, 'alice', start.code, 'Kitchen', T0 + 1000)
+        if (!claim.ok) throw new Error(claim.error)
+        // Claimed on the phone, but the display never collected its token.
+        const pending = await store.getDisplay(claim.display.id)
+        expect(pending && displayPresence(pending, T0 + 2000)).toBe('unlinked')
+
+        await pollPairing(store, start.pairingId, start.pollToken, T0 + 2000)
+        // Collected its token but no heartbeat written yet: already connected.
+        const fresh = await store.getDisplay(claim.display.id)
+        expect(fresh && displayPresence({ ...fresh, lastSeenAt: null }, T0 + 2500)).toBe('online')
+        await store.touchDisplay(claim.display.id, T0 + 3000)
+        const linked = await store.getDisplay(claim.display.id)
+        if (!linked) throw new Error('missing')
+        expect(displayPresence(linked, T0 + 4000)).toBe('online')
+        expect(displayPresence(linked, T0 + 3000 + DISPLAY_OFFLINE_AFTER_MS + 1)).toBe('offline')
     })
 })

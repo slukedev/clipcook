@@ -1,11 +1,19 @@
 @use "../../../../../../styles/mixins/typography" as type;
 @use "../../../../../../styles/mixins/media";
 
-// Cook mode: one step at a time, readable at arm's length. Rows: bar, progress, the
-// step (with the ingredients pane beside it on wide windows), timers, Back and Next.
+// Cook mode: one step at a time, readable at arm's length, and always one screen tall.
+// Rows: bar, progress, the step, the timer dock, Back and Next. On expanded windows the
+// ingredients sit beside the step and the dock. The layout is pure CSS, so the server
+// HTML is already the right one for the window.
 .root {
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template:
+        "bar" auto
+        "progress" auto
+        "stage" minmax(0, 1fr)
+        "dock" auto
+        "controls" auto
+        / minmax(0, 1fr);
     block-size: 100dvh;
     overflow: hidden;
     background-color: var(--md-sys-color-surface);
@@ -17,14 +25,33 @@
         background-color: var(--md-sys-color-tertiary-container);
         color: var(--md-sys-color-on-tertiary-container);
     }
+
+    @include media.expanded-up {
+        grid-template:
+            "bar bar" auto
+            "progress progress" auto
+            "stage side" minmax(0, 1fr)
+            "dock side" auto
+            "controls controls" auto
+            / minmax(0, 1fr) clamp(300px, 32vw, 420px);
+        column-gap: 24px;
+    }
+}
+
+// Compact-only controls: the ingredients button and the "Uses" chips (the pane replaces both).
+.root :is(.actions, .card) .compactOnly {
+    @include media.expanded-up {
+        display: none;
+    }
 }
 
 .bar {
+    grid-area: bar;
     display: flex;
     align-items: center;
     gap: 4px;
     min-block-size: 64px;
-    padding-inline: 4px;
+    padding-inline: 4px 8px;
 }
 
 .heading {
@@ -49,7 +76,7 @@
 .actions {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 0;
     color: var(--md-sys-color-on-surface-variant);
 }
 
@@ -82,6 +109,7 @@
 }
 
 .progress {
+    grid-area: progress;
     display: flex;
     gap: 4px;
     padding: 4px var(--md-sys-layout-margin) 8px;
@@ -106,34 +134,35 @@
     }
 }
 
-.body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    min-block-size: 0;
-
-    .root[data-wide] & {
-        grid-template-columns: minmax(0, 1fr) clamp(320px, 32vw, 420px);
-        gap: 24px;
-        padding-inline-end: 24px;
-    }
-}
-
+// The stage is a size container: type and the step number scale with its height as well
+// as its width, and use-fit-text steps the type down when a long step still overflows.
 .stage {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: clamp(16px, 2.5vw, 32px);
+    grid-area: stage;
+    container: stage / size;
     min-block-size: 0;
-    padding: clamp(16px, 3vw, 48px) var(--md-sys-layout-margin) 24px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    padding: clamp(12px, 4cqb, 40px) var(--md-sys-layout-margin) 16px;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
     outline: none;
     touch-action: pan-y;
     user-select: none;
     -webkit-user-select: none;
 
     @include media.expanded-up {
-        padding-inline: clamp(24px, 5vw, 96px);
+        padding-inline: clamp(24px, 4vw, 80px) 0;
+    }
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(12px, 4cqb, 32px);
+
+    // A wide, short stage (a 1024x600 display, a phone on its side) puts the number beside the text.
+    @container stage (aspect-ratio > 1.3) {
+        flex-direction: row;
+        gap: clamp(20px, 3cqi, 40px);
     }
 }
 
@@ -149,24 +178,27 @@
 }
 
 .numberShape {
-    --md-shape-size: clamp(72px, 9vw, 128px);
+    --md-shape-size: clamp(56px, min(12cqi, 18cqb), 128px);
 }
 
 .numberText {
     @include type.role(display-small, $emphasized: true);
     @include type.numeric;
-    font-size: clamp(2rem, 1.4rem + 1.8vw, 3.5rem);
+    font-size: clamp(1.625rem, min(5cqi, 8cqb), 3.5rem);
     color: var(--md-sys-color-on-primary-container);
 }
 
 .card {
+    // The largest size the step may take; fitting only ever goes down from here, and the
+    // measure stays tied to it so smaller type does not mean shorter lines.
+    --_type: clamp(1.375rem, min(0.75rem + 4.4cqi, 14cqb), 3.25rem);
     display: flex;
+    flex: 1;
     flex-direction: column;
-    gap: clamp(16px, 2.5vw, 32px);
-    inline-size: 100%;
-    max-inline-size: 40ch;
-    font-size: clamp(1.5rem, 1rem + 2.4vw, 3.25rem);
-    will-change: transform;
+    gap: clamp(12px, 3cqb, 28px);
+    min-inline-size: 0;
+    max-inline-size: calc(var(--_type) * 21);
+    font-size: var(--_type);
 
     &[data-enter="next"] {
         animation:
@@ -226,18 +258,14 @@
     letter-spacing: 0;
     text-wrap: pretty;
     overflow-wrap: anywhere;
+    // The stage swallows drags for paging; the words themselves can still be selected and copied.
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 .duration {
     font-weight: 600;
     color: var(--md-sys-color-primary);
-}
-
-.timers {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 1rem;
 }
 
 .uses {
@@ -262,17 +290,24 @@
 }
 
 .side {
-    display: flex;
+    grid-area: side;
+    display: none;
     flex-direction: column;
     gap: 16px;
     min-block-size: 0;
     margin-block: 8px 16px;
     padding: 20px 16px;
     overflow-y: auto;
+    margin-inline-end: var(--md-sys-layout-margin);
     border-radius: var(--md-sys-shape-corner-extra-large);
     background-color: var(--md-sys-color-surface-container-low);
     outline: none;
     scrollbar-width: thin;
+    scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+
+    @include media.expanded-up {
+        display: flex;
+    }
 }
 
 .sideTitle {
@@ -284,14 +319,59 @@
     --md-list-item-container: var(--md-sys-color-surface-container);
 }
 
+// The step's own timers and every running one, in one row that never scrolls away with
+// the step. A chip that starts docks into the tray beside it.
+.dock {
+    grid-area: dock;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px var(--md-sys-layout-margin) 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--md-sys-layout-margin);
+    scrollbar-width: none;
+
+    &:empty {
+        display: none;
+    }
+
+    @include media.expanded-up {
+        padding-inline-start: clamp(24px, 4vw, 80px);
+    }
+}
+
+.stepTimers {
+    display: flex;
+    flex: none;
+    gap: 12px;
+}
+
+.stepTimer {
+    display: contents;
+}
+
 .tray {
-    padding: 0 var(--md-sys-layout-margin) 12px;
+    flex: none;
 }
 
 .controls {
+    grid-area: controls;
     display: flex;
     gap: 12px;
     padding: 8px var(--md-sys-layout-margin) max(16px, var(--safe-bottom));
+}
+
+// Arm's-length targets where the window has the height for them: 56dp on short displays
+// (1024x600), growing to the 96dp large size on a tall tablet or desktop.
+// Reaches into the button's size tokens: Button has no per-breakpoint size yet.
+.controls > :is(.prev, .next)[data-size] {
+    @include media.expanded-up {
+        --_h: clamp(56px, 11dvh, 96px);
+        --_icon: clamp(24px, 4dvh, 32px);
+        --_pad: clamp(24px, 5dvh, 48px);
+        font-size: clamp(1rem, 0.5rem + 1.6dvh, 1.5rem);
+    }
 }
 
 .prev {

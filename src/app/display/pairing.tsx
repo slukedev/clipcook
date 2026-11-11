@@ -2,8 +2,10 @@
 
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { LoadingIndicator } from '@/components/ui/loading-indicator'
 import { LinearProgress } from '@/components/ui/progress'
 import { MorphShape } from '@/components/ui/shape'
+import { readJson, writeJson } from '@/lib/cook/storage'
 import styles from './pairing.module.scss'
 
 interface Pairing {
@@ -22,25 +24,34 @@ type Phase =
     | { kind: 'loading' }
     | { kind: 'ready'; pairing: Pairing }
     | { kind: 'claimed' }
-    | { kind: 'error'; message: string }
+    | { kind: 'error'; message: string; retryAt: number; offline: boolean }
 
 const POLL_MS = 2500
 /** Ask for a fresh code this long before the current one expires. */
 const REFRESH_EARLY_MS = 20_000
+/** A reload keeps showing the same code: new codes are rate limited per network. */
+const STORE_KEY = 'cc:display-pairing'
 
 /** The QR arrives as black-on-white markup; recolor it so it follows the theme. */
 function themeQr(svg: string): string {
     return svg.replace(/stroke="#000000"/g, 'stroke="currentColor"').replace(/<path fill="#ffffff"[^>]*\/>/, '')
 }
 
-async function startPairing(): Promise<Pairing | { error: string; retryAfter: number }> {
+function storedPairing(): Pairing | null {
+    const saved = readJson<Pairing | null>('session', STORE_KEY, null)
+    if (!saved || typeof saved.code !== 'string' || typeof saved.pollToken !== 'string') return null
+    // Local clock: the stored receivedAt and ttl were both measured here.
+    return Date.now() - saved.receivedAt < saved.ttl - REFRESH_EARLY_MS ? saved : null
+}
+
+async function startPairing(): Promise<Pairing | { error: string; retryAfter: number; offline: boolean }> {
     try {
         const res = await fetch('/api/display/pair', { method: 'POST', cache: 'no-store' })
         if (res.status === 429) {
             const retryAfter = Number(res.headers.get('Retry-After')) || 60
-            return { error: 'Too many codes for now. A new one is on the way.', retryAfter }
+            return { error: 'Too many new codes.', retryAfter, offline: false }
         }
-        if (!res.ok) return { error: 'Could not get a code. Retrying.', retryAfter: 10 }
+        if (!res.ok) return { error: 'Could not get a code.', retryAfter: 10, offline: false }
         const data = (await res.json()) as {
             code: string
             pairingId: string
@@ -61,14 +72,20 @@ async function startPairing(): Promise<Pairing | { error: string; retryAfter: nu
             qrSvg: themeQr(data.qrSvg),
         }
     } catch {
-        return { error: 'No connection. Retrying.', retryAfter: 10 }
+        return { error: 'No connection.', retryAfter: 10, offline: true }
     }
 }
 
-export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode } }) {
+function formatWait(ms: number): string {
+    const seconds = Math.max(0, Math.ceil(ms / 1000))
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode; wait: ReactNode } }) {
     const router = useRouter()
     const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
     const [remaining, setRemaining] = useState(1)
+    const [now, setNow] = useState(0)
     const generation = useRef(0)
 
     // Get a code, then poll for the claim; any dead end loops back to a new code.
@@ -80,14 +97,22 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode 
 
         const fresh = async () => {
             clearTimeout(timer)
+            current = null
+            writeJson('session', STORE_KEY, null)
             const result = await startPairing()
             if (cancelled || run !== generation.current) return
             if ('error' in result) {
-                setPhase({ kind: 'error', message: result.error })
+                setPhase({
+                    kind: 'error',
+                    message: result.error,
+                    retryAt: Date.now() + result.retryAfter * 1000,
+                    offline: result.offline,
+                })
                 timer = setTimeout(fresh, result.retryAfter * 1000)
                 return
             }
             current = result
+            writeJson('session', STORE_KEY, result)
             setPhase({ kind: 'ready', pairing: result })
             schedule()
         }
@@ -117,6 +142,7 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode 
                 if (res.ok) {
                     const body = (await res.json()) as { status: string }
                     if (body.status === 'claimed') {
+                        writeJson('session', STORE_KEY, null)
                         setPhase({ kind: 'claimed' })
                         // Let the morph land before the home screen replaces this view.
                         timer = setTimeout(() => router.refresh(), 1200)
@@ -134,7 +160,14 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode 
             else clearTimeout(timer)
         }
 
-        void fresh()
+        const resumed = storedPairing()
+        if (resumed) {
+            current = resumed
+            setPhase({ kind: 'ready', pairing: resumed })
+            void poll()
+        } else {
+            void fresh()
+        }
         document.addEventListener('visibilitychange', onVisibility)
         return () => {
             cancelled = true
@@ -143,11 +176,17 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode 
         }
     }, [router])
 
-    // Countdown for the progress bar, a few updates a second is plenty.
+    // Countdowns: the code's life for the progress bar, the wait before the next try.
+    // Once a second is plenty; the bar eases between values.
     useEffect(() => {
-        if (phase.kind !== 'ready') return
-        const { receivedAt, ttl } = phase.pairing
-        const tick = () => setRemaining(Math.max(0, 1 - (Date.now() - receivedAt) / ttl))
+        if (phase.kind !== 'ready' && phase.kind !== 'error') return
+        const tick = () => {
+            const t = Date.now()
+            setNow(t)
+            if (phase.kind === 'ready') {
+                setRemaining(Math.max(0, 1 - (t - phase.pairing.receivedAt) / phase.pairing.ttl))
+            }
+        }
         tick()
         const id = setInterval(tick, 1000)
         return () => clearInterval(id)
@@ -170,7 +209,7 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode 
                                     <CodeGroup chars={pairing.code.slice(3)} />
                                 </>
                             ) : (
-                                <span className={styles.codePlaceholder} />
+                                phase.kind === 'loading' && <span className={styles.codePlaceholder} />
                             )}
                         </p>
                         <p className={styles.instruction} data-hidden={pairing ? undefined : ''}>
@@ -181,8 +220,11 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode 
                         </div>
                         {phase.kind === 'error' && (
                             <p className={styles.error} role="status">
-                                <span aria-hidden>{icons.error}</span>
-                                {phase.message}
+                                <span aria-hidden>{phase.offline ? icons.error : icons.wait}</span>
+                                <span>
+                                    {phase.message} New code in{' '}
+                                    <span className={styles.wait}>{formatWait(phase.retryAt - now)}</span>
+                                </span>
                             </p>
                         )}
                     </>
@@ -191,10 +233,12 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode 
 
             <div className={styles.visual} aria-hidden={claimed ? true : undefined}>
                 <MorphShape shape={claimed ? 'sunny' : 'cookie12'} spring="spatial-slow" className={styles.blob} />
-                <div className={styles.qr} data-hidden={pairing ? undefined : ''}>
-                    {pairing && (
+                <div className={styles.qr} data-waiting={pairing || claimed ? undefined : ''}>
+                    {pairing ? (
                         // biome-ignore lint/security/noDangerouslySetInnerHtml: server-rendered QR markup from our own API
                         <div className={styles.qrCode} dangerouslySetInnerHTML={{ __html: pairing.qrSvg }} />
+                    ) : (
+                        !claimed && <LoadingIndicator size={96} label="Getting a code" />
                     )}
                 </div>
                 <span className={styles.check}>{icons.done}</span>

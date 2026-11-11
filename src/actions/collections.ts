@@ -1,9 +1,10 @@
 'use server'
 
 import { z } from 'zod'
-import type { ActionResult, Collection } from '@/lib/domain/types'
+import type { ActionResult, Collection, RecipeSummary } from '@/lib/domain/types'
 import { LIMITS } from '@/lib/domain/types'
 import { fail, invalidateApp, ok, withUser } from '@/server/action-utils'
+import { listRecipeCards } from '@/server/queries'
 import { collectionNameSchema, idSchema } from '@/server/schemas'
 
 const NOT_FOUND = 'That collection no longer exists.'
@@ -69,4 +70,9 @@ export async function removeFromCollection(id: string, recipeIds: string[]): Pro
         invalidateApp()
         return ok(changed)
     }, NOT_FOUND)
+}
+
+/** The library for the "Add recipes" picker, fetched when it opens so collection pages stay small. */
+export async function listPickerRecipes(): Promise<ActionResult<RecipeSummary[]>> {
+    return withUser(async ({ user }) => ok(await listRecipeCards(user.uid)))
 }

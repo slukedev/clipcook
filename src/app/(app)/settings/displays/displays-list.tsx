@@ -167,6 +167,7 @@ export function DisplaysList({
 
             <RenameDialog
                 display={renaming}
+                taken={list.filter((d) => d.id !== renaming?.id).map((d) => d.name)}
                 onClose={() => setRenaming(null)}
                 onSave={(display, name) =>
                     run({ type: 'rename', id: display.id, name }, () => renameDisplay(display.id, name))
@@ -207,10 +208,13 @@ export function DisplaysList({
 
 function RenameDialog({
     display,
+    taken,
     onClose,
     onSave,
 }: {
     display: KitchenDisplay | null
+    /** The other displays' names: two screens with one name cannot be told apart when sending. */
+    taken: readonly string[]
     onClose: () => void
     onSave: (display: KitchenDisplay, name: string) => void
 }) {
@@ -221,8 +225,9 @@ function RenameDialog({
         if (display) setName(display.name)
     }
     const clean = name.trim()
+    const clash = taken.some((t) => t.trim().toLocaleLowerCase() === clean.toLocaleLowerCase())
     const save = () => {
-        if (!display || !clean) return
+        if (!display || !clean || clash) return
         onClose()
         if (clean !== display.name) onSave(display, clean)
     }
@@ -233,7 +238,7 @@ function RenameDialog({
                 actions={
                     <>
                         <DialogClose render={<Button variant="text" />}>Cancel</DialogClose>
-                        <Button variant="text" disabled={!clean} onClick={save}>
+                        <Button variant="text" disabled={!clean || clash} onClick={save}>
                             Save
                         </Button>
                     </>
@@ -251,6 +256,7 @@ function RenameDialog({
                         onChange={(event) => setName(event.target.value)}
                         maxLength={LIMITS.displayName}
                         autoComplete="off"
+                        error={clash ? 'Another display has this name.' : undefined}
                         autoFocus
                     />
                 </form>

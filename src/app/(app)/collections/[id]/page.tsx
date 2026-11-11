@@ -20,17 +20,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CollectionPage({ params }: Props) {
     const [{ id }, { uid }] = await Promise.all([params, requireSession()])
-    const [found, recipes, collections, jar] = await Promise.all([
+    const [found, library, collections, jar] = await Promise.all([
         getCollection(uid, id),
         listRecipes(uid),
         listCollections(uid),
         cookies(),
     ])
     if (!found) notFound()
+    // Only the members ship with the page; the picker fetches the library when it opens.
     return (
         <CollectionView
             collection={{ id: found.collection.id, name: found.collection.name }}
-            recipes={recipes}
+            recipes={found.recipes}
+            libraryCount={library.length}
             collections={collections.map((c) => ({ id: c.id, name: c.name }))}
             prefs={parseLibraryPrefs(jar.get(LIBRARY_COOKIE)?.value)}
             icons={libraryIcons()}

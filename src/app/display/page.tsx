@@ -13,7 +13,16 @@ function toTile(recipe: RecipeSummary): HomeTile {
 
 export default async function DisplayPage() {
     const display = await getDisplaySession()
-    if (!display) return <Pairing icons={{ done: <Icon name="check" />, error: <Icon name="wifi_off" /> }} />
+    if (!display)
+        return (
+            <Pairing
+                icons={{
+                    done: <Icon name="check" />,
+                    error: <Icon name="wifi_off" />,
+                    wait: <Icon name="hourglass_empty" />,
+                }}
+            />
+        )
 
     const recipes = await listRecipes(display.uid)
     const favorites = recipes.filter((r) => r.favorite).slice(0, TILE_LIMIT)

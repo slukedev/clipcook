@@ -650,7 +650,7 @@ function Entry({
                 )}
 
                 <div className={styles.actions}>
-                    <Button type="submit" size="m" icon={mode === 'link' ? icons.addLink : icons.check}>
+                    <Button type="submit" size="m" icon={mode === 'link' ? icons.addLink : undefined}>
                         {mode === 'link' ? 'Clip' : 'Find recipe'}
                     </Button>
                     {mode === 'text' && canPaste && !text && (

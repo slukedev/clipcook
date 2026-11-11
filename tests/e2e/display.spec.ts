@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test'
 import { BASE_URL } from './support/env'
-import { openRecipe } from './support/library'
 import { expect, test, unique, watchConsole } from './support/fixtures'
+import { openRecipe } from './support/library'
 
 const TITLE = 'Shakshuka with Feta and Herbs'
 
@@ -56,7 +56,8 @@ test('pair a kitchen display, send a recipe, follow cook mode, then unlink it', 
 
         await openRecipe(page, TITLE)
         await showOn(page, name)
-        await expect(page.getByRole('region', { name: 'Notifications' })).toContainText(`Showing on ${name}`)
+        // The wording depends on how recently the display checked in; the display itself is the proof.
+        await expect(page.getByRole('region', { name: 'Notifications' })).toContainText(name)
         await expect(display).toHaveURL(/\/display\/r\/[\w-]+$/, { timeout: 15_000 })
         await expect(display.getByRole('heading', { level: 1, name: TITLE })).toBeVisible()
 
@@ -64,9 +65,9 @@ test('pair a kitchen display, send a recipe, follow cook mode, then unlink it', 
         await page.getByRole('link', { name: 'Cook', exact: true }).click()
         const counter = page.getByRole('banner').getByText(/^Step \d+ of \d+$/)
         await expect(counter).toHaveText(/^Step 1 of /)
-        const sync = page.getByRole('button', { name: `Show on ${name}` }).or(
-            page.getByRole('button', { name: 'Show on display' }),
-        )
+        const sync = page
+            .getByRole('button', { name: `Show on ${name}` })
+            .or(page.getByRole('button', { name: 'Show on display' }))
         if (await page.getByRole('button', { name: `Show on ${name}` }).isVisible()) {
             await sync.click()
             await expect(page.getByRole('button', { name: `Show on ${name}` })).toHaveAttribute('aria-pressed', 'true')

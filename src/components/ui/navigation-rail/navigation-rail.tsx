@@ -53,6 +53,14 @@ export function NavigationRail({
         onExpandedChange?.(next)
     }
     const floating = modal && expanded
+    // Labels fade in when the rail changes width, never on page load: primary
+    // navigation text starts visible.
+    const [shownExpanded, setShownExpanded] = useState(expanded)
+    const [toggled, setToggled] = useState(false)
+    if (expanded !== shownExpanded) {
+        setShownExpanded(expanded)
+        setToggled(true)
+    }
     const navRef = useRef<HTMLElement>(null)
     const menuRef = useRef<HTMLButtonElement>(null)
 
@@ -117,6 +125,7 @@ export function NavigationRail({
                 aria-label={label}
                 className={cx(styles.rail, className)}
                 data-expanded={expanded || undefined}
+                data-toggled={toggled || undefined}
                 data-modal={modal || undefined}
             >
                 <div className={styles.header}>

@@ -3,8 +3,9 @@ import { notFound } from 'next/navigation'
 import { getThemePreference } from '@/lib/theme/server'
 import { recipeColorCss } from '@/lib/cook/color'
 import { requireSession } from '@/server/auth'
-import { getRecipe, listCollections, listDisplays } from '@/server/queries'
+import { getRecipe, listCollections } from '@/server/queries'
 import { recipeIdSchema } from '@/server/schemas'
+import { displayOptions } from './_view/display-options'
 import { RecipeScreen } from './_view/recipe-screen'
 import './_view/view-transitions.css'
 
@@ -30,7 +31,7 @@ export default async function RecipePage({ params }: Props) {
     const session = await requireSession()
     const [recipe, displays, collections, preference] = await Promise.all([
         getRecipe(session.uid, parsed.data),
-        listDisplays(session.uid),
+        displayOptions(session.uid),
         listCollections(session.uid),
         getThemePreference(),
     ])
@@ -43,7 +44,7 @@ export default async function RecipePage({ params }: Props) {
         <RecipeScreen
             recipe={recipe}
             colorCss={css}
-            displays={displays.map((d) => ({ id: d.id, name: d.name, current: d.current }))}
+            displays={displays}
             collections={collections.map((c) => ({ id: c.id, name: c.name }))}
         />
     )

@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 
 // Displays live on a counter all day: always dark, so they glow less and burn in less.
 const brandDark = schemeFromSeed(BRAND_SEED, { dark: true, primaryChroma: BRAND_PRIMARY_CHROMA })
-const DISPLAY_CSS = `[data-display-root] {\n${schemeDeclarations(brandDark)}\n    color-scheme: dark;\n}\nhtml:has([data-display-root]), body:has([data-display-root]) {\n    background-color: ${brandDark.surface};\n}`
+// On body as well: menus and dialogs portal out of the display root and need its palette.
+const DISPLAY_CSS = `[data-display-root], body:has([data-display-root]) {\n${schemeDeclarations(brandDark)}\n    color-scheme: dark;\n}\nhtml:has([data-display-root]), body:has([data-display-root]) {\n    background-color: ${brandDark.surface};\n}`
 
 export const viewport: Viewport = {
     themeColor: brandDark.surface ?? '#1a1110',
@@ -35,6 +36,12 @@ export default async function DisplayLayout({ children }: { children: React.Reac
                     fullscreen: <Icon name="fullscreen" />,
                     fullscreenExit: <Icon name="fullscreen_exit" />,
                     unlink: <Icon name="logout" />,
+                    timers: {
+                        timer: <Icon name="timer" />,
+                        pause: <Icon name="pause" />,
+                        play: <Icon name="play_arrow" />,
+                        close: <Icon name="close" />,
+                    },
                 }}
             >
                 {children}

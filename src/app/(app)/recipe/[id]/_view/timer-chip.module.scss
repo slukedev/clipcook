@@ -104,6 +104,15 @@
     }
 }
 
+// A chip and the punctuation after it wrap together, with no gap before the period.
+.run {
+    white-space: nowrap;
+
+    > .chip {
+        margin-inline-end: 0;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .chip[data-state="done"] {
         animation: timer-ring-fade 1.6s ease-in-out infinite;

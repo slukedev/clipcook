@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ViewTransition } from 'react'
+import { type CSSProperties, ViewTransition } from 'react'
 import { CastButton } from '@/components/kitchen/cast-button'
 import { Button } from '@/components/ui/button'
 import { AssistChip, ChipSet } from '@/components/ui/chip'
@@ -133,7 +133,10 @@ export function RecipeScreen({
                                 {source && !recipe.sourceUrl && <p className={styles.sourceText}>{source}</p>}
                                 {recipe.description && <p className={styles.description}>{recipe.description}</p>}
                                 {stats.length > 0 && (
-                                    <dl className={styles.stats}>
+                                    <dl
+                                        className={styles.stats}
+                                        style={{ '--_count': stats.length } as CSSProperties}
+                                    >
                                         {stats.map((s) => (
                                             <div key={s.label} className={styles.stat}>
                                                 <dt>{s.label}</dt>
@@ -183,12 +186,15 @@ export function RecipeScreen({
                                 )}
                             </div>
                         </header>
-                        <IngredientsPanel
-                            recipeId={recipe.id}
-                            ingredients={recipe.ingredients}
-                            servings={recipe.servings}
-                            icons={{ cart: icons.cart }}
-                        />
+                        <div className={styles.ingredients}>
+                            <IngredientsPanel
+                                recipeId={recipe.id}
+                                ingredients={recipe.ingredients}
+                                instructions={recipe.instructions}
+                                servings={recipe.servings}
+                                icons={{ cart: icons.cart }}
+                            />
+                        </div>
                     </div>
                     <div className={styles.main}>
                         <StepsList

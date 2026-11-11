@@ -58,8 +58,18 @@
     }
 }
 
-.duplicate {
+.notices {
     grid-area: dup;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &:empty {
+        display: none;
+    }
+}
+
+.duplicate {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -212,6 +222,23 @@
     max-inline-size: 100%;
 }
 
+// A parsed value worth a second look: the tile turns tertiary, the same tone as the notice.
+.facts .fact[data-check] {
+    background-color: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+
+    dt {
+        color: inherit;
+    }
+}
+
+.title[data-check],
+.sectionTitle[data-check] {
+    text-decoration: underline wavy var(--md-sys-color-tertiary);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+}
+
 .tags {
     display: flex;
     flex-wrap: wrap;
@@ -275,9 +302,8 @@
 }
 
 .subheading {
-    @include type.role(title-medium, $emphasized: true);
-    padding: 16px 4px 8px;
-    color: var(--md-sys-color-primary);
+    @include type.subhead;
+    padding-block: 16px 8px;
 
     &:first-child {
         padding-block-start: 0;

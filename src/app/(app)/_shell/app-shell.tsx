@@ -41,9 +41,21 @@ function badgeLabel(destination: Destination): string | undefined {
     return `${destination.label}, ${destination.badge} to buy`
 }
 
-/** Routes where Clip is the screen's main action, so the compact FAB shows. */
+/**
+ * Routes where Clip is the screen's main action, so the compact FAB shows. Collection
+ * pages have their own "New collection" and "Add recipes" actions, and one FAB per
+ * screen means a second plus there would read as one of those.
+ */
 function showsFab(pathname: string): boolean {
-    return pathname === '/' || pathname === '/collections' || pathname.startsWith('/collections/')
+    return pathname === '/'
+}
+
+/**
+ * Clipping and editing are focused tasks with their own close button, so the
+ * compact navigation bar stays out of them from the first step to the last.
+ */
+function isFocusedTask(pathname: string): boolean {
+    return pathname === '/clip' || pathname === '/new' || /^\/recipe\/[^/]+\/edit$/.test(pathname)
 }
 
 /**
@@ -103,19 +115,21 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
                 <main id="main" tabIndex={-1} className={styles.main}>
                     {children}
                 </main>
-                <NavigationBar className={styles.bar}>
-                    {destinations.map((d) => (
-                        <NavigationBarItem
-                            key={d.href}
-                            href={d.href}
-                            label={d.label}
-                            icon={d.icon}
-                            selectedIcon={d.selectedIcon}
-                            badge={d.badge || undefined}
-                            aria-label={badgeLabel(d)}
-                        />
-                    ))}
-                </NavigationBar>
+                {!isFocusedTask(pathname) && (
+                    <NavigationBar className={styles.bar}>
+                        {destinations.map((d) => (
+                            <NavigationBarItem
+                                key={d.href}
+                                href={d.href}
+                                label={d.label}
+                                icon={d.icon}
+                                selectedIcon={d.selectedIcon}
+                                badge={d.badge || undefined}
+                                aria-label={badgeLabel(d)}
+                            />
+                        ))}
+                    </NavigationBar>
+                )}
             </div>
             {showsFab(pathname) && (
                 <div className={styles.fab} data-clip-fab="">

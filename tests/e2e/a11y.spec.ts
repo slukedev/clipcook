@@ -47,8 +47,8 @@ test.describe('signed out', () => {
         await page.goto('/login')
         await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
         await expect(page.getByRole('main')).toHaveCount(1)
-        expect(
-            await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
-        ).toBeLessThanOrEqual(0)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(
+            0,
+        )
     })
 })

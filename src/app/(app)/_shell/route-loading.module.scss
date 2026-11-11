@@ -1,0 +1,16 @@
+// A neutral wait for pages without their own skeleton. It takes the page's room
+// without drawing a layout the page might not have, and only shows up when the
+// wait is long enough to notice.
+.root {
+    display: grid;
+    place-items: center;
+    min-block-size: min(60dvh, 480px);
+    animation: route-loading-in var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) 400ms both;
+}
+
+@keyframes route-loading-in {
+    from {
+        opacity: 0;
+    }
+}

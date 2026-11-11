@@ -42,3 +42,12 @@ $_rond: (
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
 }
+
+// Section subheads inside an ingredient or step list ("For the marinade"): one
+// style everywhere, sitting on the list's own edge with no extra inset.
+//   .subhead { @include type.subhead; }
+@mixin subhead {
+    @include role(title-small, $emphasized: true);
+    padding-inline: 0;
+    color: var(--md-sys-color-primary);
+}
