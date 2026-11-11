@@ -163,17 +163,9 @@ export function ClipReview({ recipe, library, icons, onEdit, onExit }: ClipRevie
                     </div>
 
                     <header className={styles.header}>
-                        {savedId ? (
-                            <SharedElement name={vtName('recipe-title', savedId)}>
-                                <h1 id="clip-title" className={styles.title}>
-                                    {title}
-                                </h1>
-                            </SharedElement>
-                        ) : (
-                            <h1 id="clip-title" className={styles.title} data-check={check('title')}>
-                                {title}
-                            </h1>
-                        )}
+                        <h1 id="clip-title" className={styles.title} data-check={savedId ? undefined : check('title')}>
+                            {title}
+                        </h1>
                         {recipe.sourceUrl && (
                             <a
                                 className={styles.source}

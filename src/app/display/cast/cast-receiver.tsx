@@ -117,7 +117,7 @@ export function CastReceiver() {
             <Script src={RECEIVER_SDK} strategy="afterInteractive" onReady={() => startReceiver(setStatus)} />
             <LoadingIndicator size={96} label={status === 'error' ? 'Cast failed' : 'Connecting'} />
             <p className={styles.status} role="status">
-                {status === 'error' ? 'Could not link. Cast again from your phone.' : 'Connecting to your phone'}
+                {status === 'error' ? 'Could not link. Try casting again.' : 'Connecting'}
             </p>
         </main>
     )

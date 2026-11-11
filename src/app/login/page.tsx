@@ -4,7 +4,7 @@ import { signInMethod } from '@/server/auth'
 import styles from './login.module.scss'
 import { LoginActions } from './login-actions'
 
-export const metadata: Metadata = { title: 'Sign in' }
+export const metadata: Metadata = { title: 'Sign In' }
 
 /** Same-origin path plus query only; anything else goes to the library. Shared text makes long ones. */
 function safeNext(value: string | string[] | undefined): string | undefined {

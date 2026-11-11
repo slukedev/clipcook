@@ -26,7 +26,7 @@ import { Menu, MenuContent, MenuGroup, MenuRadioGroup, MenuRadioItem, MenuTrigge
 import { MorphShape, type ShapeName } from '@/components/ui/shape'
 import { useSnackbar } from '@/components/ui/snackbar'
 import { Tooltip } from '@/components/ui/tooltip'
-import { vtName } from '@/components/ui/view-transition'
+import { goBackWithMorph, morphTarget, vtName } from '@/components/ui/view-transition'
 import { flatSteps, ingredientSections, mentionedIngredients, stepShape } from '@/lib/cook/content'
 import { cookStep, doneSteps, recipeScale, useRecipeState } from '@/lib/cook/recipe-state'
 import { timerActions, useTimers } from '@/lib/cook/timers'
@@ -162,8 +162,8 @@ export function CookMode({
 
     const exit = () => {
         const nav = (window as unknown as { navigation?: { canGoBack?: boolean } }).navigation
-        if (nav?.canGoBack) router.back()
-        else router.replace(`/recipe/${recipe.id}`, { transitionTypes: ['cook'] })
+        if (nav?.canGoBack) goBackWithMorph(recipe.id, () => router.back(), { kinds: ['cook'], rest: 'anchored' })
+        else router.replace(`/recipe/${recipe.id}`, { transitionTypes: ['cook-close'] })
     }
 
     const finish = () => {
@@ -473,7 +473,7 @@ export function CookMode({
 
     return (
         <ViewTransition name={vtName('cook', recipe.id)} share="cc-cook" default="none">
-            <div className={styles.root} data-recipe={recipe.id}>
+            <div className={styles.root} data-recipe={recipe.id} {...morphTarget('cook', recipe.id)}>
                 <header className={styles.bar}>
                     <IconButton size="m" width="narrow" label="Close cook mode" icon={icons.close} onClick={exit} />
                     <div className={styles.heading}>

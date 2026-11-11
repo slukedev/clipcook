@@ -11,7 +11,7 @@ export default function RecipeNotFound() {
             <EmptyState
                 shape="soft-burst"
                 icon={<Icon name="search_off" />}
-                title="Recipe not found"
+                title="Recipe Not Found"
                 titleAs="h1"
                 description="It may have been deleted."
                 action={

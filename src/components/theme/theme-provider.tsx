@@ -52,7 +52,14 @@ function withTransition(update: () => void) {
         syncThemeColor()
         return
     }
-    document.startViewTransition(update).finished.then(syncThemeColor, syncThemeColor)
+    // The whole root crossfades here, unlike route changes, which keep the chrome anchored.
+    const root = document.documentElement
+    root.dataset.vtRoot = 'theme'
+    const done = () => {
+        delete root.dataset.vtRoot
+        syncThemeColor()
+    }
+    document.startViewTransition(update).finished.then(done, done)
 }
 
 function applyAttribute(name: 'theme' | 'contrast' | 'motion', value: string | undefined) {

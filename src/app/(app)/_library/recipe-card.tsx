@@ -1,12 +1,13 @@
 'use client'
 
-import type { PrefetchKind } from 'next/dist/client/components/router-reducer/router-reducer-types'
 import { useRouter } from 'next/navigation'
 import { type MouseEvent, type PointerEvent, type ReactNode, useRef } from 'react'
 import { IconButton } from '@/components/ui/icon-button'
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
 import { morphTarget, SharedElement, TransitionLink, vtName } from '@/components/ui/view-transition'
 import type { RecipeSummary } from '@/lib/domain/types'
+import { prefetchPage } from '@/lib/navigation/prefetch'
+import { useWarmOnView } from '@/lib/navigation/warm-on-view'
 import type { LibraryIcons } from './icons'
 import { highlightRanges, recipeMeta, type ViewMode } from './library-data'
 import styles from './recipe-card.module.scss'
@@ -84,7 +85,9 @@ export function RecipeCard({
 
     // The photo can only morph into the recipe page when that page renders in the same
     // commit, so warm the whole page on intent instead of only its loading shell.
-    const warm = () => router.prefetch(`/recipe/${id}`, { kind: 'full' as PrefetchKind })
+    const warm = () => prefetchPage(router, `/recipe/${id}`)
+    const cardRef = useRef<HTMLElement>(null)
+    useWarmOnView(cardRef, warm, !selecting)
 
     const cancelPress = () => {
         if (press.current) window.clearTimeout(press.current.timer)
@@ -131,6 +134,7 @@ export function RecipeCard({
 
     return (
         <article
+            ref={cardRef}
             className={styles.card}
             data-view={view}
             data-selecting={selecting || undefined}
@@ -154,22 +158,20 @@ export function RecipeCard({
                 </div>
             </SharedElement>
             <div className={styles.text}>
-                <SharedElement name={vtName('recipe-title', id)}>
-                    <h3 className={styles.title} {...morphTarget('title', id)}>
-                        <TransitionLink
-                            href={`/recipe/${id}`}
-                            className={styles.link}
-                            onClick={onLinkClick}
-                            onPointerEnter={selecting ? undefined : warm}
-                            onFocus={selecting ? undefined : warm}
-                            draggable={!selecting}
-                            role={selecting ? 'checkbox' : undefined}
-                            aria-checked={selecting ? selected : undefined}
-                        >
-                            <Highlighted text={recipe.title} tokens={tokens} />
-                        </TransitionLink>
-                    </h3>
-                </SharedElement>
+                <h3 className={styles.title}>
+                    <TransitionLink
+                        href={`/recipe/${id}`}
+                        className={styles.link}
+                        onClick={onLinkClick}
+                        onPointerEnter={selecting ? undefined : warm}
+                        onFocus={selecting ? undefined : warm}
+                        draggable={!selecting}
+                        role={selecting ? 'checkbox' : undefined}
+                        aria-checked={selecting ? selected : undefined}
+                    >
+                        <Highlighted text={recipe.title} tokens={tokens} />
+                    </TransitionLink>
+                </h3>
                 {meta && <p className={styles.meta}>{meta}</p>}
             </div>
             <div className={styles.actions}>

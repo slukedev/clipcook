@@ -104,7 +104,7 @@ export function DisplaysList({
                     className={styles.empty}
                     shape="cookie12"
                     icon={icons.display}
-                    title="No displays yet"
+                    title="No Displays Yet"
                     titleAs="h2"
                 />
             ) : (
@@ -158,7 +158,7 @@ export function DisplaysList({
 
             <Dialog open={adding} onOpenChange={setAdding}>
                 <DialogContent
-                    headline="Add a display"
+                    headline="Add a Display"
                     actions={<DialogClose render={<Button variant="text" />}>Close</DialogClose>}
                 >
                     {steps}
@@ -176,7 +176,7 @@ export function DisplaysList({
 
             <AlertDialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
                 <AlertDialogContent
-                    headline={`Remove ${removing?.name ?? 'display'}?`}
+                    headline={`Remove ${removing?.name ?? 'Display'}?`}
                     actions={
                         <>
                             <AlertDialogClose render={<Button variant="text" />}>Cancel</AlertDialogClose>
@@ -234,7 +234,7 @@ function RenameDialog({
     return (
         <Dialog open={display !== null} onOpenChange={(open) => !open && onClose()}>
             <DialogContent
-                headline="Rename display"
+                headline="Rename Display"
                 actions={
                     <>
                         <DialogClose render={<Button variant="text" />}>Cancel</DialogClose>

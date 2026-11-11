@@ -22,7 +22,7 @@ export default function GlobalError({ error, retry }: { error: unknown; retry: (
                         fullscreen
                         shape="puffy"
                         icon={<SvgIcon d={ERROR} name="error" />}
-                        title="ClipCook hit a problem"
+                        title="ClipCook Hit a Problem"
                         action={
                             <Button size="m" onClick={() => retry()}>
                                 Try again

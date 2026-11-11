@@ -220,7 +220,7 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode;
     return (
         <main className={styles.root} data-phase={phase.kind}>
             <section className={styles.text} aria-live="polite">
-                <h1 className={styles.title}>{claimed ? 'Linked' : 'Link this display'}</h1>
+                <h1 className={styles.title}>{claimed ? 'Linked' : 'Link This Display'}</h1>
                 {!claimed && (
                     <>
                         <p className={styles.code}>
@@ -235,7 +235,7 @@ export function Pairing({ icons }: { icons: { done: ReactNode; error: ReactNode;
                             )}
                         </p>
                         <p className={styles.instruction} data-hidden={pairing ? undefined : ''}>
-                            On your phone, open <strong>{pairing ? `${pairing.host}/link` : '/link'}</strong>
+                            On another device, open <strong>{pairing ? `${pairing.host}/link` : '/link'}</strong>
                         </p>
                         <div className={styles.progress}>
                             {pairing && <LinearProgress value={remaining} wavy label="Code expires" />}

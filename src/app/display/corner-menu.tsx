@@ -90,7 +90,7 @@ export function CornerMenu({
             </Menu>
             <AlertDialog open={confirm} onOpenChange={setConfirm}>
                 <AlertDialogContent
-                    headline="Unlink this display?"
+                    headline="Unlink This Display?"
                     actions={
                         <>
                             <AlertDialogClose

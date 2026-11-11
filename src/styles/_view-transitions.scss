@@ -1,11 +1,111 @@
-// View Transitions for route changes. React's <ViewTransition> (see
-// src/components/ui/view-transition) assigns these classes per transition type:
-//   nav-forward / nav-back: M3 shared axis X; anything else: fade through.
-// Shared elements (recipe photo, title) morph on the slow spatial spring.
+// View Transitions for route changes, following the M3 transition patterns.
+//
+// React's <ViewTransition> (src/components/ui/view-transition) assigns these classes:
+//   cc-forward / cc-back  shared axis X, for moving deeper into or back out of the hierarchy
+//   cc-fade               fade through, between top-level destinations
+//   cc-reveal             a loading skeleton handing over to the content it stood in for
+//   cc-hold               the page stays put while something grows over it (cook mode)
+// The recipe photo is a shared element that morphs on the default spatial spring.
+//
+// Timing follows M3: the outgoing page leaves in the first 90ms, the incoming page
+// arrives over the remaining 210ms, so a whole navigation reads in about 300ms. React
+// holds the next commit (a Suspense reveal, say) until the running transition ends,
+// so nothing here may run longer than the motion needs.
+
+:root {
+    --cc-vt-exit: 90ms;
+    --cc-vt-enter: 210ms;
+    --cc-vt-exit-ease: cubic-bezier(0.3, 0, 0.8, 0.15);
+    --cc-vt-enter-ease: cubic-bezier(0.05, 0.7, 0.1, 1);
+    --cc-vt-axis: 30px;
+}
+
+// Taps during a transition reach the live page instead of the overlay.
+::view-transition {
+    pointer-events: none;
+}
+
+// The app chrome (rail, navigation bar, FAB) lives in the root snapshot. It is the
+// anchor of every route change: the old frame is dropped and the new one is live, so
+// only the page content moves. Theme changes and history traversals opt back in with
+// data-vt-root because their changes happen in the root itself.
+:root:not([data-vt-root])::view-transition-old(root) {
+    display: none;
+}
+
+:root:not([data-vt-root])::view-transition-new(root) {
+    animation: none;
+}
+
+:root[data-vt-root="theme"]::view-transition-old(root),
+:root[data-vt-root="theme"]::view-transition-new(root) {
+    animation-duration: var(--md-sys-motion-spring-effects-slow-duration);
+    animation-timing-function: var(--md-sys-motion-spring-effects-slow);
+}
+
+:root[data-vt-root="back"]::view-transition-old(root) {
+    animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+}
+
+:root[data-vt-root="back"]::view-transition-new(root) {
+    animation: cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) both;
+}
+
+// The navigation bar and rail have their own names so they sit above the page snapshots,
+// which would otherwise paint over them, and never move. Names live here, not in a CSS
+// module, because modules hash view-transition-name values.
+.cc-vt-bar {
+    view-transition-name: cc-nav-bar;
+    view-transition-class: cc-chrome;
+}
+
+.cc-vt-rail {
+    view-transition-name: cc-nav-rail;
+    view-transition-class: cc-chrome;
+}
+
+.cc-vt-rail-large {
+    view-transition-name: cc-nav-rail-large;
+    view-transition-class: cc-chrome;
+}
+
+.cc-vt-fab {
+    view-transition-name: cc-fab;
+}
+
+::view-transition-group(.cc-chrome) {
+    z-index: 1;
+    animation: none;
+}
+
+:root:not([data-vt-root="theme"])::view-transition-old(.cc-chrome) {
+    display: none;
+}
+
+:root:not([data-vt-root="theme"])::view-transition-new(.cc-chrome) {
+    animation: none;
+}
+
+// The FAB belongs to the library alone: it leaves quickly and arrives with the page.
+::view-transition-group(cc-fab) {
+    z-index: 1;
+}
+
+// Opening cook mode: the old screen holds still under the growing container, and the
+// focus layout fades in behind it once the container has mostly arrived.
+:root:active-view-transition-type(cook)::view-transition-old(root) {
+    display: block;
+    animation: none;
+}
+
+:root:active-view-transition-type(cook)::view-transition-new(root) {
+    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) var(--md-sys-motion-spring-spatial-fast-duration) both;
+}
 
 ::view-transition-group(*) {
-    animation-duration: var(--md-sys-motion-spring-spatial-slow-duration);
-    animation-timing-function: var(--md-sys-motion-spring-spatial-slow);
+    animation-duration: var(--md-sys-motion-spring-spatial-default-duration);
+    animation-timing-function: var(--md-sys-motion-spring-spatial-default);
 }
 
 ::view-transition-old(*),
@@ -14,53 +114,113 @@
     animation-timing-function: var(--md-sys-motion-spring-effects-default);
 }
 
-// Shared elements crossfade content while the group morphs bounds. Images keep their
-// aspect instead of stretching.
+// Shared elements travel above the page snapshots, which would otherwise cover them
+// (the page's photo frame is opaque), and above the anchored chrome.
+::view-transition-group(.cc-shared) {
+    z-index: 2;
+}
+
+// Shared photos crossfade while the group morphs bounds, keeping their aspect.
 ::view-transition-old(.cc-shared),
 ::view-transition-new(.cc-shared) {
     height: 100%;
     object-fit: cover;
-    animation-duration: var(--md-sys-motion-spring-effects-slow-duration);
 }
 
-::view-transition-old(.cc-fade) {
+// Cook button to cook mode and back: a container transform. The bounds morph on the
+// spatial spring while the content crossfades inside the moving container.
+::view-transition-group(.cc-cook) {
+    z-index: 2;
+    overflow: clip;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+}
+
+::view-transition-old(.cc-cook),
+::view-transition-new(.cc-cook) {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: top center;
+}
+
+::view-transition-old(.cc-cook) {
     animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
         both;
 }
 
-::view-transition-new(.cc-fade) {
+::view-transition-new(.cc-cook) {
     animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
-        var(--md-sys-motion-spring-effects-default) var(--md-sys-motion-spring-effects-fast-duration) both;
+        var(--md-sys-motion-spring-effects-default) both;
 }
 
-::view-transition-old(.cc-forward) {
+// Fade through: out quickly, then in while settling from a slightly smaller scale.
+::view-transition-old(.cc-fade) {
+    animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+}
+
+::view-transition-new(.cc-fade) {
+    transform-origin: 50% 0;
     animation:
-        cc-vt-slide-out-start var(--md-sys-motion-spring-spatial-default-duration)
-            var(--md-sys-motion-spring-spatial-default) both,
-        cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast) both;
+        cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both,
+        cc-vt-grow calc(var(--cc-vt-exit) + var(--cc-vt-enter)) var(--cc-vt-enter-ease) both;
 }
 
-::view-transition-new(.cc-forward) {
-    animation:
-        cc-vt-slide-in-end var(--md-sys-motion-spring-spatial-default-duration)
-            var(--md-sys-motion-spring-spatial-default) both,
-        cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
-            var(--md-sys-motion-spring-effects-fast-duration) both;
-}
-
+// Shared axis X. Content travels the full distance on the spatial spring while the
+// fades hand over in the first third.
+::view-transition-old(.cc-forward),
 ::view-transition-old(.cc-back) {
     animation:
-        cc-vt-slide-out-end var(--md-sys-motion-spring-spatial-default-duration)
-            var(--md-sys-motion-spring-spatial-default) both,
-        cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast) both;
+        cc-vt-axis-out var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default)
+            both,
+        cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
 }
 
+::view-transition-new(.cc-forward),
 ::view-transition-new(.cc-back) {
     animation:
-        cc-vt-slide-in-start var(--md-sys-motion-spring-spatial-default-duration)
-            var(--md-sys-motion-spring-spatial-default) both,
-        cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
-            var(--md-sys-motion-spring-effects-fast-duration) both;
+        cc-vt-axis-in var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default)
+            both,
+        cc-vt-fade-in var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
+}
+
+::view-transition-old(.cc-forward),
+::view-transition-new(.cc-forward) {
+    --cc-vt-from: var(--cc-vt-axis);
+}
+
+::view-transition-old(.cc-back),
+::view-transition-new(.cc-back) {
+    --cc-vt-from: calc(var(--cc-vt-axis) * -1);
+}
+
+// Skeleton to content: a straight crossfade with no gap between them.
+::view-transition-old(.cc-reveal) {
+    animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
+        both;
+}
+
+::view-transition-new(.cc-reveal) {
+    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) both;
+}
+
+// Library results after a filter, tag, sort or layout change: the same place with
+// different content, so a short crossfade with no movement.
+::view-transition-old(.cc-results) {
+    animation: cc-vt-fade-out var(--cc-vt-exit) var(--cc-vt-exit-ease) both;
+}
+
+::view-transition-new(.cc-results) {
+    animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) both;
+}
+
+::view-transition-group(.cc-results) {
+    animation-duration: 0ms;
+}
+
+::view-transition-old(.cc-hold) {
+    animation: none;
 }
 
 @keyframes cc-vt-fade-out {
@@ -75,44 +235,40 @@
     }
 }
 
-@keyframes cc-vt-slide-out-start {
-    to {
-        translate: calc(-30px * var(--cc-dir, 1)) 0;
-    }
-}
-
-@keyframes cc-vt-slide-in-end {
+@keyframes cc-vt-grow {
     from {
-        translate: calc(30px * var(--cc-dir, 1)) 0;
+        scale: 0.94;
     }
 }
 
-@keyframes cc-vt-slide-out-end {
+@keyframes cc-vt-axis-out {
     to {
-        translate: calc(30px * var(--cc-dir, 1)) 0;
+        translate: calc(var(--cc-vt-from) * -1 * var(--cc-dir, 1)) 0;
     }
 }
 
-@keyframes cc-vt-slide-in-start {
+@keyframes cc-vt-axis-in {
     from {
-        translate: calc(-30px * var(--cc-dir, 1)) 0;
+        translate: calc(var(--cc-vt-from) * var(--cc-dir, 1)) 0;
     }
 }
 
-// Movement goes; the crossfade stays.
+// Movement goes; the crossfades stay.
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-group(*) {
         animation-duration: 0ms;
     }
 
     ::view-transition-old(.cc-forward),
-    ::view-transition-old(.cc-back) {
-        animation: cc-vt-fade-out var(--md-sys-motion-spring-effects-fast-duration) linear both;
+    ::view-transition-old(.cc-back),
+    ::view-transition-old(.cc-fade) {
+        animation: cc-vt-fade-out var(--cc-vt-exit) linear both;
     }
 
     ::view-transition-new(.cc-forward),
-    ::view-transition-new(.cc-back) {
-        animation: cc-vt-fade-in var(--md-sys-motion-spring-effects-default-duration) linear both;
+    ::view-transition-new(.cc-back),
+    ::view-transition-new(.cc-fade) {
+        animation: cc-vt-fade-in var(--cc-vt-enter) linear var(--cc-vt-exit) both;
     }
 }
 

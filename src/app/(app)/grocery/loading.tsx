@@ -1,5 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import { TopAppBar } from '@/components/ui/top-app-bar'
+import { PageTransition } from '@/components/ui/view-transition'
 import styles from './grocery.module.scss'
 
 const GROUPS = [
@@ -8,10 +9,10 @@ const GROUPS = [
     { key: 'c', rows: ['c1', 'c2', 'c3'] },
 ]
 
-export default function GroceryLoading() {
+function GroceryPlaceholder() {
     return (
         <div className={styles.page} aria-busy="true">
-            <TopAppBar variant="medium" title="Grocery list" />
+            <TopAppBar variant="medium" title="Grocery List" />
             <div className={styles.body}>
                 <div className={styles.top}>
                     <Skeleton height={56} shape="pill" />
@@ -33,5 +34,14 @@ export default function GroceryLoading() {
                 </div>
             </div>
         </div>
+    )
+}
+
+/** Enters with the navigation's motion and crossfades into the page when it arrives. */
+export default function Loading() {
+    return (
+        <PageTransition>
+            <GroceryPlaceholder />
+        </PageTransition>
     )
 }

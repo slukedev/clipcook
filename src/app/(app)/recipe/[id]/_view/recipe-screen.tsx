@@ -108,6 +108,7 @@ export function RecipeScreen({
                                         <RecipePhoto
                                             id={recipe.id}
                                             src={recipe.image}
+                                            thumbnail={recipe.thumbnail}
                                             alt=""
                                             sizes="(width < 720px) 100vw, 480px"
                                         />
@@ -115,11 +116,9 @@ export function RecipeScreen({
                                 </SharedElement>
                             </div>
                             <div className={styles.summary} data-bar-sentinel>
-                                <SharedElement name={vtName('recipe-title', recipe.id)}>
-                                    <h1 id={titleId} className={styles.title} {...morphTarget('title', recipe.id)}>
-                                        {recipe.title}
-                                    </h1>
-                                </SharedElement>
+                                <h1 id={titleId} className={styles.title}>
+                                    {recipe.title}
+                                </h1>
                                 {source && recipe.sourceUrl && (
                                     <a
                                         className={styles.source}
@@ -147,10 +146,15 @@ export function RecipeScreen({
                                     <ViewTransition name={vtName('cook', recipe.id)} share="cc-cook" default="none">
                                         <Button
                                             className={styles.cook}
+                                            {...morphTarget('cook', recipe.id)}
                                             size="m"
                                             icon={icons.cook}
                                             render={
-                                                <Link href={`/recipe/${recipe.id}/cook`} transitionTypes={['cook']} />
+                                                <Link
+                                                    href={`/recipe/${recipe.id}/cook`}
+                                                    transitionTypes={['cook']}
+                                                    prefetch
+                                                />
                                             }
                                             nativeButton={false}
                                         >

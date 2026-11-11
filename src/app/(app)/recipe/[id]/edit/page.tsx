@@ -11,7 +11,7 @@ import { editorIcons } from '../../../_editor/icons'
 import { RecipeEditor } from '../../../_editor/recipe-editor'
 import { EDITOR_SCOPE, valuesFromRecipe } from '../../../_editor/values'
 
-export const metadata: Metadata = { title: 'Edit recipe' }
+export const metadata: Metadata = { title: 'Edit Recipe' }
 
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -34,7 +34,7 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
         <PageTransition>
             <RecipeEditor
                 recipeId={recipe.id}
-                heading="Edit recipe"
+                heading="Edit Recipe"
                 initial={valuesFromRecipe(recipe)}
                 initialPhoto={recipe.image ? { kind: 'existing', src: recipe.image } : { kind: 'none' }}
                 initialColorCss={colorCss}

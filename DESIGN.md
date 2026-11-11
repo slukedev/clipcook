@@ -27,7 +27,7 @@ The Expressive motion scheme by default, the Standard scheme as a setting.
 | Spatial fast / default / slow | 0.6 / 0.8 / 0.8 | 800 / 380 / 200   |
 | Effects fast / default / slow | 1.0             | 3800 / 1600 / 800 |
 
-Spatial springs move things (position, size, shape). Effects springs change color and opacity and never overshoot. JS motion uses `src/lib/motion.ts`; CSS uses `linear()` approximations of the same springs in `src/styles/theme/motion.css`. Route changes use React view transitions: shared axis between destinations, and a shared element morph from a library card to its recipe. Reduced motion removes movement and keeps short fades.
+Spatial springs move things (position, size, shape). Effects springs change color and opacity and never overshoot. JS motion uses `src/lib/motion.ts`; CSS uses `linear()` approximations of the same springs in `src/styles/theme/motion.css`. Route changes use React view transitions on M3 timing: the old page leaves in 90ms and the new one arrives over the next 210ms. Top-level destinations fade through, deeper pages use shared axis X, the recipe photo morphs from its library card (and back), and the Cook button grows into cook mode. The navigation bar and rail are anchored and never animate. Navigations should land in one step: destinations, on-screen recipe cards and the Cook button prefetch whole pages, so a skeleton only appears on a cold link, and then it crossfades into the page with no gap. Library filters crossfade the results; typing in search stays instant. Reduced motion removes movement and keeps short fades.
 
 ## Layout
 
@@ -42,3 +42,5 @@ M3 window classes: compact under 600px, medium 600 to 839, expanded 840 to 1199,
 ## Copy
 
 Labels are one to three plain words. Buttons name the action. Errors say what happened and what to do next in one sentence. No taglines, no exclamation marks, no em dashes.
+
+Titles and headings use title case; buttons, labels and body text use sentence case.

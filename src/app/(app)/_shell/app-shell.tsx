@@ -8,6 +8,7 @@ import { ExtendedFab, FabMenu, FabMenuItem } from '@/components/ui/fab'
 import { Menu, MenuContent, MenuLinkItem, MenuTrigger } from '@/components/ui/menu'
 import { NavigationBar, NavigationBarItem } from '@/components/ui/navigation-bar'
 import { NavigationRail, NavigationRailItem, useRailExpanded } from '@/components/ui/navigation-rail'
+import { prefetchPage, whenIdle } from '@/lib/navigation/prefetch'
 import styles from './app-shell.module.scss'
 import { captureInstallPrompt } from './install-prompt'
 import { RAIL_COOKIE, takeLegacyMotion, writeCookie } from './preferences'
@@ -35,6 +36,10 @@ interface AppShellProps {
     railExpanded: boolean
     children: ReactNode
 }
+
+// Top-level destinations fade through (M3) and are prefetched whole, so switching tabs
+// never shows a skeleton.
+const DESTINATION_LINK = { prefetch: true, transitionTypes: ['nav-fade'] }
 
 function badgeLabel(destination: Destination): string | undefined {
     if (!destination.badge) return undefined
@@ -79,6 +84,16 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
         adoptLegacyMotion()
     }, [])
 
+    // Link only refreshes an expired prefetch on hover, which touch screens never send.
+    // Re-warm the other destinations after each navigation instead; fresh ones are reused.
+    useEffect(
+        () =>
+            whenIdle(() => {
+                for (const d of destinations) if (d.href !== pathname) prefetchPage(router, d.href)
+            }),
+        [pathname, destinations, router],
+    )
+
     const railItems = destinations.map((d) => (
         <NavigationRailItem
             key={d.href}
@@ -88,6 +103,7 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
             selectedIcon={d.selectedIcon}
             badge={d.badge || undefined}
             aria-label={badgeLabel(d)}
+            {...DESTINATION_LINK}
         />
     ))
     const railFab = <ClipRailFab icon={clipIcon} actions={clipActions} />
@@ -97,11 +113,11 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
             <a href="#main" className={styles.skip}>
                 Skip to content
             </a>
-            <NavigationRail className={styles.railModal} modal fab={railFab}>
+            <NavigationRail className={`${styles.railModal} cc-vt-rail`} modal fab={railFab}>
                 {railItems}
             </NavigationRail>
             <NavigationRail
-                className={styles.railLarge}
+                className={`${styles.railLarge} cc-vt-rail-large`}
                 expanded={largeExpanded}
                 onExpandedChange={(next) => {
                     setLargeExpanded(next)
@@ -116,7 +132,7 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
                     {children}
                 </main>
                 {!isFocusedTask(pathname) && (
-                    <NavigationBar className={styles.bar}>
+                    <NavigationBar className={`${styles.bar} cc-vt-bar`}>
                         {destinations.map((d) => (
                             <NavigationBarItem
                                 key={d.href}
@@ -126,13 +142,14 @@ export function AppShell({ destinations, clipActions, clipIcon, railExpanded, ch
                                 selectedIcon={d.selectedIcon}
                                 badge={d.badge || undefined}
                                 aria-label={badgeLabel(d)}
+                                {...DESTINATION_LINK}
                             />
                         ))}
                     </NavigationBar>
                 )}
             </div>
             {showsFab(pathname) && (
-                <div className={styles.fab} data-clip-fab="">
+                <div className={`${styles.fab} cc-vt-fab`} data-clip-fab="">
                     <FabMenu label="Clip a recipe" icon={clipIcon}>
                         {clipActions.map((action) => (
                             <FabMenuItem key={action.href} icon={action.icon} onClick={() => router.push(action.href)}>

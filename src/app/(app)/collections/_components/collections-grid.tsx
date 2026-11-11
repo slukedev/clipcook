@@ -42,7 +42,7 @@ export function CollectionsGrid({ collections, icons }: CollectionsGridProps) {
                         className={styles.empty}
                         shape="clover8"
                         icon={icons.empty}
-                        title="No collections yet"
+                        title="No Collections Yet"
                         titleAs="h2"
                         action={
                             <Button icon={icons.add} onClick={create}>
@@ -57,7 +57,7 @@ export function CollectionsGrid({ collections, icons }: CollectionsGridProps) {
                                 <CollectionMosaic name={c.name} thumbnails={c.coverThumbnails} />
                                 <div className={styles.text}>
                                     <h2 className={styles.name}>
-                                        <TransitionLink href={`/collections/${c.id}`} className={styles.link}>
+                                        <TransitionLink href={`/collections/${c.id}`} className={styles.link} prefetch>
                                             {c.name}
                                         </TransitionLink>
                                     </h2>

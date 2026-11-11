@@ -14,7 +14,7 @@ export default function AppError({ error, retry }: { error: unknown; retry: () =
         <StatusScreen
             shape="puffy"
             icon={<SvgIcon d={CLOUD_OFF} name="cloud_off" />}
-            title="This page didn't load"
+            title="This Page Didn't Load"
             action={<Button onClick={() => retry()}>Try again</Button>}
         />
     )

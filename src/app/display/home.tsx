@@ -132,7 +132,7 @@ export function DisplayHome({
                 {favorites.length + recent.length === 0 ? (
                     <div className={styles.empty}>
                         <Shape name="cookie9" className={styles.emptyShape} />
-                        <p>Send a recipe from your phone</p>
+                        <p>Send a recipe from any signed-in device</p>
                     </div>
                 ) : (
                     <>

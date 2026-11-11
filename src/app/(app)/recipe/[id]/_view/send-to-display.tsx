@@ -76,7 +76,7 @@ export function SendToDisplay({
                 </Tooltip>
                 <Dialog open={explain} onOpenChange={setExplain}>
                     <DialogContent
-                        headline="Send to a display"
+                        headline="Send to a Display"
                         icon={icons.tv}
                         actions={
                             <>

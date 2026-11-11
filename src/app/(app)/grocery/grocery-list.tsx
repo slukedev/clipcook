@@ -220,7 +220,7 @@ export function GroceryList({
         const text = shareText(list)
         if (typeof navigator.share === 'function' && navigator.canShare?.({ text }) !== false) {
             try {
-                await navigator.share({ title: 'Grocery list', text })
+                await navigator.share({ title: 'Grocery List', text })
                 return
             } catch (err) {
                 if (err instanceof DOMException && err.name === 'AbortError') return
@@ -250,7 +250,7 @@ export function GroceryList({
             <div className={styles.page} data-large={largeText || undefined}>
                 <TopAppBar
                     variant="medium"
-                    title="Grocery list"
+                    title="Grocery List"
                     subtitle={empty ? undefined : open.length === 0 ? 'All done' : `${open.length} left`}
                     trailing={
                         <>
@@ -298,7 +298,7 @@ export function GroceryList({
                         {recipeIds.length > 0 && (
                             <section className={styles.recipes} aria-labelledby="grocery-from">
                                 <h2 id="grocery-from" className={styles.recipesLabel}>
-                                    From recipes
+                                    From Recipes
                                 </h2>
                                 <ChipSet scroll bleed label="From recipes">
                                     {recipeIds.map((id) => (
@@ -321,7 +321,7 @@ export function GroceryList({
                             className={styles.empty}
                             shape="cookie9"
                             icon={icons.empty}
-                            title="Nothing on the list"
+                            title="Nothing on the List"
                             action={
                                 <Button
                                     variant="tonal"
@@ -403,7 +403,7 @@ export function GroceryList({
 
                 <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
                     <AlertDialogContent
-                        headline="Clear the list?"
+                        headline="Clear the List?"
                         actions={
                             <>
                                 <AlertDialogClose render={<Button variant="text" />}>Cancel</AlertDialogClose>

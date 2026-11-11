@@ -39,11 +39,11 @@ test('cook mode pages by keyboard, Done records the cook, Escape leaves', async 
         .poll(async () => (await exportLibrary(page)).recipes.find((r) => r.title === TITLE)?.cookCount)
         .toBe((before?.cookCount ?? 0) + 1)
 
-    // The library leads "Jump back in" with what was just cooked.
+    // The library leads "Jump Back In" with what was just cooked.
     await page.goto('/')
     await expect(
         page
-            .getByRole('region', { name: 'Jump back in' })
+            .getByRole('region', { name: 'Jump Back In' })
             .getByRole('group', { name: /^1 of / })
             .getByRole('link'),
     ).toHaveAccessibleName(TITLE)

@@ -40,12 +40,6 @@
     --md-sys-typescale-grade: 100;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    :root:focus-within {
-        scroll-behavior: smooth;
-    }
-}
-
 body {
     min-height: 100dvh;
     @include type.role(body-large);

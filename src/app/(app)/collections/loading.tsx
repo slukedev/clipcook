@@ -1,5 +1,15 @@
+import { PageTransition } from '@/components/ui/view-transition'
 import { CollectionsSkeleton } from './_components/collections-skeleton'
 
-export default function Loading() {
+function Placeholder() {
     return <CollectionsSkeleton />
+}
+
+/** Enters with the navigation's motion and crossfades into the page when it arrives. */
+export default function Loading() {
+    return (
+        <PageTransition>
+            <Placeholder />
+        </PageTransition>
+    )
 }

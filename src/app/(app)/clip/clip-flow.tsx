@@ -145,7 +145,7 @@ export function ClipFlow({ initial, mode, library, tags, collections, icons }: C
     if (view.type === 'manual') {
         return (
             <RecipeEditor
-                heading="New recipe"
+                heading="New Recipe"
                 initial={view.values}
                 initialPhoto={view.photo}
                 tags={tags}
@@ -265,7 +265,7 @@ function Found({
     if (editing) {
         return (
             <RecipeEditor
-                heading="New recipe"
+                heading="New Recipe"
                 initial={valuesFromImported(recipe)}
                 initialPhoto={photo}
                 tags={tags}
@@ -307,7 +307,7 @@ function Pending({
     return (
         <div className={styles.page}>
             <TopAppBar
-                title="Clip a recipe"
+                title="Clip a Recipe"
                 leading={<IconButton label="Close" icon={icons.close} onClick={onExit} />}
             />
             <div className={styles.pending} aria-busy="true">
@@ -566,7 +566,7 @@ function Entry({
     return (
         <div className={styles.page}>
             <TopAppBar
-                title="Clip a recipe"
+                title="Clip a Recipe"
                 leading={<IconButton label="Close" icon={icons.close} onClick={onExit} />}
             />
             <form ref={formRef} className={styles.entry} onSubmit={onSubmit} noValidate data-mode={mode}>

@@ -49,7 +49,7 @@ export default async function SettingsPage() {
                     />
                 </Section>
 
-                <Section id="displays" title="Kitchen displays">
+                <Section id="displays" title="Kitchen Displays">
                     <List segmented label="Kitchen displays">
                         <ListItem
                             href="/settings/displays"

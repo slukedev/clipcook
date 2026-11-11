@@ -134,7 +134,7 @@ function Picker({
 
     return (
         <DialogContent
-            headline={recipes.length === 1 ? 'Add to collection' : `Add ${recipes.length} recipes to`}
+            headline={recipes.length === 1 ? 'Add to Collection' : `Add ${recipes.length} Recipes to a Collection`}
             actions={
                 <>
                     <DialogClose render={<Button variant="text" />}>Cancel</DialogClose>

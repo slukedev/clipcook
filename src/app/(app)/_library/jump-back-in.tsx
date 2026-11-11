@@ -7,6 +7,8 @@ import styles from './jump-back-in.module.scss'
 import { RecipeMedia } from './recipe-media'
 
 const MAX_ITEMS = 10
+/** Enough to fill the first view at every width, so returning to the library never paints them empty. */
+const EAGER_ITEMS = 4
 
 /** Recently cooked recipes, most recent first, in a multi-browse carousel. */
 export function JumpBackIn({ recipes }: { recipes: RecipeSummary[] }) {
@@ -14,12 +16,17 @@ export function JumpBackIn({ recipes }: { recipes: RecipeSummary[] }) {
     return (
         <section className={styles.section} aria-labelledby="jump-back-in">
             <h2 id="jump-back-in" className={styles.title}>
-                Jump back in
+                Jump Back In
             </h2>
             <Carousel label="Jump back in" className={styles.carousel}>
-                {recent.map((recipe) => (
-                    <TransitionLink key={recipe.id} href={`/recipe/${recipe.id}`} className={styles.item}>
-                        <RecipeMedia src={recipe.thumbnail} title={recipe.title} sizes="(width < 840px) 40vw, 360px" />
+                {recent.map((recipe, index) => (
+                    <TransitionLink key={recipe.id} href={`/recipe/${recipe.id}`} className={styles.item} prefetch>
+                        <RecipeMedia
+                            src={recipe.thumbnail}
+                            title={recipe.title}
+                            sizes="(width < 840px) 40vw, 360px"
+                            priority={index < EAGER_ITEMS}
+                        />
                         <span className={styles.label}>{recipe.title}</span>
                     </TransitionLink>
                 ))}

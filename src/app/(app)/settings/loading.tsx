@@ -1,9 +1,10 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageTransition } from '@/components/ui/view-transition'
 import styles from './_sections/sections.module.scss'
 
 const GROUPS = [3, 1, 1, 2]
 
-export default function Loading() {
+function Placeholder() {
     return (
         <div className={styles.page} role="status" aria-busy="true" aria-label="Loading settings">
             <Skeleton shape="text" className={styles.title} width={160} />
@@ -18,5 +19,14 @@ export default function Loading() {
                 </div>
             ))}
         </div>
+    )
+}
+
+/** Enters with the navigation's motion and crossfades into the page when it arrives. */
+export default function Loading() {
+    return (
+        <PageTransition>
+            <Placeholder />
+        </PageTransition>
     )
 }

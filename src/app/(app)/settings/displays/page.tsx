@@ -11,7 +11,7 @@ import { AddDisplaySteps } from './add-display'
 import styles from './displays.module.scss'
 import { DisplaysList } from './displays-list'
 
-export const metadata: Metadata = { title: 'Kitchen displays' }
+export const metadata: Metadata = { title: 'Kitchen Displays' }
 
 /** The host people type on the display: the public origin without its scheme. */
 async function publicHost(): Promise<string> {
@@ -52,7 +52,7 @@ export default async function DisplaysPage() {
         <PageTransition>
             <TopAppBar
                 variant="medium"
-                title="Kitchen displays"
+                title="Kitchen Displays"
                 leading={
                     <IconButton
                         label="Settings"
@@ -79,7 +79,7 @@ export default async function DisplaysPage() {
                 />
                 <aside className={styles.sidePane} aria-labelledby="add-display-title">
                     <h2 id="add-display-title" className={styles.sideTitle}>
-                        Add a display
+                        Add a Display
                     </h2>
                     {steps}
                 </aside>

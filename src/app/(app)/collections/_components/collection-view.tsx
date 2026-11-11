@@ -133,7 +133,7 @@ export function CollectionView({
                         className={styles.empty}
                         shape="flower"
                         icon={icons.book}
-                        title="Nothing here yet"
+                        title="Nothing Here Yet"
                         titleAs="h2"
                         action={
                             <Button icon={icons.add} onClick={openPicker} disabled={libraryCount === 0}>

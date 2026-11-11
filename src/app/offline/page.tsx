@@ -31,13 +31,13 @@ export default async function OfflinePage() {
             </div>
             <div className={styles.copy} aria-live="polite">
                 <h1 className={styles.title} data-offline="page">
-                    You are offline
+                    You Are Offline
                 </h1>
                 <p className={styles.body} data-offline="page">
                     Check your connection, then try again.
                 </p>
                 <h1 className={styles.title} data-offline="share" hidden>
-                    Clip when back online
+                    Clip When Back Online
                 </h1>
                 <p className={styles.body} data-offline="share" hidden>
                     The link stays here and clips as soon as you reconnect.

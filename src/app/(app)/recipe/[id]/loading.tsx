@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageTransition } from '@/components/ui/view-transition'
 import styles from './_view/recipe-screen.module.scss'
 import skeleton from './_view/skeleton.module.scss'
 
@@ -6,7 +7,7 @@ const ROWS = ['a', 'b', 'c', 'd', 'e', 'f']
 const STEPS = ['a', 'b', 'c', 'd']
 
 /** The recipe layout with placeholders, pane for pane, while the recipe streams in. */
-export default function Loading() {
+function Placeholder() {
     return (
         <section className={styles.root} data-has-photo="" aria-busy="true" aria-label="Loading recipe">
             <div className={skeleton.bar}>
@@ -55,5 +56,14 @@ export default function Loading() {
                 </div>
             </div>
         </section>
+    )
+}
+
+/** Enters with the navigation's motion and crossfades into the page when it arrives. */
+export default function Loading() {
+    return (
+        <PageTransition>
+            <Placeholder />
+        </PageTransition>
     )
 }

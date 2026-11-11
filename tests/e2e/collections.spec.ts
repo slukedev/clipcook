@@ -9,13 +9,13 @@ test('create a collection, fill it from the picker, open it, remove a recipe, de
 
     await page.goto('/collections')
     await page.getByRole('button', { name: 'New collection' }).click()
-    const dialog = page.getByRole('dialog', { name: 'New collection' })
+    const dialog = page.getByRole('dialog', { name: 'New Collection' })
     await dialog.getByRole('textbox', { name: 'Name' }).fill(name)
     await dialog.getByRole('button', { name: 'Create' }).click()
 
     await expect(page).toHaveURL(/\/collections\/[\w-]+$/)
     await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Nothing here yet' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Nothing Here Yet' })).toBeVisible()
 
     await page.getByRole('button', { name: 'Add recipes' }).click()
     const picker = page.getByRole('dialog', { name: `Add to ${name}` })

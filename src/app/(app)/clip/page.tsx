@@ -8,7 +8,7 @@ import { editorIcons } from '../_editor/icons'
 import { ClipFlow } from './clip-flow'
 import type { ClipJob, ClipResult } from './jobs'
 
-export const metadata: Metadata = { title: 'Clip a recipe' }
+export const metadata: Metadata = { title: 'Clip a Recipe' }
 
 type Params = Record<string, string | string[] | undefined>
 

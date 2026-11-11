@@ -370,7 +370,7 @@ export function RecipeEditor({
 
             <AlertDialog open={guard.pendingHref !== null} onOpenChange={(open) => !open && guard.cancel()}>
                 <AlertDialogContent
-                    headline="Discard changes?"
+                    headline="Discard Changes?"
                     actions={
                         <>
                             <AlertDialogClose render={<Button variant="text" />}>Keep editing</AlertDialogClose>
