@@ -276,7 +276,9 @@ export function CookMode({
         const top = first.getBoundingClientRect().top - box.top
         const bottom = lastRow.getBoundingClientRect().bottom - box.top
         if (top >= 0 && bottom <= side.clientHeight) return
-        side.scrollTo({ top: side.scrollTop + top - 56, behavior: reduce ? 'auto' : 'smooth' })
+        // Half a row of the one before stays in view, so it reads as a list that goes on.
+        const inset = Number.parseFloat(getComputedStyle(side).paddingBlockStart) + first.offsetHeight / 2
+        side.scrollTo({ top: side.scrollTop + top - inset, behavior: reduce ? 'auto' : 'smooth' })
     }, [usedKey, prepping, reduce])
 
     useEffect(() => {
@@ -323,7 +325,9 @@ export function CookMode({
         else if (command === 'repeat') readStep()
         else if (command === 'stop') setListening(false)
         else if (command === 'ingredients') {
-            if (isWide()) document.getElementById(`cook-ingredients-${recipe.id}`)?.focus()
+            // The overview lays the list out itself; during the steps it is the pane or the sheet.
+            if (prepping) document.getElementById(`cook-gather-${recipe.id}`)?.focus()
+            else if (isWide()) document.getElementById(`cook-ingredients-${recipe.id}`)?.focus()
             else setSheetOpen(true)
         } else if (command === 'timer') {
             const first = stepTimers[0]
@@ -632,6 +636,7 @@ export function CookMode({
                     {prepping ? (
                         <PrepOverview
                             ref={cardRef}
+                            ingredientsId={`cook-gather-${recipe.id}`}
                             enter={enter}
                             totalMinutes={recipe.totalMinutes}
                             totalTime={recipe.totalTime}

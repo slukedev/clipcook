@@ -181,8 +181,18 @@
 
     @include media.expanded-up {
         padding-inline-end: 0;
+    }
 
-        [data-prepping] > & {
+    // The overview can run past the stage on short windows. Its last rows fade out under
+    // the controls, so it is plain there is more to scroll to, and the extra end padding
+    // lets the final row clear the fade.
+    [data-prepping] > & {
+        padding-block-end: 56px;
+        mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
+        scrollbar-width: thin;
+        scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+
+        @include media.expanded-up {
             padding-inline-end: var(--_edge);
         }
     }
@@ -229,6 +239,13 @@
     // measure stays tied to it so smaller type does not mean shorter lines.
     --_type: clamp(1.375rem, min(0.75rem + 4.4cqi, 14cqb), 3.25rem);
     display: flex;
+
+    // Desks and wall screens are read from the stove: let the step fill more of a big stage.
+    // Lines stay around 30 characters at the top size, and fitting still steps long ones down.
+    @include media.large-up {
+        --_type: clamp(1.375rem, min(1rem + 4.6cqi, 13cqb), 4.5rem);
+    }
+
     flex: 1;
     flex-direction: column;
     gap: clamp(12px, 3cqb, 28px);
@@ -342,26 +359,23 @@
 
 .prepIngredients {
     grid-area: ingredients;
+    // Focused only by the voice command, to bring the list into view; never by Tab.
+    outline: none;
 
     @container stage (inline-size >= 900px) {
         align-self: start;
     }
 
-    // Columns read top to bottom, the way people gather down a list.
+    // Rows read across, so whatever is on screen is one unbroken run of the list.
     @container stage (inline-size >= 640px) {
         ul[data-segmented] {
-            display: block;
-            columns: 2 280px;
-            column-gap: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2px 12px;
         }
 
-        li {
-            break-inside: avoid;
-            padding-block-end: 2px;
-        }
-
-        // A segmented list rounds only its two ends, which land mid-column once it wraps.
-        // Even corners keep each column reading as one group.
+        // A segmented list rounds only its two ends, which land mid-grid once it wraps.
+        // Even corners keep the rows reading as one group.
         li:nth-child(n) > [class] {
             border-radius: var(--md-sys-shape-corner-medium);
         }
@@ -538,18 +552,15 @@
     gap: 12px;
     padding: 8px var(--_edge) max(16px, var(--safe-bottom));
 
+    // Big windows: Back where the step starts, Next where it ends, each sized like a button
+    // rather than stretched across the frame. Start sits where Next will be.
     @include media.large-up {
+        justify-content: space-between;
         padding-inline-end: 0;
 
         [data-prepping] > & {
             padding-inline-end: var(--_edge);
         }
-    }
-
-    // Big windows: Back where the step starts, Next where it ends, each sized like a button
-    // rather than stretched across the frame. Start sits where Next will be.
-    @include media.large-up {
-        justify-content: space-between;
     }
 }
 

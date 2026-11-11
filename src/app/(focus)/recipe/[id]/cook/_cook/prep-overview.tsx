@@ -50,6 +50,7 @@ export function PrepOverview({
     enter,
     ref,
     icons,
+    ingredientsId,
 }: {
     totalMinutes: number | null
     totalTime: string
@@ -58,6 +59,8 @@ export function PrepOverview({
     enter: string
     ref?: Ref<HTMLDivElement>
     icons: { timer: ReactNode; schedule: ReactNode }
+    /** Lets the hands-free "ingredients" command move focus to the list. */
+    ingredientsId?: string
 }) {
     const minute = useMinute()
     return (
@@ -92,7 +95,12 @@ export function PrepOverview({
                 </section>
             )}
             {ingredients && (
-                <section className={styles.prepIngredients} aria-labelledby="cook-gather">
+                <section
+                    id={ingredientsId}
+                    className={styles.prepIngredients}
+                    aria-labelledby="cook-gather"
+                    tabIndex={-1}
+                >
                     <h3 id="cook-gather" className={styles.prepHeading}>
                         Ingredients
                     </h3>
