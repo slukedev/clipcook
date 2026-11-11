@@ -1,0 +1,34 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the recipe URL if clipping failed.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+  - type: input
+    id: device
+    attributes:
+      label: Browser and device
+      placeholder: Chrome 142 on Pixel 9, Safari on iPad, Echo Show 8
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options: [Firebase, Local]
