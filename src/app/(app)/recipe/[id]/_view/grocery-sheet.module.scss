@@ -1,0 +1,15 @@
+.all {
+    min-block-size: 48px;
+    padding-inline: 4px;
+}
+
+.list {
+    margin-inline: -8px;
+}
+
+.row {
+    min-block-size: 56px;
+    gap: 12px;
+    padding-inline: 4px 8px;
+    border-radius: var(--md-sys-shape-corner-large);
+}

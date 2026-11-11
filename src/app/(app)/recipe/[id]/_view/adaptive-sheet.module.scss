@@ -1,0 +1,22 @@
+.sheetBody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+// Actions stay in reach while the list scrolls.
+.sheetActions {
+    position: sticky;
+    inset-block-end: -24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-inline: -24px;
+    margin-block-end: -24px;
+    padding: 12px 24px calc(16px + var(--safe-bottom));
+    background-color: var(--md-sys-color-surface-container-low);
+}
+
+.dialog {
+    inline-size: min(560px, 100%);
+}

@@ -1,0 +1,77 @@
+@use "../../../../../styles/mixins/typography" as type;
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-inline: var(--md-sys-layout-margin);
+
+    @container recipe (width >= 600px) {
+        padding-inline: var(--md-sys-layout-margin);
+    }
+
+    @container recipe (width >= 780px) {
+        padding-inline: 0;
+    }
+}
+
+.head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 48px;
+}
+
+.title {
+    @include type.role(headline-small, $emphasized: true);
+    margin-inline-end: auto;
+}
+
+.scaler {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+}
+
+.stepper {
+    flex: none;
+}
+
+.unit {
+    @include type.role(body-large);
+    color: var(--md-sys-color-on-surface-variant);
+    margin-inline-start: -8px;
+    margin-inline-end: auto;
+}
+
+.quick {
+    flex: none;
+}
+
+.printScale {
+    display: none;
+}
+
+@media print {
+    .printScale {
+        display: block;
+        margin-block-end: 6pt;
+        font-style: italic;
+    }
+
+    .head > :not(.title),
+    .scaler {
+        display: none !important;
+    }
+
+    .panel {
+        padding: 0;
+        display: block;
+    }
+
+    .title {
+        margin-block-end: 8pt;
+    }
+}
