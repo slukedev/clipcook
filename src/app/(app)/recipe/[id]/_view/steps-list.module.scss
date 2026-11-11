@@ -101,8 +101,15 @@
     }
 }
 
+// In two panes the steps column is sized to a reading measure; fill it.
+@container recipe (width >= 880px) {
+    .text {
+        max-inline-size: none;
+    }
+}
+
 // Big monitors are read from the stove, a step back from the screen.
-@container recipe (width >= 1800px) {
+@container recipe (width >= 1600px) {
     .text {
         font-size: 1.1875rem;
     }

@@ -10,7 +10,10 @@
 //           so the first screen always shows what you need and what you do. Not
 //           earlier: the ingredients pane needs about 400px to keep the scaler on one row.
 //   1100+   wider gutters
-//   1800+   a slightly larger frame and type for big monitors across the kitchen
+//   1600+   a larger frame (medium-xl) and type for big monitors across the kitchen. 1920
+//           windows land here with the rail open or closed, so toggling it changes nothing.
+// The steps column holds a reading measure (--_main); the ingredients column takes the
+// rest, so the description, steps and notes share one right edge on the frame.
 // From 880 up the panes sit in the medium page frame, and the bar reads the same frame.
 
 .root {
@@ -271,7 +274,8 @@
     .layout {
         --_side: clamp(360px, 46%, 420px);
         display: grid;
-        grid-template-columns: var(--_side) minmax(0, 1fr);
+        --_main: 46rem;
+        grid-template-columns: minmax(var(--_side), 1fr) minmax(0, var(--_main));
         grid-template-areas:
             "photo summary"
             "ingredients summary"
@@ -296,14 +300,23 @@
 
     .photoFrame {
         grid-area: photo;
-        // Short windows (a 1024x600 display) keep the photo from pushing the ingredients down.
-        max-block-size: 40dvh;
+        // Short windows (a 1024x600 display) keep the photo from pushing the ingredients down,
+        // and a wide ingredients column crops it to landscape so the steps start right under
+        // the summary instead of under a tall photo.
+        max-block-size: min(40dvh, 340px);
         border-radius: var(--md-sys-shape-corner-extra-large);
     }
 
     .summary {
         grid-area: summary;
         padding-inline: 0;
+    }
+
+    // The column is already a reading measure, so text and tiles fill it and share its edge.
+    .description,
+    .stats,
+    .notes {
+        max-inline-size: none;
     }
 
     // A primary action, not a banner: wide enough to find at a glance, no wider.
@@ -348,10 +361,11 @@
     }
 }
 
-@container recipe (width >= 1800px) {
+@container recipe (width >= 1600px) {
     .layout {
-        --cc-page-max: calc(var(--cc-page-medium) + 160px);
+        --cc-page-max: var(--cc-page-medium-xl);
         --_side: 480px;
+        --_main: 50rem;
         column-gap: 80px;
     }
 

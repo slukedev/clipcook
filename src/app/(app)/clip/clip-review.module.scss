@@ -16,8 +16,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    // Save's edge on the content edge (the bar row sits 4px inside the margin).
-    padding-inline-end: calc(var(--md-sys-layout-margin) - 4px);
+    // Save's edge on the content edge (the bar row stops 8px short of it).
+    padding-inline-end: 8px;
 }
 
 // Under 380px the edit action keeps its icon and its accessible name only.

@@ -1,3 +1,4 @@
+@use "../../../styles/mixins/page";
 @use "../../../styles/mixins/typography" as type;
 
 .bar {
@@ -5,9 +6,13 @@
     align-items: center;
     gap: 16px;
     min-block-size: calc(64px + var(--safe-top));
-    // Matches the TopAppBar row inset inside the page frame.
-    --_inset: max(4px, (100% - var(--cc-page-max, 100%)) / 2 - var(--md-sys-layout-margin) + 4px);
-    padding: var(--safe-top) calc(var(--_inset) + var(--md-sys-layout-margin) - 4px) 0 calc(var(--_inset) + 4px);
+    padding-block-start: var(--safe-top);
+    // Matches the TopAppBar row; the Save placeholder ends on the content edge like Save.
+    @include page.bar-inset;
+
+    > :last-child {
+        margin-inline-end: 8px;
+    }
 }
 
 .heading {

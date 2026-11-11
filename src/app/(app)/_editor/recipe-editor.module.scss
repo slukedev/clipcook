@@ -15,9 +15,9 @@
     display: block;
 }
 
-// The bar's row sits 4px inside the window margin; this puts Save's edge on the content edge.
+// The bar's row stops 8px short of the content edge; this puts Save's edge on it.
 .save {
-    margin-inline: 4px calc(var(--md-sys-layout-margin) - 4px);
+    margin-inline: 4px 8px;
 }
 
 // Compact: one column, core details first, then the lists, then the extras.

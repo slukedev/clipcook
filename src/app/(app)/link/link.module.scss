@@ -11,11 +11,9 @@
     display: grid;
     justify-items: center;
     gap: var(--md-sys-space-8);
-    inline-size: 100%;
-    max-inline-size: 560px;
-    margin-inline: auto;
-    padding: var(--md-sys-space-6) max(16px, var(--safe-right)) calc(var(--md-sys-space-16) + var(--safe-bottom))
-        max(16px, var(--safe-left));
+    // The form spans the same narrow frame as the bar, so Back sits on its edge.
+    @include page.inner;
+    padding-block: var(--md-sys-space-6) calc(var(--md-sys-space-16) + var(--safe-bottom));
 
     @include media.medium-up {
         padding-block-start: var(--md-sys-space-12);

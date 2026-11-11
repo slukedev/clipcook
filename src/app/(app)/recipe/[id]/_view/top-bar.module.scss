@@ -1,4 +1,5 @@
 @use "../../../../../styles/mixins/typography" as type;
+@use "../../../../../styles/mixins/page";
 
 // Small top app bar (64dp). On compact windows with a photo it floats over the image
 // (`--_over-photo` is set by the screen's container query) and its buttons sit on
@@ -12,9 +13,8 @@
     gap: 4px;
     min-block-size: calc(64px + var(--safe-top));
     padding-block-start: var(--safe-top);
-    // Same inset as the shared TopAppBar: back and actions sit on the page frame's edges.
-    --_inset: max(4px, (100% - var(--cc-page-max, 100%)) / 2 - var(--md-sys-layout-margin) + 4px);
-    padding-inline: max(var(--_inset), var(--safe-left)) max(var(--_inset), var(--safe-right));
+    // Same inset as the shared TopAppBar: back and action glyphs sit on the content edges.
+    @include page.bar-inset;
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
     transition: background-color var(--md-sys-motion-spring-effects-default-duration)
@@ -69,9 +69,9 @@
     }
 }
 
-@container recipe (width >= 1800px) {
+@container recipe (width >= 1600px) {
     .bar {
-        --cc-page-max: calc(var(--cc-page-medium) + 160px);
+        --cc-page-max: var(--cc-page-medium-xl);
     }
 }
 
