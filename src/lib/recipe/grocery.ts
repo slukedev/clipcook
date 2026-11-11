@@ -124,8 +124,16 @@ export function normalizeGroceryName(name: string): string {
     return words.join(' ')
 }
 
+// Names arrive singularized ('chickpea', 'bean'), so plurals stay optional. Specific
+// phrases come first: 'ground beef' is meat, not a ground spice, and 'tomato paste'
+// is a can, not a tomato.
 const CATEGORY_RULES: Array<[RegExp, GroceryCategory]> = [
     [/\bfrozen\b|\bice cream\b/, 'frozen'],
+    [/\bground (beef|pork|lamb|turkey|chicken|veal|meat|sausage)\b/, 'meat-seafood'],
+    [
+        /\btomato(es)? (paste|sauce|pur[eé]e|passata)\b|\b(canned|tinned|crushed|diced) tomato(es)?\b|\bcoconut cream\b|\bcream of tartar\b/,
+        'pantry',
+    ],
     [/\b(peanut|almond|cashew) butter\b|\bcoconut milk\b|\bstock\b|\bbroth\b|\bbouillon\b/, 'pantry'],
     [/\b(bell|jalape[nñ]o|poblano|serrano|chili|chile|habanero|banana) peppers?\b/, 'produce'],
     [
@@ -146,11 +154,11 @@ const CATEGORY_RULES: Array<[RegExp, GroceryCategory]> = [
         'drinks',
     ],
     [
-        /\b(onions?|garlic|shallots?|scallions?|leeks?|tomato(es)?|potato(es)?|carrots?|celery|lettuce|spinach|kale|arugula|cabbage|broccoli|cauliflower|zucchini|squash|pumpkin|cucumbers?|eggplant|aubergine|mushrooms?|corn|peas|beans? sprouts|green beans|asparagus|avocados?|lemons?|limes?|oranges?|apples?|pears?|bananas?|berr(y|ies)|strawberr(y|ies)|blueberr(y|ies)|raspberr(y|ies)|grapes?|mangos?|mangoes|pineapple|peach(es)?|plums?|cherr(y|ies)|herbs?|basil|parsley|cilantro|coriander|mint|dill|rosemary|thyme|sage|chives|ginger|radish(es)?|beets?|sweet potato(es)?|fennel|jalape[nñ]os?|chilies|chiles)\b/,
+        /\b(onions?|garlic|shallots?|scallions?|leeks?|tomato(es)?|potato(es)?|carrots?|celery|lettuce|spinach|kale|arugula|cabbage|broccoli|cauliflower|zucchini|squash|pumpkin|cucumbers?|eggplant|aubergine|mushrooms?|corn|peas|bean sprouts?|green beans?|asparagus|avocados?|lemons?|limes?|oranges?|apples?|pears?|bananas?|berr(y|ies)|strawberr(y|ies)|blueberr(y|ies)|raspberr(y|ies)|grapes?|mangos?|mangoes|pineapple|peach(es)?|plums?|cherr(y|ies)|herbs?|basil|parsley|cilantro|coriander|mint|dill|rosemary|thyme|sage|chives|ginger|radish(es)?|beets?|sweet potato(es)?|fennel|jalape[nñ]os?|chilies|chiles)\b/,
         'produce',
     ],
     [
-        /\b(flour|sugar|rice|pasta|spaghetti|noodles|oats|oil|vinegar|honey|syrup|maple|soy sauce|fish sauce|sauce|ketchup|mustard|mayonnaise|mayo|beans|lentils|chickpeas|quinoa|couscous|breadcrumbs|panko|cornstarch|baking powder|baking soda|yeast|cocoa|chocolate|nuts?|almonds?|walnuts?|pecans?|cashews?|peanuts?|raisins|seeds?|canned|tomato paste|paste|jam|cereal|crackers|gelatin|extract|tahini|miso|capers|olives)\b/,
+        /\b(flour|sugar|rice|pasta|spaghetti|noodles?|oats|oil|vinegar|honey|syrup|maple|soy sauce|fish sauce|sauce|ketchup|mustard|mayonnaise|mayo|beans?|lentils?|chickpeas?|garbanzos?|quinoa|couscous|breadcrumbs?|panko|cornstarch|baking powder|baking soda|yeast|cocoa|chocolate|nuts?|almonds?|walnuts?|pecans?|cashews?|peanuts?|raisins?|seeds?|canned|paste|jam|cereal|crackers?|gelatin|extract|tahini|miso|capers?|olives?)\b/,
         'pantry',
     ],
 ]

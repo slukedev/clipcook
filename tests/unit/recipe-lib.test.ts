@@ -350,6 +350,29 @@ describe('grocery', () => {
         expect(categorizeIngredient('frozen peas')).toBe('frozen')
         expect(categorizeIngredient('chicken thigh')).toBe('meat-seafood')
         expect(categorizeIngredient('egg')).toBe('dairy-eggs')
+        // Names reach the categorizer singularized, and phrases beat their single words.
+        for (const line of [
+            '1 lb ground beef',
+            '2 cans chickpeas',
+            '1 can black beans',
+            '2 tbsp tomato paste',
+            '1 cup raisins',
+            '8 oz green beans',
+        ]) {
+            const item = addGroceryLines([], [line], { now: 0, newId: () => 'x' })[0]
+            expect(item && [line, item.category]).toEqual([
+                line,
+                {
+                    '1 lb ground beef': 'meat-seafood',
+                    '2 cans chickpeas': 'pantry',
+                    '1 can black beans': 'pantry',
+                    '2 tbsp tomato paste': 'pantry',
+                    '1 cup raisins': 'pantry',
+                    '8 oz green beans': 'produce',
+                }[line],
+            ])
+        }
+        expect(categorizeIngredient('ground cumin')).toBe('spices')
         expect(categorizeIngredient('chicken stock')).toBe('pantry')
         expect(categorizeIngredient('mystery')).toBe('other')
     })
