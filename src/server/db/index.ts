@@ -22,11 +22,14 @@ export function resolveBackend(env: Record<string, string | undefined> = process
     )
 }
 
-let store: Promise<Store> | null = null
+// Kept on globalThis because Next can load this module more than once per process
+// (route handlers and server actions get separate module graphs). Two local stores
+// would each queue writes to the same file and lose updates.
+const holder = globalThis as typeof globalThis & { __clipcookStore?: Promise<Store> | null }
 
 /** Process-wide store; it holds connections, never request data. */
 export function getStore(): Promise<Store> {
-    store ??= (async () => {
+    holder.__clipcookStore ??= (async () => {
         if (resolveBackend() === 'local') {
             const { LocalStore } = await import('./local')
             return new LocalStore()
@@ -34,10 +37,10 @@ export function getStore(): Promise<Store> {
         const { FirestoreStore } = await import('./firestore')
         return new FirestoreStore()
     })().catch((err: unknown) => {
-        store = null
+        holder.__clipcookStore = null
         throw err
     })
-    return store
+    return holder.__clipcookStore
 }
 
 export function backend(): Backend {
