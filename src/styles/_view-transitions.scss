@@ -87,7 +87,7 @@
 ::view-transition-group(cc-nav-bar),
 ::view-transition-group(cc-nav-rail),
 ::view-transition-group(cc-nav-rail-large) {
-    z-index: 1;
+    z-index: 4;
     animation: none;
 }
 
@@ -107,7 +107,7 @@
 // The FAB belongs to the library alone: it leaves quickly and arrives with the page.
 // Its name is set inline and changes with every transition (view-transition/generation).
 ::view-transition-group(.cc-fab) {
-    z-index: 1;
+    z-index: 4;
 }
 
 // Opening cook mode: the old screen holds still under the growing container, and the
@@ -137,10 +137,16 @@
     animation: var(--cc-vt-fade-in) var(--cc-vt-enter) var(--cc-vt-enter-ease) var(--cc-vt-exit) both;
 }
 
-// Shared elements travel above the page snapshots, which would otherwise cover them
-// (the page's photo frame is opaque), and above the anchored chrome.
+// Stacking, bottom to top: pages, shared elements, the page that holds the large photo
+// (cc-over, so its top bar and sheet stay over the photo; the recipe page clears its
+// own background while a transition runs), then the chrome and the FAB. Cook mode's
+// container grows over all of it.
 ::view-transition-group(.cc-shared) {
     z-index: 2;
+}
+
+::view-transition-group(.cc-over) {
+    z-index: 3;
 }
 
 // Shared photos crossfade while the group morphs bounds, keeping their aspect.
@@ -164,7 +170,7 @@
 // Cook button to cook mode and back: a container transform. The bounds morph on the
 // spatial spring while the content crossfades inside the moving container.
 ::view-transition-group(.cc-cook) {
-    z-index: 2;
+    z-index: 5;
     overflow: clip;
     border-radius: var(--md-sys-shape-corner-extra-large);
 }

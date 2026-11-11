@@ -88,6 +88,13 @@ export function goBackWithMorph(id: string, back: () => void, options: MorphOpti
     const root = document.documentElement
     if (rest === 'crossfade') root.dataset.vtRoot = 'back'
     const from = tag(id, kinds)
+    // The page we leave keeps its top bar and sheet over the photo while it fades.
+    const over = rest === 'crossfade' ? document.querySelector<HTMLElement>('[data-vt-over]') : null
+    if (over) {
+        over.style.setProperty('view-transition-name', freshVtName('over'))
+        over.style.setProperty('view-transition-class', 'cc-over')
+        from.push(over)
+    }
     let to: HTMLElement[] = []
     const transition = document.startViewTransition(async () => {
         untag(from)

@@ -54,7 +54,12 @@ export function RecipeScreen({
         <PageTransition>
             {/* biome-ignore lint/security/noDangerouslySetInnerHtml: generated color tokens, id is validated */}
             {colorCss && <style dangerouslySetInnerHTML={{ __html: colorCss }} />}
-            <div className={styles.root} data-recipe={recipe.id} data-has-photo={recipe.image ? '' : undefined}>
+            <div
+                className={styles.root}
+                data-recipe={recipe.id}
+                data-has-photo={recipe.image ? '' : undefined}
+                data-vt-over=""
+            >
                 <TopBar
                     recipeId={recipe.id}
                     title={recipe.title}

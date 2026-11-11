@@ -76,6 +76,16 @@
     border-radius: inherit;
 }
 
+// While a view transition runs, the page is a snapshot above the morphing photo
+// (src/styles/_view-transitions.scss). Clear the backgrounds behind the photo so it
+// shows through; the window behind has the same surface color.
+:global(:root:active-view-transition) {
+    .root,
+    .photoFrame {
+        background-color: transparent;
+    }
+}
+
 .summary {
     container: summary / inline-size;
     position: relative;

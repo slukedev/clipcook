@@ -16,8 +16,12 @@ const PAGE = {
     default: 'cc-reveal',
 }
 
-// Closing cook mode shrinks it back into the button over a page that is already there.
-const ENTER = { ...PAGE, cook: 'none', 'cook-close': 'none' }
+// The deeper page holds the large photo, under its own top bar and sheet, so it stays
+// above the photo while the photo morphs to or from a card: entering on the way in,
+// leaving on the way out. Closing cook mode shrinks it back into the button over a page
+// that is already there.
+const ENTER = { ...PAGE, 'nav-forward': 'cc-forward cc-over', cook: 'none', 'cook-close': 'none' }
+const EXIT = { ...PAGE, 'nav-back': 'cc-back cc-over' }
 
 let pages = 0
 
@@ -33,7 +37,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
     const [page] = useState(() => ++pages)
     const name = useFreshVtName(`page-${page}`)
     return (
-        <ViewTransition name={name} enter={ENTER} exit={PAGE} share="none" default="none">
+        <ViewTransition name={name} enter={ENTER} exit={EXIT} share="none" default="none">
             {children}
         </ViewTransition>
     )
