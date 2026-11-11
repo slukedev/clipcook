@@ -1,42 +1,50 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { dynamicColorCss } from '@/lib/theme/scheme'
+import { getThemePreference } from '@/lib/theme/server'
+import { recipeColorCss } from '@/lib/cook/color'
 import { requireSession } from '@/server/auth'
-import { getRecipeForUser } from '@/server/recipes'
+import { getRecipe, listCollections, listDisplays } from '@/server/queries'
 import { recipeIdSchema } from '@/server/schemas'
-import { RecipeView } from './RecipeView'
+import { RecipeScreen } from './_view/recipe-screen'
+import './_view/view-transitions.css'
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-    const { id } = await params
+type Props = { params: Promise<{ id: string }> }
+
+async function load(id: string) {
     const parsed = recipeIdSchema.safeParse(id)
-    if (!parsed.success) return { title: 'ClipCook' }
-    try {
-        const session = await requireSession()
-        const recipe = await getRecipeForUser(session.uid, parsed.data)
-        if (recipe) return { title: recipe.title }
-    } catch {
-        // fall through
-    }
-    return { title: 'ClipCook' }
+    if (!parsed.success) return null
+    const session = await requireSession()
+    return getRecipe(session.uid, parsed.data)
 }
 
-export default async function RecipePage({ params }: { params: Promise<{ id: string }> }) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const recipe = await load((await params).id).catch(() => null)
+    if (!recipe) return { title: 'Recipe' }
+    return { title: recipe.title, description: recipe.description || undefined }
+}
+
+export default async function RecipePage({ params }: Props) {
     const { id } = await params
     const parsed = recipeIdSchema.safeParse(id)
     if (!parsed.success) notFound()
     const session = await requireSession()
-    const recipe = await getRecipeForUser(session.uid, parsed.data)
+    const [recipe, displays, collections, preference] = await Promise.all([
+        getRecipe(session.uid, parsed.data),
+        listDisplays(session.uid),
+        listCollections(session.uid),
+        getThemePreference(),
+    ])
     if (!recipe) notFound()
 
-    // Per-recipe dynamic color, rendered on the server: the whole page below
-    // the app bar re-themes from the photo's seed color, in both schemes,
-    // with zero client color computation and no flash.
-    const dynamicCss = recipe.seedColor !== null ? dynamicColorCss('[data-recipe-scope]', recipe.seedColor) : null
+    // The page re-themes from the photo on the server, so the first paint is already in color.
+    const css = recipe.seedColor === null ? null : recipeColorCss(recipe.id, recipe.seedColor, preference.contrast)
 
     return (
-        <>
-            {dynamicCss && <style>{dynamicCss}</style>}
-            <RecipeView recipe={recipe} />
-        </>
+        <RecipeScreen
+            recipe={recipe}
+            colorCss={css}
+            displays={displays.map((d) => ({ id: d.id, name: d.name, current: d.current }))}
+            collections={collections.map((c) => ({ id: c.id, name: c.name }))}
+        />
     )
 }

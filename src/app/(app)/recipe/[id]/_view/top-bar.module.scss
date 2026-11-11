@@ -1,0 +1,74 @@
+@use "../../../../../styles/mixins/typography" as type;
+
+// Small top app bar (64dp). On compact windows with a photo it floats over the image
+// (`--_over-photo` is set by the screen's container query) and its buttons sit on
+// tonal discs until the summary sheet reaches it.
+.bar {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-block-size: calc(64px + var(--safe-top));
+    padding-block-start: var(--safe-top);
+    padding-inline: max(4px, var(--safe-left)) max(4px, var(--safe-right));
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
+
+    &[data-scrolled] {
+        background-color: var(--md-sys-color-surface-container);
+    }
+}
+
+.title {
+    @include type.role(title-large);
+    flex: 1;
+    min-inline-size: 0;
+    padding-inline: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0;
+    translate: 0 8px;
+    transition:
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        translate var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    .bar[data-title-visible] & {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+.trailing {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+// Over the photo: transparent bar, buttons on solid discs so they read on any image.
+@container recipe (width < 600px) {
+    .bar {
+        --_over-photo: 1;
+    }
+
+    [data-has-photo] .bar:not([data-scrolled]) {
+        background-color: transparent;
+
+        :where(button, a) {
+            --_container: color-mix(in srgb, var(--md-sys-color-surface-container-high) 88%, transparent);
+            --_content: var(--md-sys-color-on-surface);
+        }
+    }
+}
+
+@media print {
+    .bar {
+        display: none;
+    }
+}
