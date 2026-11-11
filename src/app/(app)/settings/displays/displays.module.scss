@@ -31,8 +31,17 @@
     }
 }
 
-.empty {
-    padding-block: var(--md-sys-space-10);
+.setup {
+    display: grid;
+    gap: var(--md-sys-space-5);
+    max-inline-size: 560px;
+    padding: var(--md-sys-space-6) var(--md-sys-space-5);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-surface-container);
+
+    @include media.medium-up {
+        padding: var(--md-sys-space-6);
+    }
 }
 
 // Segmented list: 2dp gaps, 16dp outer corners.
@@ -255,5 +264,14 @@
     > :last-child {
         border-end-start-radius: var(--md-sys-shape-corner-large);
         border-end-end-radius: var(--md-sys-shape-corner-large);
+    }
+}
+
+// With nothing linked the setup card stands alone; the side pane would repeat it.
+.body:has(.setup) {
+    grid-template-columns: minmax(0, 1fr);
+
+    .sidePane {
+        display: none;
     }
 }

@@ -3,7 +3,7 @@ import { Icon } from '@/components/ui/icon'
 import { List, ListItem } from '@/components/ui/list'
 import { PageTransition } from '@/components/ui/view-transition'
 import { requireSession } from '@/server/auth'
-import { listDisplays } from '@/server/queries'
+import { listCollections, listDisplays, listRecipes } from '@/server/queries'
 import pkg from '../../../../package.json'
 import { AccountSection } from './_sections/account'
 import { AppearanceSection } from './_sections/appearance'
@@ -30,7 +30,12 @@ function Section({ id, title, children }: { id: string; title: string; children:
 
 export default async function SettingsPage() {
     const { uid } = await requireSession()
-    const [displays, origin] = await Promise.all([listDisplays(uid), requestOrigin()])
+    const [displays, recipes, collections, origin] = await Promise.all([
+        listDisplays(uid),
+        listRecipes(uid),
+        listCollections(uid),
+        requestOrigin(),
+    ])
     const chevron = <Icon name="chevron_right" />
     const external = <Icon name="open_in_new" size={20} />
 
@@ -55,7 +60,7 @@ export default async function SettingsPage() {
                             href="/settings/displays"
                             leading={<Icon name="cast" />}
                             headline="Displays"
-                            supporting={displays.length === 0 ? 'None linked' : `${displays.length} linked`}
+                            supporting={displays.length === 0 ? 'None linked' : displays.map((d) => d.name).join(', ')}
                             trailing={chevron}
                         />
                     </List>
@@ -75,7 +80,11 @@ export default async function SettingsPage() {
                 </Section>
 
                 <Section id="data" title="Data">
-                    <DataSection icons={{ export: <Icon name="download" />, import: <Icon name="upload" /> }} />
+                    <DataSection
+                        recipes={recipes.length}
+                        collections={collections.length}
+                        icons={{ export: <Icon name="download" />, import: <Icon name="upload" /> }}
+                    />
                 </Section>
 
                 <Section id="account" title="Account">

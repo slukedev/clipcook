@@ -6,16 +6,12 @@ import { List, ListItem } from '@/components/ui/list'
 import { CircularProgress } from '@/components/ui/progress'
 import { useSnackbar } from '@/components/ui/snackbar'
 import type { ImportCounts } from '@/lib/domain/types'
+import { exportSummary, importedMessage } from './data-summary'
 
 interface DataProps {
+    recipes: number
+    collections: number
     icons: { export: ReactNode; import: ReactNode }
-}
-
-function importedMessage(counts: ImportCounts): string {
-    const added = counts.recipesAdded === 1 ? '1 recipe' : `${counts.recipesAdded} recipes`
-    if (counts.recipesAdded === 0 && counts.recipesSkipped > 0) return 'Those recipes are already here'
-    if (counts.recipesSkipped > 0) return `Imported ${added}, skipped ${counts.recipesSkipped} already here`
-    return `Imported ${added}`
 }
 
 /** Uploads with XMLHttpRequest because fetch still cannot report upload progress. */
@@ -38,7 +34,7 @@ function upload(file: File, onProgress: (fraction: number) => void): Promise<Imp
     })
 }
 
-export function DataSection({ icons }: DataProps) {
+export function DataSection({ recipes, collections, icons }: DataProps) {
     const router = useRouter()
     const snackbar = useSnackbar()
     const inputRef = useRef<HTMLInputElement>(null)
@@ -69,6 +65,7 @@ export function DataSection({ icons }: DataProps) {
                 <ListItem
                     leading={icons.export}
                     headline="Export"
+                    supporting={exportSummary(recipes, collections)}
                     onClick={() => {
                         const link = document.createElement('a')
                         link.href = '/api/export'
@@ -79,7 +76,7 @@ export function DataSection({ icons }: DataProps) {
                 <ListItem
                     leading={icons.import}
                     headline={busy ? 'Importing' : 'Import'}
-                    supporting="Add recipes from a ClipCook export"
+                    supporting="From a ClipCook export. Adds to what is here; nothing is replaced."
                     disabled={busy}
                     trailing={
                         busy ? (
