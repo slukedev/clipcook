@@ -3,8 +3,9 @@ import { cardTitles, type ExportedRecipe, exportLibrary, recipeGrid, sorted } fr
 
 const fold = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
+// Search covers ingredients too ("chicken" finds a chili made with chicken stock).
 function searchHit(recipe: ExportedRecipe, query: string): boolean {
-    const haystack = fold([recipe.title, recipe.sourceName ?? '', ...recipe.tags].join('\n'))
+    const haystack = fold([recipe.title, recipe.sourceName ?? '', ...recipe.tags, ...recipe.ingredients].join('\n'))
     return fold(query)
         .split(/\s+/)
         .every((token) => haystack.includes(token))
