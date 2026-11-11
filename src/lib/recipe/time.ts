@@ -2,7 +2,8 @@
 
 import { normalizeFractions } from './text'
 
-const ISO = /^P(?:(\d+(?:[.,]\d+)?)Y)?(?:(\d+(?:[.,]\d+)?)M)?(?:(\d+(?:[.,]\d+)?)W)?(?:(\d+(?:[.,]\d+)?)D)?(?:T(?:(\d+(?:[.,]\d+)?)H)?(?:(\d+(?:[.,]\d+)?)M)?(?:(\d+(?:[.,]\d+)?)S)?)?$/i
+const ISO =
+    /^P(?:(\d+(?:[.,]\d+)?)Y)?(?:(\d+(?:[.,]\d+)?)M)?(?:(\d+(?:[.,]\d+)?)W)?(?:(\d+(?:[.,]\d+)?)D)?(?:T(?:(\d+(?:[.,]\d+)?)H)?(?:(\d+(?:[.,]\d+)?)M)?(?:(\d+(?:[.,]\d+)?)S)?)?$/i
 
 const NUMBER_WORDS: Record<string, number> = {
     a: 1,
@@ -44,8 +45,7 @@ function parseIso(value: string): number | null {
     const m = ISO.exec(value.trim())
     if (!m || value.trim().toUpperCase() === 'P' || value.trim().toUpperCase() === 'PT') return null
     const n = (i: number) => Number((m[i] ?? '0').replace(',', '.'))
-    const minutes =
-        n(1) * 525_600 + n(2) * 43_800 + n(3) * 10_080 + n(4) * 1_440 + n(5) * 60 + n(6) + n(7) / 60
+    const minutes = n(1) * 525_600 + n(2) * 43_800 + n(3) * 10_080 + n(4) * 1_440 + n(5) * 60 + n(6) + n(7) / 60
     return Number.isFinite(minutes) ? minutes : null
 }
 
@@ -65,8 +65,7 @@ const HUMAN_PART =
  */
 export function parseDurationToMinutes(input: string | null | undefined): number | null {
     if (!input) return null
-    const text = normalizeFractions(String(input).trim())
-        .replace(/\b(?:a\s+)?half\s+(?:an?\s+)?hour\b/gi, '30 minutes')
+    const text = normalizeFractions(String(input).trim()).replace(/\b(?:a\s+)?half\s+(?:an?\s+)?hour\b/gi, '30 minutes')
     if (!text) return null
     if (/^P/i.test(text)) {
         const iso = parseIso(text)

@@ -1,0 +1,48 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "allRecipes",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "uid", "order": "ASCENDING" },
+                { "fieldPath": "collectionIds", "arrayConfig": "CONTAINS" }
+            ]
+        },
+        {
+            "collectionGroup": "displays",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "uid", "order": "ASCENDING" },
+                { "fieldPath": "castDeviceId", "order": "ASCENDING" }
+            ]
+        }
+    ],
+    "fieldOverrides": [
+        { "collectionGroup": "allRecipes", "fieldPath": "image", "indexes": [] },
+        { "collectionGroup": "allRecipes", "fieldPath": "thumbnail", "indexes": [] },
+        { "collectionGroup": "allRecipes", "fieldPath": "ingredients", "indexes": [] },
+        { "collectionGroup": "allRecipes", "fieldPath": "instructions", "indexes": [] },
+        { "collectionGroup": "allRecipes", "fieldPath": "notes", "indexes": [] },
+        { "collectionGroup": "allRecipes", "fieldPath": "description", "indexes": [] },
+        { "collectionGroup": "groceryLists", "fieldPath": "items", "indexes": [] },
+        { "collectionGroup": "clipDrafts", "fieldPath": "recipe", "indexes": [] },
+        {
+            "collectionGroup": "clipDrafts",
+            "fieldPath": "expiresAt",
+            "ttl": true,
+            "indexes": []
+        },
+        {
+            "collectionGroup": "displayPairings",
+            "fieldPath": "expiresAt",
+            "ttl": true,
+            "indexes": []
+        },
+        {
+            "collectionGroup": "castTokens",
+            "fieldPath": "expiresAt",
+            "ttl": true,
+            "indexes": []
+        }
+    ]
+}

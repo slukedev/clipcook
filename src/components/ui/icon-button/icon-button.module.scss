@@ -1,0 +1,104 @@
+@use '../button/shared';
+
+.button {
+    @include shared.base;
+
+    // Width = leading space + icon + trailing space (IconButton*Tokens).
+    --_space: calc((var(--_h) - var(--_icon)) / 2);
+    padding-inline: var(--_space);
+    min-inline-size: var(--_h);
+
+    &[data-size='xs'] {
+        --_wide: 10px;
+        --_narrow: 4px;
+    }
+    &[data-size='s'] {
+        --_icon: 24px;
+        --_wide: 14px;
+        --_narrow: 4px;
+    }
+    &[data-size='m'] {
+        --_wide: 24px;
+        --_narrow: 12px;
+    }
+    &[data-size='l'] {
+        --_wide: 48px;
+        --_narrow: 16px;
+    }
+    &[data-size='xl'] {
+        --_wide: 72px;
+        --_narrow: 32px;
+    }
+
+    &[data-width='narrow'] {
+        --_space: var(--_narrow);
+        min-inline-size: 0;
+    }
+
+    &[data-width='wide'] {
+        --_space: var(--_wide);
+    }
+
+    // Selected: round becomes the size's selected radius, square becomes round.
+    &[data-toggle][data-pressed] {
+        --_radius: var(--_square);
+    }
+
+    &[data-toggle][data-shape='square'][data-pressed] {
+        --_radius: var(--_round);
+    }
+}
+
+.icon {
+    display: inline-grid;
+    place-items: center;
+}
+
+.standard {
+    --_content: var(--md-sys-color-on-surface-variant);
+
+    &[data-toggle][data-pressed] {
+        --_content: var(--md-sys-color-primary);
+    }
+
+    &:disabled,
+    &[data-disabled] {
+        --_container: transparent;
+    }
+}
+
+.filled {
+    --_container: var(--md-sys-color-primary);
+    --_content: var(--md-sys-color-on-primary);
+
+    &[data-toggle]:not([data-pressed]) {
+        --_container: var(--md-sys-color-surface-container);
+        --_content: var(--md-sys-color-on-surface-variant);
+    }
+}
+
+.tonal {
+    --_container: var(--md-sys-color-secondary-container);
+    --_content: var(--md-sys-color-on-secondary-container);
+
+    &[data-toggle][data-pressed] {
+        --_container: var(--md-sys-color-secondary);
+        --_content: var(--md-sys-color-on-secondary);
+    }
+}
+
+.outlined {
+    --_content: var(--md-sys-color-on-surface-variant);
+    --_outline-color: var(--md-sys-color-outline-variant);
+
+    &[data-toggle][data-pressed] {
+        --_container: var(--md-sys-color-inverse-surface);
+        --_content: var(--md-sys-color-inverse-on-surface);
+        --_outline-color: transparent;
+    }
+
+    &:disabled,
+    &[data-disabled] {
+        --_container: transparent;
+    }
+}

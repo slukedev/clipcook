@@ -28,7 +28,13 @@ interface UnitDef {
 }
 
 const UNITS: UnitDef[] = [
-    { id: 'tsp', singular: 'teaspoon', plural: 'teaspoons', aliases: ['tsp', 'tsps', 'teaspoon', 'teaspoons', 'tspn'], exact: ['t'] },
+    {
+        id: 'tsp',
+        singular: 'teaspoon',
+        plural: 'teaspoons',
+        aliases: ['tsp', 'tsps', 'teaspoon', 'teaspoons', 'tspn'],
+        exact: ['t'],
+    },
     {
         id: 'tbsp',
         singular: 'tablespoon',
@@ -37,11 +43,22 @@ const UNITS: UnitDef[] = [
         exact: ['T', 'Tb'],
     },
     { id: 'cup', singular: 'cup', plural: 'cups', aliases: ['cup', 'cups', 'c'] },
-    { id: 'floz', singular: 'fl oz', plural: 'fl oz', aliases: ['fl oz', 'fl. oz', 'fluid ounce', 'fluid ounces', 'floz'] },
+    {
+        id: 'floz',
+        singular: 'fl oz',
+        plural: 'fl oz',
+        aliases: ['fl oz', 'fl. oz', 'fluid ounce', 'fluid ounces', 'floz'],
+    },
     { id: 'oz', singular: 'ounce', plural: 'ounces', aliases: ['oz', 'ounce', 'ounces', 'ozs'] },
     { id: 'lb', singular: 'pound', plural: 'pounds', aliases: ['lb', 'lbs', 'pound', 'pounds', '#'] },
     { id: 'g', singular: 'g', plural: 'g', aliases: ['g', 'gr', 'gram', 'grams', 'gramme', 'grammes'], metric: true },
-    { id: 'kg', singular: 'kg', plural: 'kg', aliases: ['kg', 'kgs', 'kilogram', 'kilograms', 'kilo', 'kilos'], metric: true },
+    {
+        id: 'kg',
+        singular: 'kg',
+        plural: 'kg',
+        aliases: ['kg', 'kgs', 'kilogram', 'kilograms', 'kilo', 'kilos'],
+        metric: true,
+    },
     { id: 'mg', singular: 'mg', plural: 'mg', aliases: ['mg', 'milligram', 'milligrams'], metric: true },
     {
         id: 'ml',
@@ -63,7 +80,12 @@ const UNITS: UnitDef[] = [
     { id: 'can', singular: 'can', plural: 'cans', aliases: ['can', 'cans', 'tin', 'tins'] },
     { id: 'jar', singular: 'jar', plural: 'jars', aliases: ['jar', 'jars'] },
     { id: 'bottle', singular: 'bottle', plural: 'bottles', aliases: ['bottle', 'bottles'] },
-    { id: 'package', singular: 'package', plural: 'packages', aliases: ['package', 'packages', 'pkg', 'pkgs', 'pack', 'packs', 'packet', 'packets'] },
+    {
+        id: 'package',
+        singular: 'package',
+        plural: 'packages',
+        aliases: ['package', 'packages', 'pkg', 'pkgs', 'pack', 'packs', 'packet', 'packets'],
+    },
     { id: 'box', singular: 'box', plural: 'boxes', aliases: ['box', 'boxes'] },
     { id: 'bag', singular: 'bag', plural: 'bags', aliases: ['bag', 'bags'] },
     { id: 'stick', singular: 'stick', plural: 'sticks', aliases: ['stick', 'sticks'] },
@@ -78,7 +100,13 @@ const UNITS: UnitDef[] = [
     { id: 'envelope', singular: 'envelope', plural: 'envelopes', aliases: ['envelope', 'envelopes'] },
     { id: 'scoop', singular: 'scoop', plural: 'scoops', aliases: ['scoop', 'scoops'] },
     { id: 'inch', singular: 'inch', plural: 'inches', aliases: ['inch', 'inches', 'in'] },
-    { id: 'cm', singular: 'cm', plural: 'cm', aliases: ['cm', 'centimeter', 'centimeters', 'centimetre', 'centimetres'], metric: true },
+    {
+        id: 'cm',
+        singular: 'cm',
+        plural: 'cm',
+        aliases: ['cm', 'centimeter', 'centimeters', 'centimetre', 'centimetres'],
+        metric: true,
+    },
 ]
 
 const UNIT_BY_ALIAS = new Map<string, UnitDef>()
@@ -287,7 +315,8 @@ export function formatQuantity(n: number, unit?: string | null): string {
     if (!Number.isFinite(n)) return ''
     const def = unitDef(unit ?? null)
     if (def?.metric) {
-        if (def.id === 'g' || def.id === 'ml' || def.id === 'mg') return n >= 10 ? String(Math.round(n)) : trimDecimal(n, 1)
+        if (def.id === 'g' || def.id === 'ml' || def.id === 'mg')
+            return n >= 10 ? String(Math.round(n)) : trimDecimal(n, 1)
         return trimDecimal(n, 2)
     }
     if (n >= 20) return String(Math.round(n))
@@ -336,7 +365,8 @@ function matchCase(word: string, like: string): string {
         : word
 }
 
-const EQUIVALENT = /^\((?<qty>\d+(?:\.\d+)?|\d+\s+\d+\/\d+|\d+\/\d+)(?:\s*(?:-|–|to)\s*(?<max>\d+(?:\.\d+)?))?\s*(?<rest>[^)]*)\)$/
+const EQUIVALENT =
+    /^\((?<qty>\d+(?:\.\d+)?|\d+\s+\d+\/\d+|\d+\/\d+)(?:\s*(?:-|–|to)\s*(?<max>\d+(?:\.\d+)?))?\s*(?<rest>[^)]*)\)$/
 
 /**
  * Scales the leading amount (and a '(190 g)' equivalent right after the unit), keeps
@@ -377,7 +407,12 @@ export function scaleIngredient(line: string, factor: number): string {
         cursor = equivalentSpan[1]
     }
     pieces.push(text.slice(cursor))
-    return prettifyFractions(pieces.join('').replace(/\s{2,}/g, ' ').trim())
+    return prettifyFractions(
+        pieces
+            .join('')
+            .replace(/\s{2,}/g, ' ')
+            .trim(),
+    )
 }
 
 /** Display form at a scale. Kept for older call sites. */

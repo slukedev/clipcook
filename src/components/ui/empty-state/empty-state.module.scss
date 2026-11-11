@@ -1,0 +1,61 @@
+@use '../../../styles/mixins/typography' as type;
+
+.root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: clamp(112px, 28vw, 160px);
+    aspect-ratio: 1;
+    margin-block-end: 16px;
+
+    > * {
+        grid-area: 1 / 1;
+    }
+}
+
+.shape {
+    --md-shape-size: 100%;
+    color: var(--md-sys-color-primary-container);
+    animation: md-empty-turn 48s linear infinite;
+}
+
+.icon {
+    --md-icon-size: clamp(40px, 10vw, 56px);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.title {
+    @include type.role(headline-small, $emphasized: true);
+    max-inline-size: 24ch;
+}
+
+.description {
+    @include type.role(body-large);
+    max-inline-size: 40ch;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.action {
+    margin-block-start: 16px;
+}
+
+@keyframes md-empty-turn {
+    to {
+        rotate: 360deg;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shape {
+        animation: none;
+    }
+}

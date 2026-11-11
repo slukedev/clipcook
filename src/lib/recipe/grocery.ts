@@ -82,7 +82,23 @@ const DESCRIPTORS = new Set([
     'optional',
 ])
 
-const SINGULAR_EXCEPTIONS = new Set(['molasses', 'asparagus', 'hummus', 'couscous', 'swiss', 'grits', 'oats', 'brussels', 'chips', 'greens', 'peas', 'lentils', 'noodles', 'oats', 'sprinkles'])
+const SINGULAR_EXCEPTIONS = new Set([
+    'molasses',
+    'asparagus',
+    'hummus',
+    'couscous',
+    'swiss',
+    'grits',
+    'oats',
+    'brussels',
+    'chips',
+    'greens',
+    'peas',
+    'lentils',
+    'noodles',
+    'oats',
+    'sprinkles',
+])
 
 function singularize(word: string): string {
     if (word.length < 4 || SINGULAR_EXCEPTIONS.has(word) || /(ss|us|is)$/.test(word)) return word
@@ -214,7 +230,11 @@ export function lineToGroceryItem(line: string, opts: AddLinesOptions): GroceryI
  * sum up ('1 cup milk' + '4 tbsp milk' = '1¼ cups milk'); checked items are left
  * alone so a new trip starts a new line. Returns the new array (input untouched).
  */
-export function addGroceryLines(items: readonly GroceryItem[], lines: readonly string[], opts: AddLinesOptions): GroceryItem[] {
+export function addGroceryLines(
+    items: readonly GroceryItem[],
+    lines: readonly string[],
+    opts: AddLinesOptions,
+): GroceryItem[] {
     const out = items.map((item) => ({ ...item, recipeIds: [...item.recipeIds] }))
     for (const line of lines) {
         const incoming = lineToGroceryItem(line, opts)
@@ -255,7 +275,9 @@ export const GROCERY_CATEGORY_ORDER: GroceryCategory[] = [
 ]
 
 /** Groups items by category in aisle order; unchecked first within each group. */
-export function groupGroceries(items: readonly GroceryItem[]): Array<{ category: GroceryCategory; items: GroceryItem[] }> {
+export function groupGroceries(
+    items: readonly GroceryItem[],
+): Array<{ category: GroceryCategory; items: GroceryItem[] }> {
     const groups = new Map<GroceryCategory, GroceryItem[]>()
     for (const item of items) {
         const list = groups.get(item.category) ?? []
@@ -264,6 +286,8 @@ export function groupGroceries(items: readonly GroceryItem[]): Array<{ category:
     }
     return GROCERY_CATEGORY_ORDER.filter((c) => groups.has(c)).map((category) => ({
         category,
-        items: (groups.get(category) ?? []).toSorted((a, b) => Number(a.checked) - Number(b.checked) || a.addedAt - b.addedAt),
+        items: (groups.get(category) ?? []).toSorted(
+            (a, b) => Number(a.checked) - Number(b.checked) || a.addedAt - b.addedAt,
+        ),
     }))
 }

@@ -1,0 +1,220 @@
+@use '../../../styles/mixins/typography' as type;
+@use '../../../styles/mixins/focus-ring';
+
+// Navigation rail (WideNavigationRail, 2025): collapsed 96dp with vertical items,
+// expanded 220 to 360dp with horizontal items. Expanding springs the width
+// (default spatial) and fades the content (default effects).
+.rail {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    inline-size: 96px;
+    block-size: 100dvh;
+    padding-block: calc(44px - 40px + var(--safe-top)) 16px;
+    padding-inline-start: var(--safe-left);
+    background-color: var(--md-sys-color-surface);
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+    transition:
+        inline-size var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
+        border-radius var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
+        box-shadow var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[data-expanded] {
+        inline-size: var(--md-rail-expanded-width, 240px);
+    }
+
+    // Modal expanded: floats over content with a scrim, large end corners.
+    &[data-modal][data-expanded] {
+        position: fixed;
+        inset-block: 0;
+        inset-inline-start: 0;
+        z-index: 1100;
+        border-start-end-radius: var(--md-sys-shape-corner-large);
+        border-end-end-radius: var(--md-sys-shape-corner-large);
+        background-color: var(--md-sys-color-surface-container);
+        box-shadow: var(--md-sys-elevation-level2);
+    }
+}
+
+// Keeps the page from jumping when a modal rail lifts out of the flow.
+.placeholder {
+    flex: none;
+    inline-size: 96px;
+}
+
+.scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1099;
+    background-color: var(--md-sys-color-scrim);
+    opacity: 0.32;
+    transition: opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    @starting-style {
+        opacity: 0;
+    }
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-block-size: 40px;
+    padding-inline: 20px;
+    margin-block-end: 24px;
+}
+
+.items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    list-style: none;
+}
+
+.item {
+    @include focus-ring.inward('&:focus-visible');
+
+    --md-icon-size: 24px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-block-size: 64px;
+    color: var(--md-sys-color-on-surface-variant);
+    text-decoration: none;
+    -webkit-user-select: none;
+    user-select: none;
+    border-radius: 9999px;
+
+    &[aria-current='page'] {
+        color: var(--md-sys-color-secondary);
+    }
+
+    .rail[data-expanded] & {
+        flex-direction: row;
+        justify-content: flex-start;
+        min-block-size: 56px;
+        padding-inline: 20px;
+    }
+}
+
+.indicator {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    inline-size: 56px;
+    block-size: 32px;
+    border-radius: 9999px;
+
+    &::after,
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+    }
+
+    &::after {
+        z-index: -2;
+        background-color: var(--md-sys-color-secondary-container);
+        transform: scaleX(0.4);
+        opacity: 0;
+        transition:
+            transform var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+            opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    &::before {
+        z-index: -1;
+        background-color: currentcolor;
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    .item[aria-current='page'] & {
+        color: var(--md-sys-color-on-secondary-container);
+
+        &::after {
+            transform: none;
+            opacity: 1;
+        }
+    }
+
+    @media (hover: hover) {
+        .item:hover &::before {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+    }
+
+    .item:active &::before {
+        opacity: var(--md-sys-state-pressed-state-layer-opacity);
+    }
+
+    .rail[data-expanded] & {
+        justify-content: flex-start;
+        inline-size: 100%;
+        block-size: 56px;
+        padding-inline: 16px;
+    }
+}
+
+.label {
+    @include type.role(label-medium);
+    white-space: nowrap;
+    animation: md-rail-label-a var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    .item[aria-current='page'] > & {
+        @include type.role(label-medium, $emphasized: true);
+    }
+}
+
+.innerLabel {
+    display: none;
+    @include type.role(label-large);
+    animation: md-rail-label-b var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    .rail[data-expanded] & {
+        display: inline;
+    }
+}
+
+.rail[data-expanded] .item > .label {
+    display: none;
+}
+
+.icons {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+}
+
+.badge {
+    position: absolute;
+    inset-block-start: -2px;
+    inset-inline-start: calc(100% - 8px);
+}
+
+// Two keyframe names so the fade replays each time the layout flips.
+@keyframes md-rail-label-a {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes md-rail-label-b {
+    from {
+        opacity: 0;
+    }
+}

@@ -1,0 +1,250 @@
+@use '../../../styles/mixins/typography' as type;
+@use '../../../styles/mixins/state-layer';
+@use '../../../styles/mixins/focus-ring';
+
+// FloatingActionButton tokens: small 40/12/24, default 56/16/24, medium 80/20/28, large 96/28/36.
+.fab {
+    @include state-layer.host;
+    @include focus-ring.ring;
+
+    --_h: 56px;
+    --_radius: var(--md-sys-shape-corner-large);
+    --md-icon-size: 24px;
+
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: var(--_gap, 8px);
+    min-inline-size: var(--_h);
+    block-size: var(--_h);
+    padding-inline: var(--_pad, 0);
+    border: 0;
+    border-radius: var(--_radius);
+    background-color: var(--_container);
+    color: var(--_content);
+    box-shadow: var(--md-sys-elevation-level3);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition:
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        min-inline-size var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        block-size var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        padding var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        gap var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default),
+        box-shadow var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    @media (hover: hover) {
+        &:hover {
+            box-shadow: var(--md-sys-elevation-level4);
+        }
+    }
+
+    &[data-lowered] {
+        box-shadow: var(--md-sys-elevation-level1);
+
+        @media (hover: hover) {
+            &:hover {
+                box-shadow: var(--md-sys-elevation-level2);
+            }
+        }
+    }
+
+    &[data-size='small'] {
+        --_h: 40px;
+        --_radius: var(--md-sys-shape-corner-medium);
+    }
+
+    &[data-size='medium'] {
+        --_h: 80px;
+        --_radius: var(--md-sys-shape-corner-large-increased);
+        --md-icon-size: 28px;
+    }
+
+    &[data-size='large'] {
+        --_h: 96px;
+        --_radius: var(--md-sys-shape-corner-extra-large);
+        --md-icon-size: 36px;
+    }
+
+    &:disabled,
+    &[data-disabled] {
+        cursor: default;
+        box-shadow: none;
+        opacity: var(--md-sys-state-disabled-content-opacity);
+    }
+}
+
+// Container colors (default) and the vibrant solid variants.
+.primary {
+    --_container: var(--md-sys-color-primary-container);
+    --_content: var(--md-sys-color-on-primary-container);
+}
+.secondary {
+    --_container: var(--md-sys-color-secondary-container);
+    --_content: var(--md-sys-color-on-secondary-container);
+}
+.tertiary {
+    --_container: var(--md-sys-color-tertiary-container);
+    --_content: var(--md-sys-color-on-tertiary-container);
+}
+.primary[data-vibrant] {
+    --_container: var(--md-sys-color-primary);
+    --_content: var(--md-sys-color-on-primary);
+}
+.secondary[data-vibrant] {
+    --_container: var(--md-sys-color-secondary);
+    --_content: var(--md-sys-color-on-secondary);
+}
+.tertiary[data-vibrant] {
+    --_container: var(--md-sys-color-tertiary);
+    --_content: var(--md-sys-color-on-tertiary);
+}
+
+// Extended FAB: small 56 (pad 16, gap 8, title-medium), medium 80 (26, 12, title-large),
+// large 96 (28, 16, headline-small). Collapsing shrinks it to a plain FAB.
+.extended {
+    --_pad: 16px;
+    --_gap: 8px;
+    @include type.role(title-medium);
+
+    &[data-size='medium'] {
+        --_pad: 26px;
+        --_gap: 12px;
+        @include type.role(title-large);
+    }
+
+    &[data-size='large'] {
+        --_pad: 28px;
+        --_gap: 16px;
+        --md-icon-size: 32px;
+        @include type.role(headline-small);
+    }
+
+    &[data-collapsed] {
+        --_pad: calc((var(--_h) - var(--md-icon-size)) / 2);
+        --_gap: 0px;
+    }
+}
+
+.label {
+    display: grid;
+    grid-template-columns: 1fr;
+    white-space: nowrap;
+    transition:
+        grid-template-columns var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    > span {
+        overflow: hidden;
+    }
+
+    [data-collapsed] > & {
+        grid-template-columns: 0fr;
+        opacity: 0;
+    }
+}
+
+.icon {
+    display: inline-grid;
+    place-items: center;
+
+    > * {
+        grid-area: 1 / 1;
+        transition:
+            rotate var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+            opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+}
+
+// FAB menu toggle: closes into a 56dp primary circle with a 20dp close icon.
+.toggle[data-popup-open] {
+    --_h: 56px;
+    --_radius: 28px;
+    --_container: var(--md-sys-color-primary);
+    --_content: var(--md-sys-color-on-primary);
+}
+
+.toggle {
+    .closeIcon {
+        --md-icon-size: 20px;
+        opacity: 0;
+        rotate: -90deg;
+    }
+
+    &[data-popup-open] .openIcon {
+        opacity: 0;
+        rotate: 90deg;
+    }
+
+    &[data-popup-open] .closeIcon {
+        opacity: 1;
+        rotate: 0deg;
+    }
+}
+
+.menuPositioner {
+    z-index: 1000;
+}
+
+.menuPopup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    outline: 0;
+    transition: opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[data-ending-style] {
+        opacity: 0;
+        transition-duration: var(--md-sys-motion-spring-effects-fast-duration);
+    }
+}
+
+// Menu items: 56dp pills, staggered from the toggle outward.
+.menuItem {
+    @include state-layer.host;
+    @include type.role(title-medium);
+
+    --md-icon-size: 24px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    block-size: 56px;
+    padding-inline: 24px;
+    border-radius: 28px;
+    background-color: var(--_container, var(--md-sys-color-primary-container));
+    color: var(--_content, var(--md-sys-color-on-primary-container));
+    box-shadow: var(--md-sys-elevation-level3);
+    cursor: pointer;
+    outline: 0;
+    transform-origin: right center;
+    transition:
+        transform var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast)
+            calc(var(--_order, 0) * 40ms),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
+            calc(var(--_order, 0) * 40ms);
+
+    &[data-highlighted]::before {
+        opacity: var(--md-sys-state-focus-state-layer-opacity);
+    }
+
+    &[data-highlighted] {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: 2px;
+    }
+
+    .menuPopup[data-starting-style] & {
+        opacity: 0;
+        transform: translateY(16px) scale(0.6);
+    }
+}
+
+:dir(rtl) .menuItem {
+    transform-origin: left center;
+}

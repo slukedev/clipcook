@@ -62,7 +62,14 @@ function recipeToDoc(r: RecipeRecord): Data {
               image: '',
               thumbnail: '',
           }
-        : { image: r.image, thumbnail: r.thumbnail, imageUrl: null, thumbnailUrl: null, imagePath: null, thumbnailPath: null }
+        : {
+              image: r.image,
+              thumbnail: r.thumbnail,
+              imageUrl: null,
+              thumbnailUrl: null,
+              imagePath: null,
+              thumbnailPath: null,
+          }
     return {
         uid: r.uid,
         title: r.title,
@@ -263,7 +270,12 @@ export class FirestoreStore implements Store {
         await ref.delete()
     }
 
-    async setCollectionMembership(uid: string, collectionId: string, recipeIds: string[], member: boolean): Promise<number> {
+    async setCollectionMembership(
+        uid: string,
+        collectionId: string,
+        recipeIds: string[],
+        member: boolean,
+    ): Promise<number> {
         const collection = await this.getCollection(uid, collectionId)
         if (!collection) throw new StoreError('NOT_FOUND')
         const ids = [...new Set(recipeIds)]
@@ -442,7 +454,12 @@ export class FirestoreStore implements Store {
         if (!doc.exists || !data) return null
         const expiresAt = millis(data.expiresAt) ?? 0
         if (expiresAt <= now) return null
-        return { id, recipe: (data.recipe ?? {}) as ClipDraftRecord['recipe'], createdAt: millis(data.createdAt) ?? 0, expiresAt }
+        return {
+            id,
+            recipe: (data.recipe ?? {}) as ClipDraftRecord['recipe'],
+            createdAt: millis(data.createdAt) ?? 0,
+            expiresAt,
+        }
     }
 
     async createCastToken(record: CastTokenRecord): Promise<void> {

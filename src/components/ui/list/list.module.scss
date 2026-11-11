@@ -1,0 +1,162 @@
+@use '../../../styles/mixins/typography' as type;
+@use '../../../styles/mixins/state-layer';
+@use '../../../styles/mixins/focus-ring';
+
+.list {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+
+    // Expressive segmented list: 2dp gaps, small inner corners, large outer ones.
+    &[data-segmented] {
+        gap: 2px;
+    }
+}
+
+.item {
+    display: flex;
+    min-inline-size: 0;
+}
+
+// The row is the interactive (or static) element inside each <li>.
+.row {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+    @include focus-ring.inward;
+
+    --md-icon-size: 24px;
+    --_radius: 0px;
+
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 16px;
+    min-inline-size: 0;
+    min-block-size: 56px;
+    padding: 10px 16px;
+    border-radius: var(--_radius);
+    color: var(--md-sys-color-on-surface);
+    background-color: var(--_container, transparent);
+    text-align: start;
+    text-decoration: none;
+    transition:
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        background-color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[data-lines='2'] {
+        min-block-size: 72px;
+    }
+
+    &[data-lines='3'] {
+        min-block-size: 88px;
+        align-items: flex-start;
+    }
+
+    &[data-interactive] {
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    &[data-selected] {
+        --_container: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
+    }
+
+    &[data-disabled] {
+        cursor: default;
+        opacity: var(--md-sys-state-disabled-content-opacity);
+    }
+
+    [data-segmented] & {
+        --_container: var(--md-list-item-container, var(--md-sys-color-surface-container));
+        --_radius: var(--md-sys-shape-corner-extra-small);
+        @include focus-ring.ring(2px);
+    }
+
+    [data-segmented] .item:first-child & {
+        border-start-start-radius: var(--md-sys-shape-corner-large);
+        border-start-end-radius: var(--md-sys-shape-corner-large);
+    }
+
+    [data-segmented] .item:last-child & {
+        border-end-start-radius: var(--md-sys-shape-corner-large);
+        border-end-end-radius: var(--md-sys-shape-corner-large);
+    }
+
+    // State shapes: hover 12, pressed/focused/selected 16.
+    @media (hover: hover) {
+        [data-segmented] &[data-interactive]:hover {
+            --_radius: var(--md-sys-shape-corner-medium);
+            border-radius: var(--_radius);
+        }
+    }
+
+    [data-segmented] &[data-interactive]:active,
+    [data-segmented] &[data-ripple-pressed],
+    [data-segmented] &:focus-visible,
+    [data-segmented] &:has(:focus-visible),
+    [data-segmented] &[data-selected] {
+        --_radius: var(--md-sys-shape-corner-large);
+        border-radius: var(--_radius);
+    }
+
+    [data-segmented] &[data-selected] {
+        --_container: var(--md-sys-color-secondary-container);
+    }
+
+    [data-segmented] &[data-dragging] {
+        --_container: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+        --_radius: var(--md-sys-shape-corner-large);
+        border-radius: var(--_radius);
+        box-shadow: var(--md-sys-elevation-level3);
+    }
+}
+
+.leading,
+.trailing {
+    display: flex;
+    align-items: center;
+    flex: none;
+    color: var(--md-sys-color-on-surface-variant);
+
+    .row[data-selected] & {
+        color: inherit;
+    }
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-inline-size: 0;
+}
+
+.overline {
+    @include type.role(label-small);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.headline {
+    @include type.role(body-large);
+    overflow-wrap: anywhere;
+}
+
+.supporting {
+    @include type.role(body-medium);
+    color: var(--md-sys-color-on-surface-variant);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+
+    .row[data-selected] & {
+        color: inherit;
+    }
+}
+
+.trailingText {
+    @include type.role(label-small);
+    @include type.numeric;
+    color: var(--md-sys-color-on-surface-variant);
+}

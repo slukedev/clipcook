@@ -16,13 +16,10 @@ export interface StepTimer {
 }
 
 const NUMBER = String.raw`(?:\d*\s?[${VULGAR_FRACTION_CHARS}]|\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty-five|forty|sixty|ninety|half(?:\s+an?)?)`
-const UNIT = String.raw`(?:hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)`
+const UNIT = '(?:hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)'
 const RANGE_SEP = String.raw`\s*(?:-|–|\u2014|to|or)\s*`
 const PART = String.raw`${NUMBER}(?:${RANGE_SEP}${NUMBER})?[\s-]*${UNIT}\b(?:\s+and\s+a\s+half)?`
-const TIMER = new RegExp(
-    String.raw`(?<![\w/.])(?:${PART})(?:(?:\s*,\s*|\s+and\s+|\s+)(?:${PART}))*`,
-    'gi',
-)
+const TIMER = new RegExp(String.raw`(?<![\w/.])(?:${PART})(?:(?:\s*,\s*|\s+and\s+|\s+)(?:${PART}))*`, 'gi')
 const PART_RE = new RegExp(
     String.raw`(?<min>${NUMBER})(?:${RANGE_SEP}(?<max>${NUMBER}))?[\s-]*(?<unit>${UNIT})\b(?<half>\s+and\s+a\s+half)?`,
     'gi',

@@ -59,7 +59,11 @@ export function createSafeLookup(opts: SafeLookupOptions = {}): net.LookupFuncti
             family?: number,
         ) => void
         const o: { all?: boolean; family?: number | string; hints?: number } =
-            typeof options === 'object' && options !== null ? options : typeof options === 'number' ? { family: options } : {}
+            typeof options === 'object' && options !== null
+                ? options
+                : typeof options === 'number'
+                  ? { family: options }
+                  : {}
         const family = o.family === 'IPv4' ? 4 : o.family === 'IPv6' ? 6 : typeof o.family === 'number' ? o.family : 0
         const query: LookupAllOptions = { all: true, family, hints: o.hints, order: 'verbatim' }
         resolver(hostname, query, (err, addresses) => {
@@ -131,7 +135,12 @@ function assertFetchableUrl(raw: string, allowPrivate: boolean): URL {
     if (!allowPrivate) {
         // Literal IPs never reach the lookup hook, so they are checked here.
         if (net.isIP(host) && isBlockedAddress(host)) throw new ClipError('BLOCKED_ADDRESS', host)
-        if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.internal') || host.endsWith('.local')) {
+        if (
+            host === 'localhost' ||
+            host.endsWith('.localhost') ||
+            host.endsWith('.internal') ||
+            host.endsWith('.local')
+        ) {
             throw new ClipError('BLOCKED_ADDRESS', host)
         }
     }
@@ -139,7 +148,7 @@ function assertFetchableUrl(raw: string, allowPrivate: boolean): URL {
     return url
 }
 
-function isChallengePage(status: number, headers: Headers, sample: string): boolean {
+function isChallengePage(status: number, headers: { get(name: string): string | null }, sample: string): boolean {
     if (headers.get('cf-mitigated') === 'challenge') return true
     const server = headers.get('server')?.toLowerCase() ?? ''
     const challengeMarkup =

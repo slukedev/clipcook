@@ -19,8 +19,12 @@ function callLookup(
     options: object,
 ): Promise<{ err: NodeJS.ErrnoException | null; address: unknown; family: unknown }> {
     return new Promise((resolve) => {
-        lookup('recipes.example', options as never, ((err: NodeJS.ErrnoException | null, address: unknown, family: unknown) =>
-            resolve({ err, address, family })) as never)
+        lookup(
+            'recipes.example',
+            options as never,
+            ((err: NodeJS.ErrnoException | null, address: unknown, family: unknown) =>
+                resolve({ err, address, family })) as never,
+        )
     })
 }
 

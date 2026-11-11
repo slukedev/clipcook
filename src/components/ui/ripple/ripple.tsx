@@ -18,7 +18,7 @@ function isDisabled(host: HTMLElement) {
  * M3 press ripple. Drop it inside any interactive container that has
  * `position: relative` (the state-layer mixin provides that): it listens to its
  * parent, grows from the pointer and clips to the parent's shape. Also sets
- * `data-pressed` on the parent so CSS can morph shapes while pressed.
+ * `data-ripple-pressed` on the parent so CSS can morph shapes while pressed.
  */
 export function Ripple({ disabled = false }: { disabled?: boolean }) {
     const ref = useRef<HTMLSpanElement>(null)
@@ -46,7 +46,7 @@ export function Ripple({ disabled = false }: { disabled?: boolean }) {
             wave.style.insetBlockStart = `${y - radius}px`
             surface.append(wave)
             pressedAt = performance.now()
-            host.dataset.pressed = ''
+            host.dataset.ripplePressed = ''
             const from = reduce.matches ? 1 : size / (radius * 2)
             wave.animate([{ transform: `scale(${from})` }, { transform: 'scale(1)' }], {
                 duration: reduce.matches ? 0 : GROW_MS,
@@ -59,7 +59,7 @@ export function Ripple({ disabled = false }: { disabled?: boolean }) {
         const end = () => {
             window.clearTimeout(touchTimer)
             pending = null
-            delete host.dataset.pressed
+            delete host.dataset.ripplePressed
             const current = wave
             if (!current) return
             wave = null
@@ -105,5 +105,5 @@ export function Ripple({ disabled = false }: { disabled?: boolean }) {
         }
     }, [disabled])
 
-    return <span ref={ref} className={styles.surface} aria-hidden />
+    return <span ref={ref} className={styles.surface} data-ripple-surface="" aria-hidden />
 }

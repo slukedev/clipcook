@@ -55,7 +55,7 @@ function parseJsonLd(text: string): Json | null {
     } catch {
         // Some CMSes leave raw control characters inside strings.
         try {
-            return JSON.parse(trimmed.replace(/[\u0000-\u001f]+/g, ' ')) as Json
+            return JSON.parse(Array.from(trimmed, (ch) => (ch.charCodeAt(0) < 0x20 ? ' ' : ch)).join('')) as Json
         } catch {
             return null
         }
@@ -182,7 +182,18 @@ function splitKeywords(values: Array<string | undefined>): string[] {
     return values.flatMap((v) => (v ? v.split(/[,;|]/) : []))
 }
 
-const JUNK_TAGS = new Set(['recipe', 'recipes', 'uncategorized', 'main', 'featured', 'all', 'none', 'other', 'default', 'food'])
+const JUNK_TAGS = new Set([
+    'recipe',
+    'recipes',
+    'uncategorized',
+    'main',
+    'featured',
+    'all',
+    'none',
+    'other',
+    'default',
+    'food',
+])
 
 export function cleanTags(values: string[], exclude: string[] = []): string[] {
     const banned = new Set(exclude.map((e) => e.toLowerCase().trim()).filter(Boolean))
@@ -253,7 +264,9 @@ function dedupeKeepHeadings(lines: string[]): string[] {
         out.push(clean)
     }
     // A heading with nothing after it is noise.
-    return out.filter((line, i) => !line.startsWith('# ') || (out[i + 1] !== undefined && !out[i + 1]?.startsWith('# ')))
+    return out.filter(
+        (line, i) => !line.startsWith('# ') || (out[i + 1] !== undefined && !out[i + 1]?.startsWith('# ')),
+    )
 }
 
 // ---------- HTML helpers ----------
@@ -303,7 +316,11 @@ function imageFromElement($scope: Cheerio<AnyNode>, base: string): string | unde
 const HEADING_TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
 
 /** Walks a container in document order: headings become '# Heading', list items become lines. */
-function linesFromContainer($: CheerioAPI, $root: Cheerio<AnyNode>, opts: { paragraphs: boolean; skipFirstHeading?: boolean }): string[] {
+function linesFromContainer(
+    $: CheerioAPI,
+    $root: Cheerio<AnyNode>,
+    opts: { paragraphs: boolean; skipFirstHeading?: boolean },
+): string[] {
     const out: string[] = []
     let skippedHeading = false
     const walk = (nodes: Cheerio<AnyNode>) => {
@@ -327,7 +344,12 @@ function linesFromContainer($: CheerioAPI, $root: Cheerio<AnyNode>, opts: { para
                 if (line) out.push(line)
                 return
             }
-            if (tag === 'p' && $el.children().length === 1 && $el.children('strong,b').length === 1 && text($el) === text($el.children())) {
+            if (
+                tag === 'p' &&
+                $el.children().length === 1 &&
+                $el.children('strong,b').length === 1 &&
+                text($el) === text($el.children())
+            ) {
                 const heading = text($el)
                 if (heading.length < 60) out.push(`# ${heading.replace(/:$/, '')}`)
                 return
@@ -449,7 +471,9 @@ function recipeFromWprm($: CheerioAPI, base: string): ExtractedRecipe | null {
                     .map((p) => text($li.find(`.wprm-recipe-ingredient-${p}`).first()))
                     .filter(Boolean)
                 const notes = text($li.find('.wprm-recipe-ingredient-notes').first())
-                const line = pieces.length ? pieces.join(' ') + (notes ? `, ${notes.replace(/^\(|\)$/g, '')}` : '') : text($li)
+                const line = pieces.length
+                    ? pieces.join(' ') + (notes ? `, ${notes.replace(/^\(|\)$/g, '')}` : '')
+                    : text($li)
                 if (line) ingredients.push(line)
             })
     })
@@ -548,8 +572,12 @@ function recipeFromCard($: CheerioAPI, base: string, s: CardSelectors): Extracte
     }
     const ingRoot = card.find(s.ingredients).first()
     const insRoot = card.find(s.instructions).first()
-    const ingredients = dedupeKeepHeadings(linesFromContainer($, ingRoot, { paragraphs: false, skipFirstHeading: true }))
-    const instructions = dedupeKeepHeadings(linesFromContainer($, insRoot, { paragraphs: true, skipFirstHeading: true }))
+    const ingredients = dedupeKeepHeadings(
+        linesFromContainer($, ingRoot, { paragraphs: false, skipFirstHeading: true }),
+    )
+    const instructions = dedupeKeepHeadings(
+        linesFromContainer($, insRoot, { paragraphs: true, skipFirstHeading: true }),
+    )
     if (ingredients.length) recipe.ingredients = ingredients
     if (instructions.length) recipe.instructions = instructions
     const notesRoot = card.find(s.notes).first()
@@ -561,7 +589,9 @@ function recipeFromCard($: CheerioAPI, base: string, s: CardSelectors): Extracte
     }
     const image = imageFromElement(card.find(s.image).first(), base)
     if (image) recipe.imageUrl = image
-    const tags = splitKeywords(s.tags.map((sel) => pick(sel).replace(/^(category|cuisine|keywords?):?\s*/i, '') || undefined))
+    const tags = splitKeywords(
+        s.tags.map((sel) => pick(sel).replace(/^(category|cuisine|keywords?):?\s*/i, '') || undefined),
+    )
     if (tags.length) recipe.tags = tags
     return recipe.ingredients || recipe.instructions ? recipe : null
 }
@@ -596,7 +626,8 @@ function collectAfterHeading($: CheerioAPI, heading: Element, paragraphs: boolea
             if (line) out.push(line)
         } else if (tag === 'div' || tag === 'section') {
             const nested = linesFromContainer($, sibling, { paragraphs })
-            if (nested.some((l) => ING_HEADING.test(l.replace(/^# /, '')) || INS_HEADING.test(l.replace(/^# /, '')))) break
+            if (nested.some((l) => ING_HEADING.test(l.replace(/^# /, '')) || INS_HEADING.test(l.replace(/^# /, ''))))
+                break
             out.push(...nested)
         }
         sibling = sibling.next()
@@ -610,7 +641,9 @@ function recipeFromHeuristic($: CheerioAPI): ExtractedRecipe | null {
     let instructions: string[] = []
     for (const h of headings) {
         const t = text($(h))
-        const target = HEADING_TAGS.has(h.tagName.toLowerCase()) ? h : (($(h).closest('p').get(0) as Element | undefined) ?? h)
+        const target = HEADING_TAGS.has(h.tagName.toLowerCase())
+            ? h
+            : (($(h).closest('p').get(0) as Element | undefined) ?? h)
         if (!ingredients.length && ING_HEADING.test(t)) ingredients = collectAfterHeading($, target, false)
         else if (!instructions.length && INS_HEADING.test(t)) instructions = collectAfterHeading($, target, true)
     }
@@ -646,7 +679,9 @@ function pageMeta($: CheerioAPI, base: string): PageMeta {
         siteName: meta('meta[property="og:site_name"]') ?? meta('meta[name="application-name"]'),
         canonical: absoluteUrl($('link[rel~="canonical"]').first().attr('href'), base),
         ogImage: absoluteUrl(
-            $('meta[property="og:image:secure_url"], meta[property="og:image"], meta[name="og:image"]').first().attr('content') ??
+            $('meta[property="og:image:secure_url"], meta[property="og:image"], meta[name="og:image"]')
+                .first()
+                .attr('content') ??
                 $('meta[name="twitter:image"], meta[name="twitter:image:src"], meta[property="twitter:image"]')
                     .first()
                     .attr('content'),
@@ -718,7 +753,9 @@ export function extractRecipe(html: string, pageUrl: string, extraJsonLd: string
         recipeFromWprm($, pageUrl),
         recipeFromCard($, pageUrl, TASTY),
         recipeFromCard($, pageUrl, MV_CREATE),
-    ].filter((r): r is ExtractedRecipe => r !== null && (Boolean(r.ingredients?.length) || Boolean(r.instructions?.length)))
+    ].filter(
+        (r): r is ExtractedRecipe => r !== null && (Boolean(r.ingredients?.length) || Boolean(r.instructions?.length)),
+    )
     if (sources.length === 0) {
         const heuristic = recipeFromHeuristic($)
         if (heuristic) sources.push(heuristic)
@@ -745,7 +782,8 @@ export function extractRecipe(html: string, pageUrl: string, extraJsonLd: string
     }
 
     recipe.title ??= meta.ogTitle ?? meta.title
-    if (!recipe.description && meta.ogDescription && recipe.method === 'heuristic') recipe.description = meta.ogDescription
+    if (!recipe.description && meta.ogDescription && recipe.method === 'heuristic')
+        recipe.description = meta.ogDescription
     if (!recipe.imageUrl && meta.ogImage) recipe.imageUrl = meta.ogImage
     if (recipe.imageUrl) recipe.imageUrl = absoluteUrl(recipe.imageUrl, pageUrl)
     if (!recipe.imageUrl) delete recipe.imageUrl

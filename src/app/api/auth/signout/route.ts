@@ -8,7 +8,7 @@ const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'clipcook_session'
  * Deliberately admin-free: it never touches firebase-admin, so it can't hit the
  * same module-load failure that a stale/legacy session cookie triggers during
  * verification. That makes it a safe recovery target when the authed layout
- * can't establish a session — the browser drops the cookie and the next request
+ * can't establish a session: the browser drops the cookie and the next request
  * looks just like an incognito one, which renders fine.
  */
 export function GET(req: NextRequest) {

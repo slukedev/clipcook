@@ -1,0 +1,27 @@
+@use '../../../styles/mixins/typography' as type;
+
+.avatar {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--_size, 40px);
+    block-size: var(--_size, 40px);
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    vertical-align: middle;
+    user-select: none;
+}
+
+.image {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+.fallback {
+    @include type.role(title-medium);
+    font-size: calc(var(--_size, 40px) * 0.4);
+    line-height: 1;
+}

@@ -1,0 +1,38 @@
+@use '../checkbox/checkbox.module.scss' as *;
+
+.group {
+    display: flex;
+    flex-direction: column;
+}
+
+.ring {
+    display: grid;
+    place-items: center;
+    inline-size: 20px;
+    block-size: 20px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 2px var(--_outline);
+    transition: box-shadow var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    [data-checked] > & {
+        box-shadow: inset 0 0 0 2px var(--_color);
+    }
+}
+
+.dot {
+    inline-size: 10px;
+    block-size: 10px;
+    border-radius: 50%;
+    background-color: var(--_color);
+    scale: 0;
+    transition: scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    &[data-checked] {
+        scale: 1;
+    }
+
+    &[data-starting-style],
+    &[data-ending-style] {
+        scale: 0;
+    }
+}

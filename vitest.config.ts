@@ -13,5 +13,7 @@ export default defineConfig({
         environment: 'node',
         include: ['tests/unit/**/*.test.ts'],
         testTimeout: 15_000,
+        // Ships extensionless ESM imports that Node's resolver rejects; let Vite transform it.
+        server: { deps: { inline: ['@material/material-color-utilities'] } },
     },
 })
