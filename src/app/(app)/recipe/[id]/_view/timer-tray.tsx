@@ -1,10 +1,10 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { cx } from '@/components/ui/cx'
 import { Glyph } from '@/components/ui/icon/glyph'
 import { IconButton } from '@/components/ui/icon-button'
-import { remainingMs, timerActions, useClock, useTimers } from '@/lib/cook/timers'
+import { type KitchenTimer, remainingMs, timerActions, useClock, useTimers } from '@/lib/cook/timers'
 import { formatClock } from '@/lib/recipe/timers'
 import styles from './timer-tray.module.scss'
 
@@ -36,7 +36,6 @@ export function TimerTray({
                     const clock = formatClock(Math.ceil(left / 1000))
                     const name = t.step ? `Step ${t.step}` : 'Timer'
                     const where = t.recipeId === recipeId ? name : `${t.recipeTitle}, ${name.toLowerCase()}`
-                    const progress = t.totalMs > 0 ? 1 - left / t.totalMs : 1
                     return (
                         <li
                             key={t.id}
@@ -44,11 +43,7 @@ export function TimerTray({
                             data-state={t.state}
                             data-timer={`${t.recipeId}:${t.step}:${t.label}`}
                         >
-                            <span
-                                className={styles.progress}
-                                style={{ transform: `scaleX(${Math.min(1, Math.max(0, progress))})` }}
-                                aria-hidden
-                            />
+                            <TimerFill timer={t} />
                             <span className={styles.icon}>{icons.timer}</span>
                             <span className={styles.text}>
                                 <span className={styles.where}>{where}</span>
@@ -95,4 +90,28 @@ export function TimerTray({
             </p>
         </section>
     )
+}
+
+/**
+ * The elapsed share as one continuous animation over the timer's whole length, run by
+ * the compositor at the screen's refresh rate. The once-a-second clock never touches
+ * it, so it cannot hitch when a tick lands a frame early or late.
+ */
+function TimerFill({ timer }: { timer: KitchenTimer }) {
+    const ref = useRef<HTMLSpanElement>(null)
+    const { state, totalMs, endsAt, remainingMs: pausedLeft } = timer
+    useEffect(() => {
+        const el = ref.current
+        if (!el || state === 'done' || totalMs <= 0) return
+        const left = state === 'running' ? Math.max(0, endsAt - Date.now()) : pausedLeft
+        const animation = el.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], {
+            duration: totalMs,
+            easing: 'linear',
+            fill: 'both',
+        })
+        animation.currentTime = Math.min(totalMs, Math.max(0, totalMs - left))
+        if (state === 'paused') animation.pause()
+        return () => animation.cancel()
+    }, [state, totalMs, endsAt, pausedLeft])
+    return <span ref={ref} className={styles.progress} aria-hidden />
 }

@@ -101,18 +101,6 @@
     }
 }
 
-// Beside the ingredients pane, the step being read is marked so its highlighted
-// ingredients have an obvious source.
-@container recipe (width >= 780px) {
-    .step[data-focused]:not([data-done]) .number {
-        color: var(--md-sys-color-primary);
-    }
-
-    .step[data-focused]:not([data-done]) .digit {
-        color: var(--md-sys-color-on-primary);
-    }
-}
-
 @media print {
     .head > :not(.title) {
         display: none;

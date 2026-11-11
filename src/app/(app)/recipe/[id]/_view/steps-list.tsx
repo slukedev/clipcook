@@ -1,12 +1,11 @@
 'use client'
 
-import { type MouseEvent, type ReactNode, useEffect, useRef } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Ripple } from '@/components/ui/ripple'
 import { MorphShape } from '@/components/ui/shape'
 import { stepSections, stepShape } from '@/lib/cook/content'
 import { doneSteps, toggleIndex, useRecipeState } from '@/lib/cook/recipe-state'
-import { setFocusedStep, useFocusedStep } from '@/lib/cook/step-focus'
 import styles from './steps-list.module.scss'
 import { StepText } from './timer-chip'
 
@@ -25,33 +24,6 @@ export function StepsList({
     const done = useRecipeState(doneSteps, recipeId)
     const sections = stepSections(instructions)
     const headingId = `steps-${recipeId}`
-    const ref = useRef<HTMLElement>(null)
-    const focused = useFocusedStep(recipeId)
-
-    // The step crossing a band a third of the way down the window is the one being read.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: re-observe when the steps change
-    useEffect(() => {
-        const root = ref.current
-        if (!root) return
-        const inBand = new Set<number>()
-        const observer = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    const step = Number((entry.target as HTMLElement).dataset.step)
-                    if (entry.isIntersecting) inBand.add(step)
-                    else inBand.delete(step)
-                }
-                setFocusedStep(recipeId, inBand.size ? Math.min(...inBand) : null)
-            },
-            { rootMargin: '-30% 0px -55% 0px' },
-        )
-        for (const item of root.querySelectorAll('[data-step]')) observer.observe(item)
-        return () => {
-            observer.disconnect()
-            setFocusedStep(recipeId, null)
-        }
-    }, [recipeId, instructions])
-
     if (sections.length === 0) return null
 
     const toggleFromText = (event: MouseEvent<HTMLElement>, index: number) => {
@@ -61,7 +33,7 @@ export function StepsList({
     }
 
     return (
-        <section ref={ref} className={styles.steps} aria-labelledby={headingId}>
+        <section className={styles.steps} aria-labelledby={headingId}>
             <div className={styles.head}>
                 <h2 id={headingId} className={styles.title}>
                     Steps
@@ -80,13 +52,7 @@ export function StepsList({
                             const isDone = done.includes(step.index)
                             const n = step.index + 1
                             return (
-                                <li
-                                    key={step.index}
-                                    className={styles.step}
-                                    data-step={step.index}
-                                    data-focused={focused === step.index || undefined}
-                                    data-done={isDone || undefined}
-                                >
+                                <li key={step.index} className={styles.step} data-done={isDone || undefined}>
                                     <button
                                         type="button"
                                         className={styles.number}

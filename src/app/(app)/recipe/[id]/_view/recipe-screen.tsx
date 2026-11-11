@@ -192,7 +192,6 @@ export function RecipeScreen({
                             <IngredientsPanel
                                 recipeId={recipe.id}
                                 ingredients={recipe.ingredients}
-                                instructions={recipe.instructions}
                                 servings={recipe.servings}
                                 icons={{ cart: icons.cart }}
                             />
