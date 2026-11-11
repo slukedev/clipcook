@@ -369,7 +369,7 @@ export function PlanScreen({
                                 aria-keyshortcuts="n"
                             />
                         </Tooltip>
-                        {weekRecipes > 0 && (
+                        {weekRecipes > 0 ? (
                             <Button
                                 variant="tonal"
                                 className={styles.shopButton}
@@ -378,7 +378,17 @@ export function PlanScreen({
                             >
                                 {shopLabel}
                             </Button>
-                        )}
+                        ) : visible.length === 0 && previousWeekCount > 0 ? (
+                            // An empty week after a planned one: repeating it is the likely start.
+                            <Button
+                                variant="tonal"
+                                className={styles.shopButton}
+                                icon={icons.copy}
+                                onClick={copyLastWeek}
+                            >
+                                Copy last week
+                            </Button>
+                        ) : null}
                         {weekMenu}
                     </>
                 }

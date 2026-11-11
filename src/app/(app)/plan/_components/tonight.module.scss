@@ -10,7 +10,6 @@
     flex-direction: column;
     gap: var(--md-sys-space-4);
     inline-size: 100%;
-    max-inline-size: 720px;
     padding: var(--md-sys-space-4);
     border-radius: var(--md-sys-shape-corner-extra-large);
     background-color: var(--md-sys-color-secondary-container);
@@ -18,6 +17,68 @@
 
     @include media.medium-up {
         padding: var(--md-sys-space-5) var(--md-sys-space-6) var(--md-sys-space-6) var(--md-sys-space-5);
+    }
+
+    // As wide as the board under it: what and when on the left, the dish itself filling
+    // the right, so the band reads from across the kitchen.
+    @include media.expanded-up {
+        &[data-photo] {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+            grid-template-rows: 1fr auto;
+            grid-template-areas: "text photo" "rest photo";
+            column-gap: var(--md-sys-space-8);
+            padding: var(--md-sys-space-4) var(--md-sys-space-4) var(--md-sys-space-4) var(--md-sys-space-8);
+
+            .lead {
+                display: contents;
+            }
+
+            .photo {
+                grid-area: photo;
+                inline-size: 100%;
+                aspect-ratio: auto;
+                block-size: clamp(168px, 12vw, 240px);
+            }
+
+            .leadText {
+                grid-area: text;
+                align-self: center;
+                padding-block-start: var(--md-sys-space-4);
+            }
+
+            .rest {
+                grid-area: rest;
+                padding-block-end: var(--md-sys-space-4);
+            }
+        }
+    }
+
+    // Nothing planned: the heading and search on the left, the suggestions filling the rest.
+    @include media.large-up {
+        &[data-empty]:has(.suggestions) {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            grid-template-rows: 1fr auto;
+            align-items: start;
+            row-gap: var(--md-sys-space-2);
+            padding: var(--md-sys-space-6);
+
+            .emptyTitle {
+                grid-row: 1;
+            }
+
+            .suggestions {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+                align-self: center;
+            }
+
+            .actions {
+                grid-row: 2;
+                margin-block: 0;
+            }
+        }
     }
 }
 
@@ -184,8 +245,9 @@
     margin-inline: calc(-1 * var(--md-sys-space-2));
     list-style: none;
 
-    @include media.medium-up {
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    // Fewer than a row's worth still spread across the card.
+    @include media.expanded-up {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
     }
 }
 

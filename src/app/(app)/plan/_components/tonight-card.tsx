@@ -88,14 +88,14 @@ export function TonightCard({
     const title = leadRecipe ? leadRecipe.title : lead.note
 
     return (
-        <section className={styles.card} aria-labelledby={headingId}>
+        <section className={styles.card} data-photo={leadRecipe ? '' : undefined} aria-labelledby={headingId}>
             <div className={styles.lead}>
                 <span className={styles.photo} data-note={leadRecipe ? undefined : ''}>
                     {leadRecipe ? (
                         <RecipeMedia
                             src={leadRecipe.thumbnail}
                             title={leadRecipe.title}
-                            sizes="(width < 600px) 112px, 160px"
+                            sizes="(width < 600px) 112px, (width < 840px) 160px, 720px"
                             priority
                         />
                     ) : (

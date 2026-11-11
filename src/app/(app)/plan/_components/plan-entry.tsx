@@ -63,11 +63,9 @@ export function PlanEntryItem({
     onServings,
 }: PlanEntryItemProps) {
     const title = recipe ? recipe.title : entry.note
-    const meta = [
-        entry.meal === 'dinner' ? '' : MEAL_LABELS[entry.meal],
-        servingsLabel(entry.servings),
-        recipeTime(recipe),
-    ].filter(Boolean)
+    // Wide windows name the meal in the row label, so only the stacked list repeats it here.
+    const meal = entry.meal === 'dinner' ? '' : MEAL_LABELS[entry.meal]
+    const meta = [servingsLabel(entry.servings), recipeTime(recipe)].filter(Boolean)
     const nextWeek = addDays(entry.date, 7)
 
     const body = (
@@ -83,8 +81,14 @@ export function PlanEntryItem({
             </span>
             <span className={styles.entryText}>
                 <span className={styles.entryTitle}>{title}</span>
-                {meta.length > 0 && (
-                    <span className={styles.entryMeta}>
+                {(meal || meta.length > 0) && (
+                    <span className={styles.entryMeta} data-meal-only={meta.length === 0 || undefined}>
+                        {meal && (
+                            <span className={styles.metaMeal}>
+                                <span className={styles.metaPart}>{meal}</span>
+                                {meta.length > 0 && ' · '}
+                            </span>
+                        )}
                         {meta.map((part, i) => (
                             <span key={part}>
                                 {i > 0 && ' · '}

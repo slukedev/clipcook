@@ -27,6 +27,19 @@ export function AddField({
     const listId = useId()
     const pressing = usePressing()
 
+    // "/" jumps to the field from anywhere on the list, as it jumps to search in the library.
+    useEffect(() => {
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return
+            const el = event.target as HTMLElement | null
+            if (el?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"]')) return
+            event.preventDefault()
+            inputRef.current?.focus()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [])
+
     function submit() {
         if (!value.trim()) return
         onAdd([value])
@@ -86,6 +99,7 @@ export function AddField({
                     }}
                     placeholder="Add item"
                     aria-label="Add item"
+                    aria-keyshortcuts="/"
                     aria-controls={open ? listId : undefined}
                     autoComplete="off"
                     autoCapitalize="sentences"

@@ -42,7 +42,9 @@ export interface WeekGridProps {
 
 /**
  * The week. Compact windows stack the days; wider ones lay them out as columns with a
- * row per meal in use, like a calendar's hours, so the week's dinners line up.
+ * row per meal, like a calendar's hours, so the week's dinners line up. Every meal has a
+ * row, so an empty week already shows where breakfast and lunch go; meals the week does
+ * not use yet stay slim.
  */
 export function WeekGrid({ days, today, entries, recipes, icons, onAdd, onMove, onRemove, onServings }: WeekGridProps) {
     const draggable = useFinePointer()
@@ -51,10 +53,9 @@ export function WeekGrid({ days, today, entries, recipes, icons, onAdd, onMove, 
     const draggingRef = useRef<string | null>(null)
     const [over, setOver] = useState<string | null>(null)
 
-    // Dinner always has a row; other meals get one as soon as the week uses them.
-    const lanes = MEAL_SLOTS.filter((slot) => slot === 'dinner' || entries.some((e) => e.meal === slot))
-    const multi = lanes.length > 1
-    const offset = multi ? 2 : 1
+    const used = new Set(entries.map((e) => e.meal))
+    const open = (slot: MealSlot) => slot === 'dinner' || used.has(slot)
+    const rows = MEAL_SLOTS.map((slot) => (open(slot) ? 'minmax(128px, auto)' : 'minmax(56px, auto)')).join(' ')
 
     const dropProps = (key: string, date: string, meal?: MealSlot) =>
         draggable
@@ -87,16 +88,20 @@ export function WeekGrid({ days, today, entries, recipes, icons, onAdd, onMove, 
     return (
         <div
             className={styles.week}
-            data-multi={multi || undefined}
             data-dragging={dragging ? '' : undefined}
-            style={{ '--_lanes': lanes.length } as React.CSSProperties}
+            style={{ '--_lanes': MEAL_SLOTS.length, '--_rows': rows } as React.CSSProperties}
         >
-            {multi &&
-                lanes.map((slot, i) => (
-                    <p key={slot} className={styles.laneLabel} style={{ gridColumn: 1, gridRow: i + 2 }} aria-hidden>
-                        {MEAL_LABELS[slot]}
-                    </p>
-                ))}
+            {MEAL_SLOTS.map((slot, i) => (
+                <p
+                    key={slot}
+                    className={styles.laneLabel}
+                    style={{ gridColumn: 1, gridRow: i + 2 }}
+                    data-slim={open(slot) ? undefined : ''}
+                    aria-hidden
+                >
+                    {MEAL_LABELS[slot]}
+                </p>
+            ))}
             {days.map((date, index) => {
                 const dayEntries = entries.filter((e) => e.date === date)
                 const isToday = date === today
@@ -108,7 +113,7 @@ export function WeekGrid({ days, today, entries, recipes, icons, onAdd, onMove, 
                     <section
                         key={date}
                         className={styles.day}
-                        style={{ gridColumn: index + offset }}
+                        style={{ gridColumn: index + 2 }}
                         data-today={isToday || undefined}
                         data-past={past || undefined}
                         data-empty={dayEntries.length === 0 || undefined}
@@ -140,7 +145,7 @@ export function WeekGrid({ days, today, entries, recipes, icons, onAdd, onMove, 
                                 onClick={() => onAdd(date)}
                             />
                         </header>
-                        {lanes.map((slot, lane) => {
+                        {MEAL_SLOTS.map((slot, lane) => {
                             const cellEntries = dayEntries.filter((e) => e.meal === slot)
                             const key = `${date}:${slot}`
                             return (
@@ -149,6 +154,7 @@ export function WeekGrid({ days, today, entries, recipes, icons, onAdd, onMove, 
                                     className={styles.cell}
                                     style={{ gridRow: lane + 2 }}
                                     data-empty={cellEntries.length === 0 || undefined}
+                                    data-slim={open(slot) ? undefined : ''}
                                     {...dropProps(key, date, slot)}
                                 >
                                     {cellEntries.length > 0 && (
