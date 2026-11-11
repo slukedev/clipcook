@@ -26,6 +26,15 @@
     &[data-over] {
         outline-color: var(--md-sys-color-primary);
     }
+
+    // Medium windows give the photo the full column; a wider frame keeps the fields on screen.
+    @include media.medium-up {
+        aspect-ratio: 16 / 9;
+    }
+
+    @include media.expanded-up {
+        aspect-ratio: 4 / 3;
+    }
 }
 
 .empty {

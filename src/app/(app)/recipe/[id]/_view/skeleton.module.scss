@@ -32,7 +32,7 @@
     gap: 16px;
     padding-inline: var(--md-sys-layout-margin);
 
-    @container recipe (width >= 780px) {
+    @container recipe (width >= 880px) {
         padding-inline: 0;
     }
 }

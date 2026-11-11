@@ -5,12 +5,13 @@
 // Layout follows the space the page actually gets (the shell's rail takes some), so it
 // runs on container queries named `recipe`:
 //   < 600   one column, full-bleed photo under a floating bar, summary sheet over it
-//   600+    one column, photo beside the summary
-//   780+    photo | summary on top, then ingredients (sticky, beside the steps) | steps,
-//           so the first screen always shows what you need and what you do
+//   600+    one column, a smaller photo beside a wider summary
+//   880+    photo | summary on top, then ingredients (sticky, beside the steps) | steps,
+//           so the first screen always shows what you need and what you do. Not
+//           earlier: the ingredients pane needs about 400px to keep the scaler on one row.
 //   1100+   wider gutters
 //   1800+   a slightly larger frame and type for big monitors across the kitchen
-// From 780 up the panes sit in the medium page frame, and the bar reads the same frame.
+// From 880 up the panes sit in the medium page frame, and the bar reads the same frame.
 
 .root {
     @include page.max(medium);
@@ -73,6 +74,7 @@
 }
 
 .summary {
+    container: summary / inline-size;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -152,6 +154,20 @@
     }
 }
 
+// Tiles size to the summary, not the window: tighter padding when it is narrow, and four
+// tiles fold into two rows only when one row would break "10 min" in two.
+@container summary (width < 420px) {
+    .stat {
+        padding-inline: 12px;
+    }
+}
+
+@container summary (width < 340px) {
+    .stats:has(> :nth-child(4)) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .cook {
     align-self: stretch;
 }
@@ -195,10 +211,6 @@
         aspect-ratio: 1 / 1;
     }
 
-    .stat {
-        padding-inline: 12px;
-    }
-
     .root:not([data-has-photo]) .photoFrame {
         margin-block-start: 0;
         aspect-ratio: 16 / 11;
@@ -228,10 +240,10 @@
 }
 
 // Medium: photo beside the summary, then ingredients and steps stacked.
-@container recipe (600px <= width < 780px) {
+@container recipe (600px <= width < 880px) {
     .header {
         display: grid;
-        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
         gap: 24px;
         align-items: start;
         padding-inline: var(--_margin);
@@ -255,9 +267,9 @@
 // Two panes on one grid: the photo sits over the ingredients column and the summary over
 // the steps, so both pairs share an edge. Ingredients follow the photo directly (not the
 // longer summary), stick under the bar beside the steps and scroll on their own when long.
-@container recipe (width >= 780px) {
+@container recipe (width >= 880px) {
     .layout {
-        --_side: clamp(300px, 36%, 400px);
+        --_side: clamp(360px, 46%, 420px);
         display: grid;
         grid-template-columns: var(--_side) minmax(0, 1fr);
         grid-template-areas:
@@ -327,7 +339,7 @@
 
 @container recipe (width >= 1100px) {
     .layout {
-        --_side: clamp(340px, 34%, 440px);
+        --_side: clamp(400px, 34%, 440px);
         column-gap: clamp(40px, 5cqi, 72px);
     }
 
