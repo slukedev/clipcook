@@ -155,7 +155,7 @@ export function PhotoField({ photo, onChange, icons, alt }: PhotoFieldProps) {
                         </Button>
                     )}
                 </div>
-                {!canCapture && <p className={styles.hint}>Or drop or paste an image</p>}
+                {!canCapture && <p className={styles.hint}>Drop or paste an image</p>}
             </div>
         )
     }
