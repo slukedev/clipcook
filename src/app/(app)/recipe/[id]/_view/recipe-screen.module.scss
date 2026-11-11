@@ -62,6 +62,10 @@
     position: absolute;
     inset: 0;
     transform-origin: 50% 0;
+    // The frame's rounding lives on the photo too, so the snapshot that morphs to and from
+    // a library card keeps its corners instead of flying square.
+    overflow: hidden;
+    border-radius: inherit;
 }
 
 .summary {
