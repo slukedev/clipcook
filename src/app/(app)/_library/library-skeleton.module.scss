@@ -1,0 +1,63 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    inline-size: 100%;
+    max-inline-size: 1840px;
+    margin-inline: auto;
+    padding: calc(12px + var(--safe-top)) var(--md-sys-layout-margin) 48px;
+
+    @include media.medium-up {
+        gap: 28px;
+        padding-block-start: calc(20px + var(--safe-top));
+    }
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.search {
+    inline-size: 100%;
+    block-size: 56px;
+
+    @include media.expanded-up {
+        inline-size: 720px;
+        max-inline-size: 100%;
+    }
+}
+
+.chips {
+    display: flex;
+    gap: 8px;
+    overflow: hidden;
+    padding-block: 8px;
+}
+
+.tools {
+    block-size: 32px;
+
+    @include media.expanded-up {
+        display: none;
+    }
+}
+
+.media {
+    grid-area: media;
+    inline-size: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--md-sys-shape-corner-large-increased);
+}
+
+.title {
+    @include type.role(title-medium);
+}
+
+.meta {
+    @include type.role(body-medium);
+}

@@ -1,0 +1,131 @@
+@use "../../../styles/mixins/media";
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/focus-ring";
+
+// Compact: content over a 64dp navigation bar. Medium and expanded: collapsed rail
+// (expands as a modal). Large and up: rail that expands in place.
+.shell {
+    display: flex;
+    min-block-size: 100dvh;
+    background-color: var(--md-sys-color-surface);
+}
+
+.column {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-inline-size: 0;
+    min-block-size: 100dvh;
+}
+
+.main {
+    flex: 1 0 auto;
+    min-inline-size: 0;
+    outline: none;
+}
+
+.skip {
+    @include type.role(label-large);
+    @include focus-ring.ring;
+
+    position: fixed;
+    inset-block-start: calc(8px + var(--safe-top));
+    inset-inline-start: 8px;
+    z-index: 2000;
+    padding: 12px 20px;
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-inverse-surface);
+    color: var(--md-sys-color-inverse-on-surface);
+    transform: translateY(calc(-100% - 16px));
+
+    &:focus-visible {
+        transform: none;
+    }
+}
+
+.bar {
+    @include media.medium-up {
+        display: none;
+    }
+}
+
+.railModal,
+.railLarge {
+    flex: none;
+}
+
+.railModal {
+    display: none;
+
+    @include media.medium-up {
+        display: flex;
+    }
+
+    @include media.large-up {
+        display: none;
+    }
+}
+
+.railLarge {
+    display: none;
+
+    @include media.large-up {
+        display: flex;
+    }
+}
+
+// Expanded rail: the count moves to the end of the pill instead of over the label.
+:is(.railLarge, .railModal)[data-expanded] span:has(> [data-large]) {
+    position: static;
+}
+
+:is(.railLarge, .railModal)[data-expanded] [data-large] {
+    inset-block-start: 50%;
+    inset-inline: auto 16px;
+    translate: 0 -50%;
+}
+
+// FAB menu: 16dp from the end edge and 16dp above the navigation bar.
+.fab {
+    position: fixed;
+    inset-inline-end: calc(16px + var(--safe-right));
+    inset-block-end: calc(64px + 16px + var(--safe-bottom));
+    z-index: 20;
+    transition:
+        translate var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    @include media.medium-up {
+        display: none;
+    }
+}
+
+// Snackbars sit above the bar, and above the FAB when it shows.
+:global(html):has(.bar) {
+    @include media.compact {
+        --md-snackbar-offset: 64px;
+    }
+}
+
+:global(html):has(.fab) {
+    @include media.compact {
+        --md-snackbar-offset: calc(64px + 56px + 16px);
+    }
+}
+
+// A selection toolbar takes the FAB's place while recipes are being selected.
+:global(html):has([data-selecting]) .fab {
+    translate: 0 calc(100% + 96px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+// With an on-screen keyboard up, the bar and FAB would ride on top of it.
+@media (pointer: coarse) {
+    :global(html):has(input:focus, textarea:focus, [contenteditable]:focus) {
+        .bar,
+        .fab {
+            display: none;
+        }
+    }
+}

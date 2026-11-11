@@ -1,0 +1,125 @@
+@use "../../../../styles/mixins/typography" as type;
+@use "../../../../styles/mixins/media";
+@use "../../../../styles/mixins/state-layer";
+@use "../../../../styles/mixins/focus-ring";
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    inline-size: 100%;
+    max-inline-size: calc(760px + 2 * var(--md-sys-layout-margin));
+    margin-inline: auto;
+    padding: calc(16px + var(--safe-top)) var(--md-sys-layout-margin) calc(64px + 48px);
+
+    @include media.medium-up {
+        gap: 32px;
+        padding-block: calc(24px + var(--safe-top)) 64px;
+    }
+}
+
+.title {
+    @include type.role(headline-medium, $emphasized: true);
+
+    display: flex;
+    align-items: center;
+    min-block-size: 56px;
+    color: var(--md-sys-color-on-surface);
+
+    @include media.expanded-up {
+        @include type.role(headline-large, $emphasized: true);
+    }
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scroll-margin-block-start: 24px;
+}
+
+.sectionTitle {
+    @include type.role(title-small);
+
+    padding-inline: 16px;
+    color: var(--md-sys-color-primary);
+}
+
+// Rows whose control is too wide to sit beside the label on a phone drop it below.
+.choiceRow {
+    flex-wrap: wrap;
+    row-gap: 12px;
+
+    > :last-child {
+        flex: 1 1 100%;
+        color: var(--md-sys-color-on-surface);
+    }
+
+    @include media.medium-up {
+        flex-wrap: nowrap;
+
+        > :last-child {
+            flex: 0 0 auto;
+        }
+    }
+}
+
+.group {
+    inline-size: 100%;
+
+    @include media.medium-up {
+        inline-size: auto;
+        min-inline-size: 300px;
+    }
+}
+
+.bookmarkletActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+// The bookmarklet itself: a real link styled as a filled button so it can be
+// dragged to the bookmarks bar. It keeps its label short because that becomes
+// the bookmark's name.
+.bookmarklet {
+    @include state-layer.host(var(--md-sys-color-on-primary));
+    @include focus-ring.ring;
+    @include type.role(label-large);
+
+    --md-icon-size: 20px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    block-size: 40px;
+    padding-inline: 16px 24px;
+    border-radius: var(--md-sys-shape-corner-full);
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    cursor: grab;
+    white-space: nowrap;
+
+    &:active {
+        cursor: grabbing;
+    }
+
+    svg {
+        fill: currentcolor;
+    }
+}
+
+.pointerFine {
+    @media (pointer: coarse) {
+        display: none;
+    }
+}
+
+.pointerCoarse {
+    display: none;
+
+    @media (pointer: coarse) {
+        display: inline;
+    }
+}

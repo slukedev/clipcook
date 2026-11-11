@@ -1,0 +1,58 @@
+@use "../../styles/mixins/typography" as type;
+
+.screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-block-size: min(70dvh, 640px);
+    padding: 48px var(--md-sys-layout-margin);
+    text-align: center;
+}
+
+.fullscreen {
+    min-block-size: 100dvh;
+    padding-block: calc(48px + var(--safe-top)) calc(48px + var(--safe-bottom));
+}
+
+.art {
+    display: grid;
+    place-items: center;
+    margin-block-end: 12px;
+
+    > * {
+        grid-area: 1 / 1;
+    }
+}
+
+.shape {
+    --md-shape-size: clamp(144px, 30vmin, 200px);
+
+    color: var(--md-sys-color-primary-container);
+}
+
+.icon {
+    --md-icon-size: clamp(48px, 10vmin, 64px);
+
+    display: grid;
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.title {
+    @include type.role(headline-medium, $emphasized: true);
+
+    max-inline-size: 22ch;
+    color: var(--md-sys-color-on-surface);
+}
+
+.description {
+    @include type.role(body-large);
+
+    max-inline-size: 40ch;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.action {
+    margin-block-start: 8px;
+}
