@@ -1,0 +1,128 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+
+.editor {
+    min-block-size: 100dvh;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    transition: background-color var(--md-sys-motion-spring-effects-slow-duration)
+        var(--md-sys-motion-spring-effects-slow);
+}
+
+.form {
+    display: block;
+}
+
+.save {
+    margin-inline: 4px 8px;
+}
+
+// Compact: one column, core details first, then the lists, then the extras.
+// Expanded: photo and details on the left, ingredients and steps on the right.
+.body {
+    display: grid;
+    grid-template-areas:
+        "core"
+        "lists"
+        "extra";
+    gap: 32px;
+    inline-size: 100%;
+    max-inline-size: 1400px;
+    margin-inline: auto;
+    padding: 8px var(--md-sys-layout-margin) calc(96px + var(--safe-bottom));
+
+    @include media.expanded-up {
+        grid-template-areas:
+            "core lists"
+            "extra lists";
+        grid-template-columns: minmax(320px, 5fr) minmax(0, 7fr);
+        grid-template-rows: auto 1fr;
+        column-gap: 40px;
+        row-gap: 32px;
+        padding-block-start: 16px;
+    }
+
+    @include media.large-up {
+        column-gap: 56px;
+    }
+}
+
+.core,
+.extra,
+.lists {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+}
+
+.core {
+    grid-area: core;
+    gap: 16px;
+}
+
+.lists {
+    grid-area: lists;
+    gap: 40px;
+}
+
+.extra {
+    grid-area: extra;
+    align-content: start;
+    gap: 24px;
+}
+
+.times {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+
+    @include media.medium-up {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    @include media.expanded-up {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include media.large-up {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.groupLabel {
+    @include type.role(title-small);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    margin-block-end: 8px;
+    color: var(--md-sys-color-on-surface-variant);
+    --md-icon-size: 20px;
+}
+
+.groupIcon {
+    display: inline-grid;
+}
+
+.source {
+    display: grid;
+    gap: 12px;
+
+    @include media.medium-up {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    }
+
+    @include media.expanded-up {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
