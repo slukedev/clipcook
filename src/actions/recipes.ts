@@ -9,6 +9,7 @@ import { normalizeTags } from '@/server/db/normalize'
 import * as recipes from '@/server/recipes'
 import { idSchema, parseRecipeFormData, tagsSchema } from '@/server/schemas'
 import { searchRecipeIds } from '@/server/search'
+import { addStarterRecipes as addStarters } from '@/server/starter'
 
 const NOT_FOUND = 'That recipe no longer exists.'
 
@@ -99,6 +100,15 @@ export async function duplicateRecipe(id: string): Promise<ActionResult<string>>
         invalidateApp()
         return ok(copy.id)
     }, NOT_FOUND)
+}
+
+/** Fills an empty library with a few beginner-friendly recipes. Returns how many were added. */
+export async function addStarterRecipes(): Promise<ActionResult<number>> {
+    return withUser(async ({ user, store }) => {
+        const added = await addStarters(store, user.uid)
+        invalidateApp()
+        return ok(added.length)
+    })
 }
 
 const searchQuerySchema = z.string().max(200)
