@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { startTransition, useDeferredValue, useEffect, useRef, useState, ViewTransition } from 'react'
-import { searchRecipes } from '@/actions/recipes'
+import { startTransition, useDeferredValue, useEffect, useRef, useState, useTransition, ViewTransition } from 'react'
+import { addStarterRecipes, searchRecipes } from '@/actions/recipes'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ChipSet, FilterChip } from '@/components/ui/chip'
@@ -23,6 +23,7 @@ import {
     MenuTrigger,
 } from '@/components/ui/menu'
 import { SearchBar } from '@/components/ui/search'
+import { useSnackbar } from '@/components/ui/snackbar'
 import { PageTransition } from '@/components/ui/view-transition'
 import type { RecipeSummary, TagCount } from '@/lib/domain/types'
 import { writeCookie } from '../_shell/preferences'
@@ -85,6 +86,14 @@ export function Library({
     const searchRef = useRef<HTMLDivElement>(null)
     const [searchFocused, setSearchFocused] = useState(false)
     const { recent, remember, forget } = useRecentSearches()
+    const snackbar = useSnackbar()
+    const [addingStarters, startAddingStarters] = useTransition()
+
+    const addStarters = () =>
+        startAddingStarters(async () => {
+            const result = await addStarterRecipes()
+            if (!result.ok) snackbar({ message: result.error, urgent: true })
+        })
 
     const deferredQuery = useDeferredValue(query)
     const tokens = queryTokens(deferredQuery)
@@ -260,6 +269,14 @@ export function Library({
                                         nativeButton={false}
                                     >
                                         Write one
+                                    </Button>
+                                    <Button
+                                        variant="text"
+                                        icon={icons.dish}
+                                        loading={addingStarters}
+                                        onClick={addStarters}
+                                    >
+                                        Add starter recipes
                                     </Button>
                                 </div>
                             </div>
