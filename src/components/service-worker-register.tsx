@@ -2,21 +2,22 @@
 
 import { useEffect } from 'react'
 
+function register() {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
+        console.error('Service worker registration failed', err)
+    })
+}
+
 export function ServiceWorkerRegister() {
     useEffect(() => {
-        if (typeof window === 'undefined') return
-        if (!('serviceWorker' in navigator)) return
-        if (process.env.NODE_ENV !== 'production') return
+        if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return
+        // Hydration can finish after the load event; then there is nothing left to wait for.
+        if (document.readyState === 'complete') {
+            register()
+            return
+        }
         const controller = new AbortController()
-        window.addEventListener(
-            'load',
-            () => {
-                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
-                    console.error('Service worker registration failed', err)
-                })
-            },
-            { once: true, signal: controller.signal },
-        )
+        window.addEventListener('load', register, { once: true, signal: controller.signal })
         return () => controller.abort()
     }, [])
     return null

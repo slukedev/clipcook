@@ -1,29 +1,48 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { PageTransition } from '@/components/ui/view-transition'
+import { dynamicColorCss } from '@/lib/theme/scheme'
+import { getThemePreference } from '@/lib/theme/server'
 import { requireSession } from '@/server/auth'
-import { getRecipeForUser } from '@/server/recipes'
-import { recipeIdSchema } from '@/server/schemas'
-import { RecipeForm, type RecipeFormValues } from '@/app/(app)/RecipeForm'
+import { getRecipe } from '@/server/queries'
+import { idSchema } from '@/server/schemas'
+import { editorChoices } from '../../../_editor/data'
+import { editorIcons } from '../../../_editor/icons'
+import { RecipeEditor } from '../../../_editor/recipe-editor'
+import { EDITOR_SCOPE, valuesFromRecipe } from '../../../_editor/values'
+
+export const metadata: Metadata = { title: 'Edit recipe' }
 
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const parsed = recipeIdSchema.safeParse(id)
+    const parsed = idSchema.safeParse(id)
     if (!parsed.success) notFound()
     const session = await requireSession()
-    const recipe = await getRecipeForUser(session.uid, parsed.data)
+    const [recipe, choices, preference] = await Promise.all([
+        getRecipe(session.uid, parsed.data),
+        editorChoices(session.uid),
+        getThemePreference(),
+    ])
     if (!recipe) notFound()
 
-    const initial: RecipeFormValues = {
-        image: recipe.image,
-        title: recipe.title,
-        description: recipe.description,
-        servings: String(recipe.servings ?? ''),
-        prepTime: recipe.prepTime,
-        cookTime: recipe.cookTime,
-        totalTime: recipe.totalTime,
-        notes: recipe.notes ?? '',
-        ingredients: recipe.ingredients.length > 0 ? recipe.ingredients : [''],
-        instructions: recipe.instructions.length > 0 ? recipe.instructions : [''],
-    }
+    const colorCss =
+        recipe.image && recipe.seedColor !== null
+            ? dynamicColorCss(EDITOR_SCOPE, recipe.seedColor, { contrast: preference.contrast })
+            : ''
 
-    return <RecipeForm mode="edit" recipeId={recipe.id} initial={initial} />
+    return (
+        <PageTransition>
+            <RecipeEditor
+                recipeId={recipe.id}
+                heading="Edit recipe"
+                initial={valuesFromRecipe(recipe)}
+                initialPhoto={recipe.image ? { kind: 'existing', src: recipe.image } : { kind: 'none' }}
+                initialColorCss={colorCss}
+                tags={choices.tags}
+                collections={choices.collections}
+                icons={editorIcons()}
+                closeHref={`/recipe/${recipe.id}`}
+            />
+        </PageTransition>
+    )
 }
