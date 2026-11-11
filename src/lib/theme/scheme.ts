@@ -1,5 +1,5 @@
 import {
-    type DynamicScheme,
+    DynamicScheme,
     Hct,
     hexFromArgb,
     MaterialDynamicColors,
@@ -7,6 +7,7 @@ import {
     SchemeExpressive,
     SchemeTonalSpot,
     SchemeVibrant,
+    TonalPalette,
 } from '@material/material-color-utilities'
 import { type Contrast, CONTRAST_LEVEL } from './preference'
 import { parseSeed, type Seed } from './seed'
@@ -22,6 +23,12 @@ export interface SchemeOptions {
     dark?: boolean
     contrast?: Contrast
     variant?: SchemeVariant
+    /**
+     * Overrides the primary palette's chroma while keeping the variant's tone
+     * mapping, neutrals and accents. The brand uses it so TonalSpot's calm surfaces
+     * sit under a primary that still reads as paprika instead of cocoa.
+     */
+    primaryChroma?: number
 }
 
 /** `--md-sys-color-*` suffix to `#rrggbb`. */
@@ -30,7 +37,25 @@ export type SchemeMap = Record<string, string>
 // 2025 spec is honored for TonalSpot/Vibrant/Expressive; Content silently uses 2021.
 const SPEC = '2025' as const
 
-function buildScheme(seed: Seed, { dark = false, contrast = 'standard', variant = 'tonalSpot' }: SchemeOptions) {
+function buildScheme(seed: Seed, options: SchemeOptions): DynamicScheme {
+    const base = baseScheme(seed, options)
+    if (options.primaryChroma === undefined) return base
+    return new DynamicScheme({
+        sourceColorHct: base.sourceColorHct,
+        variant: base.variant,
+        contrastLevel: base.contrastLevel,
+        isDark: base.isDark,
+        specVersion: SPEC,
+        primaryPalette: TonalPalette.fromHueAndChroma(base.primaryPalette.hue, options.primaryChroma),
+        secondaryPalette: base.secondaryPalette,
+        tertiaryPalette: base.tertiaryPalette,
+        neutralPalette: base.neutralPalette,
+        neutralVariantPalette: base.neutralVariantPalette,
+        errorPalette: base.errorPalette,
+    })
+}
+
+function baseScheme(seed: Seed, { dark = false, contrast = 'standard', variant = 'tonalSpot' }: SchemeOptions) {
     const hct = Hct.fromInt(parseSeed(seed))
     const level = CONTRAST_LEVEL[contrast]
     switch (variant) {
