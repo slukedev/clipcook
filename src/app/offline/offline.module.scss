@@ -68,3 +68,14 @@
     margin: 0 0 8px;
     color: var(--md-sys-color-on-surface-variant);
 }
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+
+    [hidden] {
+        display: none;
+    }
+}

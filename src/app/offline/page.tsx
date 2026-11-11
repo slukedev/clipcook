@@ -10,9 +10,15 @@ export const metadata: Metadata = { title: 'Offline', robots: { index: false } }
 // The service worker serves this page in place of any page that cannot load, so the
 // address bar shows the page that was asked for. React does not hydrate under a
 // foreign URL, hence a tiny plain script: it reloads once the connection is back
-// and words the page for a share that arrived offline.
+// words the page for a share that arrived offline, and offers the grocery list when a
+// copy of it is saved on this device, since the list is what people need in a store.
 const SCRIPT = `(() => {
   addEventListener('online', () => location.reload());
+  if (location.pathname !== '/grocery' && 'caches' in self) {
+    caches.match('/grocery', { cacheName: 'pages' }).then((hit) => {
+      if (hit) document.querySelectorAll('[data-offline-grocery]').forEach((el) => { el.hidden = false; });
+    }).catch(() => {});
+  }
   const q = new URLSearchParams(location.search);
   if (location.pathname === '/clip' && (q.has('url') || q.has('text'))) {
     document.querySelectorAll('[data-offline]').forEach((el) => {
@@ -43,14 +49,27 @@ export default async function OfflinePage() {
                     The link stays here and clips as soon as you reconnect.
                 </p>
             </div>
-            <Button
-                size="m"
-                // biome-ignore lint/a11y/useValidAnchor: an empty href reloads the address being shown, with or without JS
-                render={<a href="" />}
-                nativeButton={false}
-            >
-                Retry
-            </Button>
+            <div className={styles.actions}>
+                <Button
+                    size="m"
+                    // biome-ignore lint/a11y/useValidAnchor: an empty href reloads the address being shown, with or without JS
+                    render={<a href="" />}
+                    nativeButton={false}
+                >
+                    Retry
+                </Button>
+                <span data-offline-grocery="" hidden>
+                    <Button
+                        size="m"
+                        variant="tonal"
+                        icon={<Icon name="shopping_basket" />}
+                        render={<a href="/grocery" />}
+                        nativeButton={false}
+                    >
+                        Grocery list
+                    </Button>
+                </span>
+            </div>
             {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static script, no user input */}
             <script nonce={nonce} dangerouslySetInnerHTML={{ __html: SCRIPT }} />
         </main>
