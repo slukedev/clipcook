@@ -1,14 +1,13 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/state-layer';
-@use '../../../styles/mixins/focus-ring';
-@use '../../../styles/mixins/media' as media;
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
 
-.scrim {
+.backdrop {
     position: fixed;
     inset: 0;
-    min-height: 100dvh;
-    background-color: color-mix(in srgb, var(--md-sys-color-scrim) 40%, transparent);
-    transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+    z-index: 1200;
+    background-color: var(--md-sys-color-scrim);
+    opacity: 0.32;
+    transition: opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
 
     &[data-starting-style],
     &[data-ending-style] {
@@ -16,133 +15,131 @@
     }
 }
 
-.popup {
-    --text-field-backdrop: var(--md-sys-color-surface-container-high);
-
+.viewport {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    translate: -50% -50%;
+    inset: 0;
+    z-index: 1201;
+    display: grid;
+    place-items: center;
+    padding: 24px max(24px, var(--safe-left));
+    overflow-y: auto;
+}
+
+// Basic dialog: surfaceContainerHigh, 28dp corners, 280 to 560dp wide, 24dp padding.
+.popup {
     display: flex;
     flex-direction: column;
-    min-width: 17.5rem;
-    max-width: min(35rem, calc(100vw - 3.5rem));
-    max-height: calc(100dvh - 3.5rem);
-    padding: 1.5rem;
+    gap: 16px;
+    inline-size: min(560px, 100%);
+    min-inline-size: min(280px, 100%);
+    max-block-size: calc(100dvh - 48px);
+    padding: 24px;
     border-radius: var(--md-sys-shape-corner-extra-large);
     background-color: var(--md-sys-color-surface-container-high);
-    color: var(--md-sys-color-on-surface);
-    box-shadow: var(--md-sys-elevation-shadow-3);
-    outline: none;
-    overflow-y: auto;
-
+    color: var(--md-sys-color-on-surface-variant);
+    box-shadow: var(--md-sys-elevation-level3);
+    outline: 0;
     transition:
-        opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
-        scale var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
-        translate var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate);
+        transform var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
+        opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
 
-    &[data-starting-style],
+    &[data-starting-style] {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
     &[data-ending-style] {
         opacity: 0;
-        scale: 0.9;
+        transform: scale(0.96);
+        transition:
+            transform var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+            opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
     }
 
-    &[data-ending-style] {
-        transition-timing-function: var(--md-sys-motion-easing-emphasized-accelerate);
-        transition-duration: var(--md-sys-motion-duration-short4);
-    }
-}
-
-.heroIcon {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1rem;
-    color: var(--md-sys-color-secondary);
-
-    // A hero icon centers the headline per spec.
-    & ~ .headline {
+    &[data-centered] {
+        align-items: center;
         text-align: center;
     }
 }
 
+.icon {
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-secondary);
+    --md-icon-size: 24px;
+}
+
 .headline {
     @include type.role(headline-small);
-    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
 }
 
 .body {
     @include type.role(body-medium);
-    color: var(--md-sys-color-on-surface-variant);
+    flex: 1;
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .actions {
     display: flex;
-    justify-content: flex-end;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1.5rem;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-block-start: 8px;
 }
 
-/* ── Full-screen variant ────────────────────────────────── */
+.header {
+    display: none;
+}
 
-.fullScreen {
-    @include media.compact-only {
-        inset: 0;
-        translate: none;
-        max-width: none;
-        max-height: none;
-        width: 100%;
+// Full-screen on compact windows: square, edge to edge, actions move to a header row.
+@include media.compact {
+    .viewport[data-fullscreen] {
+        padding: 0;
+        place-items: stretch;
+    }
+
+    .popup[data-fullscreen] {
+        inline-size: 100%;
+        min-inline-size: 0;
+        max-block-size: none;
+        block-size: 100dvh;
+        padding: 0 0 var(--safe-bottom);
+        gap: 0;
         border-radius: 0;
-        padding: 0.5rem 1rem 1.5rem;
-        box-shadow: none;
         background-color: var(--md-sys-color-surface);
-
-        --text-field-backdrop: var(--md-sys-color-surface);
+        box-shadow: none;
 
         &[data-starting-style],
         &[data-ending-style] {
-            opacity: 0;
-            scale: 1;
-            translate: 0 2.5rem;
+            transform: translateY(8%);
+        }
+
+        > .icon,
+        > .headline,
+        > .actions {
+            display: none;
+        }
+
+        > .header {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-block-size: calc(56px + var(--safe-top));
+            padding: var(--safe-top) 8px 0 4px;
+        }
+
+        > .body {
+            padding: 8px 24px 24px;
+            @include type.role(body-large);
         }
     }
-
-    @include media.medium-up {
-        width: min(40rem, calc(100vw - 3.5rem));
-        max-width: none;
-    }
 }
 
-.fullScreenHeader {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 3.5rem;
-    margin-bottom: 1rem;
-}
-
-.fullScreenTitle {
+.headerTitle {
     @include type.role(title-large);
     flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.fullScreenClose {
-    @include state-layer.host;
-    @include focus-ring.ring;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border: none;
-    border-radius: var(--md-sys-shape-corner-full);
-    background: none;
     color: var(--md-sys-color-on-surface);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
 }

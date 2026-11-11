@@ -1,0 +1,64 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+    "files": {
+        "includes": [
+            "**",
+            "!**/.next",
+            "!**/node_modules",
+            "!next-env.d.ts",
+            "!public",
+            "!**/.claude",
+            "!**/.data",
+            "!**/.data-e2e",
+            "!**/playwright-report",
+            "!**/test-results"
+        ]
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 120
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "jsxQuoteStyle": "double",
+            "semicolons": "asNeeded",
+            "trailingCommas": "all",
+            "arrowParentheses": "always"
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "preset": "recommended",
+            "suspicious": {
+                "noExplicitAny": "error"
+            },
+            "correctness": {
+                "noUnusedVariables": "warn",
+                "noUnusedFunctionParameters": "warn"
+            }
+        },
+        "domains": {
+            "next": "recommended",
+            "react": "recommended"
+        }
+    },
+    "overrides": [
+        {
+            // SCSS nests state rules (`.card:has(:active) &`) above base rules for other
+            // properties of the same element; the rule cannot tell those apart from real
+            // overrides, so it stays a warning to review rather than a CI failure.
+            "includes": ["**/*.scss"],
+            "linter": { "rules": { "style": { "noDescendingSpecificity": "warn" } } }
+        },
+        {
+            "includes": ["**/*.yml", "**/*.yaml"],
+            "formatter": {
+                "indentWidth": 2
+            }
+        }
+    ]
+}

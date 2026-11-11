@@ -1,0 +1,95 @@
+@use "../../../../../styles/mixins/typography" as type;
+
+.checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.heading {
+    @include type.subhead;
+}
+
+.row {
+    min-block-size: 56px;
+    gap: 12px;
+    padding-inline-start: 4px;
+    --md-list-item-container: var(--md-sys-color-surface-container-low);
+}
+
+.text {
+    display: inline;
+    // Greedy wrapping: 'pretty' would pull '1 teaspoon' onto a line of its own.
+    text-wrap: wrap;
+    transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+}
+
+.amount {
+    @include type.numeric;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+// Beside the steps, the rows the step in view uses light up as the page scrolls.
+@container recipe (width >= 780px) {
+    [data-uses] .row {
+        --md-list-item-container: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
+    }
+
+    [data-uses] .amount {
+        color: var(--md-sys-color-primary);
+    }
+}
+
+[data-checked] .text {
+    color: var(--md-sys-color-on-surface-variant);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--md-sys-color-outline);
+}
+
+@media print {
+    .checklist {
+        display: block;
+    }
+
+    .section {
+        display: block;
+        margin-block-end: 8pt;
+    }
+
+    .section ul {
+        display: block;
+        columns: 2;
+        column-gap: 24pt;
+    }
+
+    .section li {
+        break-inside: avoid;
+    }
+
+    .row {
+        min-block-size: 0;
+        padding: 2pt 0;
+        // biome-ignore lint/complexity/noImportantStyles: print ink beats checked and hover row states
+        background: none !important;
+        // biome-ignore lint/complexity/noImportantStyles: print ink beats checked and hover row states
+        color: #000 !important;
+    }
+
+    .row > span:has([role="checkbox"]) {
+        display: none;
+    }
+
+    [data-checked] .text {
+        color: #000;
+        text-decoration: none;
+    }
+}

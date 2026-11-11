@@ -1,18 +1,21 @@
-.ripple {
+.surface {
     position: absolute;
     inset: 0;
-    border-radius: inherit;
+    z-index: -1;
     overflow: hidden;
+    border-radius: inherit;
     pointer-events: none;
-    // Contain the ink inside rounded corners on Safari.
-    transform: translateZ(0);
 }
 
-.ink {
+.wave {
     position: absolute;
     border-radius: 50%;
-    background: radial-gradient(circle closest-side, currentcolor 65%, transparent 100%);
-    opacity: 0.12;
-    transform: translate(-50%, -50%) scale(0.1);
-    will-change: transform, opacity;
+    background-color: currentcolor;
+    opacity: 0;
+}
+
+// Waves paint opaque inside a layer held at the pressed opacity, so overlapping
+// presses never stack darker than the spec.
+.surface:has(.wave) {
+    opacity: var(--md-sys-state-pressed-state-layer-opacity);
 }

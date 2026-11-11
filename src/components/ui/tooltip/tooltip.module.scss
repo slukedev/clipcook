@@ -1,22 +1,65 @@
-@use '../../../styles/mixins/typography' as type;
+@use "../../../styles/mixins/typography" as type;
 
 .positioner {
-    z-index: 30;
+    z-index: 1400;
 }
 
-.popup {
-    @include type.role(body-small);
-
-    max-width: 12.5rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--md-sys-shape-corner-extra-small);
-    background-color: var(--md-sys-color-inverse-surface);
-    color: var(--md-sys-color-inverse-on-surface);
-
-    transition: opacity var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-linear);
+// Plain: inverseSurface, 4dp corners, body-small, max 200dp. Rich: surfaceContainer,
+// 12dp corners, level 2, max 320dp.
+.plain,
+.rich {
+    transform-origin: var(--transform-origin);
+    transition:
+        transform var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
 
     &[data-starting-style],
     &[data-ending-style] {
         opacity: 0;
+        transform: scale(0.9);
     }
+
+    // Moving between neighbors: no delay, no animation.
+    &[data-instant] {
+        transition: none;
+    }
+}
+
+.plain {
+    @include type.role(body-small);
+    max-inline-size: 200px;
+    min-block-size: 24px;
+    padding: 4px 8px;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    background-color: var(--md-sys-color-inverse-surface);
+    color: var(--md-sys-color-inverse-on-surface);
+}
+
+.rich {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-inline-size: 320px;
+    padding: 12px 16px 8px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    background-color: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface-variant);
+    box-shadow: var(--md-sys-elevation-level2);
+    outline: 0;
+}
+
+.subhead {
+    @include type.role(title-small);
+    color: var(--md-sys-color-on-surface);
+}
+
+.text {
+    @include type.role(body-medium);
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-inline-start: -12px;
+    padding-block-start: 4px;
 }

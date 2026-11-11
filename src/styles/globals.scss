@@ -1,10 +1,12 @@
-@use './theme/color.css';
-@use './theme/typescale.css';
-@use './theme/shape.css';
-@use './theme/motion.css';
-@use './theme/elevation.css';
-@use './theme/state.css';
-@use './mixins/typography' as type;
+@use "./theme/color.css";
+@use "./theme/typescale.css";
+@use "./theme/shape.css";
+@use "./theme/motion.css";
+@use "./theme/elevation.css";
+@use "./theme/state.css";
+@use "./theme/layout.css";
+@use "./view-transitions";
+@use "./mixins/typography" as type;
 
 *,
 *::before,
@@ -12,20 +14,48 @@
     box-sizing: border-box;
 }
 
-html {
-    // No-preference fallback if the pre-hydration theme script is ever blocked.
-    color-scheme: light dark;
-    height: 100%;
+* {
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+:root {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    scrollbar-gutter: stable;
+    scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+    accent-color: var(--md-sys-color-primary);
+    caret-color: var(--md-sys-color-primary);
+    interpolate-size: allow-keywords;
+    overscroll-behavior-y: none;
+    font-synthesis: none;
+    font-optical-sizing: auto;
+    hanging-punctuation: first last;
+}
+
+// High contrast leans on Google Sans Flex's grade axis: heavier strokes without reflow.
+:root[data-contrast="high"] {
+    --md-sys-typescale-grade: 100;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    :root:focus-within {
+        scroll-behavior: smooth;
+    }
 }
 
 body {
-    margin: 0;
-    min-height: 100%;
+    min-height: 100dvh;
     @include type.role(body-large);
     color: var(--md-sys-color-on-surface);
     background-color: var(--md-sys-color-surface);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    transition: background-color var(--md-sys-motion-spring-effects-slow-duration)
+        var(--md-sys-motion-spring-effects-slow);
 }
 
 h1,
@@ -33,15 +63,28 @@ h2,
 h3,
 h4,
 h5,
-h6,
+h6 {
+    text-wrap: balance;
+    font: inherit;
+}
+
 p,
-figure {
-    margin: 0;
+li,
+figcaption {
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+}
+
+ul[role="list"],
+ol[role="list"] {
+    list-style: none;
 }
 
 a {
     color: inherit;
     text-decoration: none;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 0.08em;
 }
 
 button,
@@ -50,40 +93,91 @@ textarea,
 select {
     font: inherit;
     color: inherit;
+    letter-spacing: inherit;
+}
+
+button {
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: default;
 }
 
 img,
+picture,
 svg,
-video {
+video,
+canvas {
     display: block;
     max-width: 100%;
 }
 
+img {
+    height: auto;
+    font-style: italic;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 1;
+}
+
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
 ::selection {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
+    background-color: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
 }
 
-// Shared entrance keyframes (referenced from CSS modules via mixins/_enter.scss;
-// names stay global because no module defines them locally). Durations come
-// from motion tokens, which collapse to 0 under prefers-reduced-motion.
-@keyframes cc-rise {
-    from {
-        opacity: 0;
-        translate: 0 1rem;
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background: var(--md-sys-color-outline-variant) padding-box;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+[hidden] {
+    // biome-ignore lint/complexity/noImportantStyles: the hidden attribute must win over any display rule
+    display: none !important;
+}
+
+// Long lists: skip layout and paint for rows far offscreen.
+.cc-auto-visibility {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 72px;
+}
+
+.cc-tabular {
+    @include type.numeric;
+}
+
+// Focus ring growth (material-web): 3px to 8px and back.
+@keyframes md-focus-ring {
+    25% {
+        outline-width: 8px;
     }
 }
 
-@keyframes cc-pop {
-    from {
-        opacity: 0;
-        scale: 0.6;
-    }
-}
-
-@keyframes cc-reveal {
-    from {
-        opacity: 0;
-        scale: 1.05;
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-iteration-count: 1;
+        // biome-ignore lint/complexity/noImportantStyles: reduced motion overrides every smooth scroll
+        scroll-behavior: auto !important;
     }
 }

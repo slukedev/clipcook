@@ -1,0 +1,21 @@
+.divider {
+    flex: none;
+    align-self: stretch;
+    block-size: 1px;
+    border: 0;
+    background-color: var(--md-sys-color-outline-variant);
+
+    &[data-inset] {
+        margin-inline: 16px;
+    }
+
+    &[data-vertical] {
+        inline-size: 1px;
+        block-size: auto;
+        margin-inline: 0;
+
+        &[data-inset] {
+            margin-block: 8px;
+        }
+    }
+}

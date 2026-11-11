@@ -1,0 +1,179 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/state-layer";
+@use "../../../styles/mixins/focus-ring";
+
+// Search bar: 56dp pill on surfaceContainerHigh, 16dp padding, 16dp icon gap.
+.bar {
+    @include state-layer.host(var(--md-sys-color-on-surface));
+    @include focus-ring.ring;
+
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: 56px;
+    padding-inline: 16px;
+    border-radius: 28px;
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+    text-align: start;
+    cursor: text;
+    --md-icon-size: 24px;
+
+    &:has(.input:focus-visible) {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: 2px;
+    }
+}
+
+.leading {
+    display: flex;
+    flex: none;
+    margin-inline-start: -4px;
+}
+
+.trailing {
+    display: flex;
+    flex: none;
+    align-items: center;
+    margin-inline-end: -8px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.placeholder,
+.input {
+    @include type.role(body-large);
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.placeholder {
+    color: var(--md-sys-color-on-surface-variant);
+
+    &[data-has-value] {
+        color: var(--md-sys-color-on-surface);
+    }
+}
+
+.input {
+    // The whole 56dp bar height is the field, not just the text line.
+    align-self: stretch;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--md-sys-color-on-surface);
+    outline: none;
+
+    &::-webkit-search-cancel-button {
+        display: none;
+    }
+}
+
+// Full-screen view (compact): 72dp header, surfaceContainerHigh, slow spatial.
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+}
+
+.full {
+    position: fixed;
+    inset: 0;
+    z-index: 1201;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+    outline: 0;
+    clip-path: inset(0 round 0);
+    transition:
+        clip-path var(--md-sys-motion-spring-spatial-slow-duration) var(--md-sys-motion-spring-spatial-slow),
+        opacity var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    // Grows out of the bar's spot near the top.
+    &[data-starting-style],
+    &[data-ending-style] {
+        clip-path: inset(var(--_bar-top, 72px) 16px calc(100% - var(--_bar-top, 72px) - 56px) 16px round 28px);
+        opacity: 0;
+    }
+
+    &[data-ending-style] {
+        transition-duration: var(--md-sys-motion-spring-effects-default-duration);
+        transition-timing-function: var(--md-sys-motion-spring-effects-default);
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    min-block-size: calc(72px + var(--safe-top));
+    padding: var(--safe-top) 4px 0;
+    --md-icon-size: 24px;
+}
+
+.results {
+    flex: 1;
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: 8px calc(16px + var(--safe-bottom));
+    background-color: var(--md-sys-color-surface-container-high);
+}
+
+.divider {
+    flex: none;
+    block-size: 1px;
+    background-color: var(--md-sys-color-outline-variant);
+}
+
+// Docked view (expanded and up): 28dp corners, 56dp header, opens over the bar.
+.positioner {
+    z-index: 1200;
+}
+
+.docked {
+    display: flex;
+    flex-direction: column;
+    inline-size: var(--anchor-width);
+    max-block-size: min(70dvh, var(--available-height));
+    border-radius: 28px;
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+    box-shadow: var(--md-sys-elevation-level3);
+    overflow: hidden;
+    outline: 0;
+    transform-origin: top center;
+    transition:
+        clip-path var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    clip-path: inset(0 round 28px);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+        clip-path: inset(0 0 calc(100% - 56px) 0 round 28px);
+    }
+
+    &[data-ending-style] {
+        opacity: 0;
+    }
+
+    .header {
+        min-block-size: 56px;
+        padding: 0 4px 0 16px;
+        gap: 16px;
+    }
+
+    .results {
+        padding-block: 8px;
+    }
+}
+
+.landmark {
+    display: contents;
+}

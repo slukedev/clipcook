@@ -1,0 +1,167 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/focus-ring";
+@use "../../../styles/mixins/media";
+
+// Flexible navigation bar (ShortNavigationBar): 64dp, surfaceContainer.
+// Compact: icon over label, equal widths. Medium: icon beside label, centered.
+.bar {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: stretch;
+    min-block-size: calc(64px + var(--safe-bottom));
+    padding-block-end: var(--safe-bottom);
+    padding-inline: max(var(--safe-left), 0px) max(var(--safe-right), 0px);
+    background-color: var(--md-sys-color-surface-container);
+
+    @include media.medium-up {
+        justify-content: center;
+        gap: 8px;
+    }
+}
+
+.item {
+    @include focus-ring.inward("&:focus-visible");
+
+    --md-icon-size: 24px;
+
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-inline-size: 48px;
+    padding-block: 6px;
+    color: var(--md-sys-color-on-surface-variant);
+    text-decoration: none;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: color var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default);
+
+    &[aria-current="page"] {
+        color: var(--md-sys-color-secondary);
+    }
+
+    @include media.medium-up {
+        flex: 0 0 auto;
+        flex-direction: row;
+        padding-inline: 4px;
+    }
+}
+
+// The pill holds the icon (compact) or icon and label (medium); state layers live on it.
+.indicator {
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    place-items: center;
+    inline-size: 56px;
+    block-size: 32px;
+    border-radius: 9999px;
+
+    // Selected pill grows out from the icon's center.
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        border-radius: inherit;
+        background-color: var(--md-sys-color-secondary-container);
+        transform: scaleX(0.4);
+        opacity: 0;
+        transition:
+            transform var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+            opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        background-color: currentcolor;
+        opacity: 0;
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+    }
+
+    .item[aria-current="page"] & {
+        color: var(--md-sys-color-on-secondary-container);
+
+        &::after {
+            transform: none;
+            opacity: 1;
+        }
+    }
+
+    @media (hover: hover) {
+        .item:hover &::before {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+    }
+
+    .item:active &::before {
+        opacity: var(--md-sys-state-pressed-state-layer-opacity);
+    }
+
+    @include media.medium-up {
+        display: inline-flex;
+        gap: 4px;
+        inline-size: auto;
+        block-size: 40px;
+        padding-inline: 16px;
+    }
+}
+
+.icons {
+    display: inline-grid;
+    place-items: center;
+    position: relative;
+
+    > * {
+        grid-area: 1 / 1;
+    }
+}
+
+.label {
+    @include type.role(label-medium);
+    white-space: nowrap;
+
+    .item[aria-current="page"] & {
+        @include type.role(label-medium, $emphasized: true);
+    }
+
+    @include media.medium-up {
+        @include type.role(label-medium);
+    }
+}
+
+// Medium windows: the label sits inside the pill, so the outer one hides.
+.outerLabel {
+    @include media.medium-up {
+        display: none;
+    }
+}
+
+.innerLabel {
+    display: none;
+
+    @include media.medium-up {
+        display: inline;
+    }
+}
+
+.icons:has(.badge) {
+    @include media.medium-up {
+        margin-inline-end: 8px;
+    }
+}
+
+.badge {
+    position: absolute;
+    inset-block-start: -2px;
+    inset-inline-start: calc(100% - 8px);
+}

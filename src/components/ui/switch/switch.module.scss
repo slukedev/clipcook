@@ -1,97 +1,142 @@
-@use '../../../styles/mixins/typography' as type;
-@use '../../../styles/mixins/focus-ring';
-
-.track {
-    @include focus-ring.ring;
-
+// Track 52x32. Thumb 16 off, 24 on or with icons, 28 while pressed; drawn as one
+// 28dp circle scaled so the change runs on the compositor.
+.root {
     position: relative;
     display: inline-flex;
     align-items: center;
-    flex-shrink: 0;
-    width: 3.25rem;
-    height: 2rem;
-    padding: 0;
-    border: 2px solid var(--md-sys-color-outline);
-    border-radius: var(--md-sys-shape-corner-full);
+    flex: none;
+    inline-size: 52px;
+    block-size: 32px;
+    margin: 8px 4px;
+    border-radius: 9999px;
     background-color: var(--md-sys-color-surface-container-highest);
+    box-shadow: inset 0 0 0 2px var(--md-sys-color-outline);
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    outline: none;
     transition:
-        background-color var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-standard),
-        border-color var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-standard);
+        background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        box-shadow var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    &::after {
+        content: "";
+        position: absolute;
+        inset: -8px -4px;
+    }
 
     &[data-checked] {
         background-color: var(--md-sys-color-primary);
-        border-color: var(--md-sys-color-primary);
+        box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
+    }
+
+    &:focus-visible {
+        outline: var(--md-focus-ring-width) solid var(--md-focus-ring-color);
+        outline-offset: var(--md-focus-ring-offset);
     }
 
     &[data-disabled] {
         cursor: default;
-        opacity: 0.38;
+        opacity: var(--md-sys-state-disabled-content-opacity);
     }
 }
 
-.handle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1rem;
-    height: 1rem;
-    margin-inline-start: 0.375rem;
-    border-radius: var(--md-sys-shape-corner-full);
+.thumb {
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-start: 2px;
+    display: grid;
+    place-items: center;
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: 50%;
     background-color: var(--md-sys-color-outline);
+    color: var(--md-sys-color-surface-container-highest);
+    scale: calc(16 / 28);
+    --md-icon-size: 18.7px;
     transition:
-        width var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized),
-        height var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized),
-        margin var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized),
-        translate var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized),
-        background-color var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-standard);
+        translate var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast),
+        background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
 
-    .track:active:not([data-disabled]) & {
-        width: 1.75rem;
-        height: 1.75rem;
-        margin-inline-start: 0;
+    // State layer: a 40dp halo around the thumb.
+    &::before {
+        content: "";
+        position: absolute;
+        inset: calc((28px - 40px) / 2);
+        border-radius: 50%;
+        background-color: currentcolor;
+        opacity: 0;
+        scale: calc(28 / 16);
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
     }
 
-    [data-checked] & {
-        width: 1.5rem;
-        height: 1.5rem;
-        margin-inline-start: 0.125rem;
-        translate: 1.25rem 0;
+    &[data-checked] {
+        translate: 20px 0;
+        scale: calc(24 / 28);
         background-color: var(--md-sys-color-on-primary);
+        color: var(--md-sys-color-on-primary-container);
+
+        &::before {
+            scale: calc(28 / 24);
+            background-color: var(--md-sys-color-primary);
+        }
     }
 
-    [data-checked]:active:not([data-disabled]) & {
-        width: 1.75rem;
-        height: 1.75rem;
-        translate: 1.125rem 0;
+    [data-icons] > & {
+        scale: calc(24 / 28);
+
+        &::before {
+            scale: calc(28 / 24);
+        }
+    }
+
+    .root:active:not([data-disabled]) > & {
+        scale: 1;
+
+        &::before {
+            scale: 1;
+        }
+    }
+
+    @media (hover: hover) {
+        .root:hover:not([data-disabled]) > &::before {
+            opacity: var(--md-sys-state-hover-state-layer-opacity);
+        }
+
+        .root:hover:not([data-disabled]) > &:not([data-checked]) {
+            background-color: var(--md-sys-color-on-surface-variant);
+        }
+    }
+
+    .root:focus-visible > &::before {
+        opacity: var(--md-sys-state-focus-state-layer-opacity);
+    }
+
+    .root:active:not([data-disabled]) > &::before {
+        opacity: var(--md-sys-state-pressed-state-layer-opacity);
+    }
+
+    > svg {
+        transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
     }
 }
 
-.check {
-    color: var(--md-sys-color-on-primary-container);
+:dir(rtl) .thumb[data-checked] {
+    translate: -20px 0;
+}
+
+.on,
+.off {
+    grid-area: 1 / 1;
+}
+
+.on {
     opacity: 0;
-    scale: 0.6;
-    transition:
-        opacity var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-linear),
-        scale var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized-decelerate);
 
-    [data-checked] & {
+    [data-checked] > & {
         opacity: 1;
-        scale: 0.8;
     }
 }
 
-.row {
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.label {
-    @include type.role(body-large);
-    color: var(--md-sys-color-on-surface);
-    cursor: pointer;
-    user-select: none;
+[data-checked] > .off {
+    opacity: 0;
 }

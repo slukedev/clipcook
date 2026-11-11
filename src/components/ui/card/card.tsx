@@ -1,51 +1,72 @@
-'use client'
-
 import Link from 'next/link'
+import type { ComponentProps, HTMLAttributes, ReactNode } from 'react'
 import { cx } from '../cx'
-import { Ripple } from '../ripple'
+import { Ripple } from '../ripple/ripple'
 import styles from './card.module.scss'
 
 export type CardVariant = 'elevated' | 'filled' | 'outlined'
 
-interface CardProps {
+interface Base {
     variant?: CardVariant
-    /** Renders as a next/link — makes the whole card clickable. */
-    href?: string
-    /** Renders as a button. */
-    onClick?: React.MouseEventHandler<HTMLButtonElement>
     className?: string
-    children: React.ReactNode
-    'aria-label'?: string
+    children: ReactNode
 }
 
-/**
- * M3 card. Static container by default; pass `href` or `onClick`
- * to make the whole card an interactive surface with ripple.
- */
-export function Card({ variant = 'elevated', href, onClick, className, children, ...rest }: CardProps) {
-    const classes = cx(styles.card, styles[variant], className)
+export type CardProps =
+    | (Base &
+          HTMLAttributes<HTMLElement> & {
+              href?: undefined
+              onClick?: undefined
+              as?: 'div' | 'article' | 'section' | 'li'
+          })
+    | (Base & Omit<ComponentProps<typeof Link>, 'className' | 'children'> & { href: string })
+    | (Base &
+          Omit<ComponentProps<'button'>, 'className' | 'children'> & {
+              href?: undefined
+              onClick: ComponentProps<'button'>['onClick']
+          })
 
-    if (href) {
+/**
+ * M3 card. With `href` it is a link, with `onClick` a button: both get a state
+ * layer, ripple and focus ring. Otherwise a plain container.
+ */
+export function Card(props: CardProps) {
+    const { variant = 'filled', className, children } = props
+    const classes = (interactive: boolean) =>
+        cx(styles.card, styles[variant], interactive && styles.interactive, className)
+    if (props.href !== undefined) {
+        const { variant: _v, className: _c, children: _ch, ...link } = props as Extract<CardProps, { href: string }>
         return (
-            <Link href={href} className={cx(classes, styles.interactive)} {...rest}>
-                {children}
+            <Link {...link} className={classes(true)}>
                 <Ripple />
+                {children}
             </Link>
         )
     }
-
-    if (onClick) {
+    if (props.onClick !== undefined) {
+        const {
+            variant: _v,
+            className: _c,
+            children: _ch,
+            ...button
+        } = props as Extract<CardProps, { onClick: unknown }> & ComponentProps<'button'>
         return (
-            <button type="button" onClick={onClick} className={cx(classes, styles.interactive)} {...rest}>
-                {children}
+            <button type="button" {...button} className={classes(true)}>
                 <Ripple />
+                {children}
             </button>
         )
     }
-
+    const {
+        variant: _v,
+        className: _c,
+        children: _ch,
+        as: Tag = 'div',
+        ...rest
+    } = props as Extract<CardProps, { as?: string }>
     return (
-        <div className={classes} {...rest}>
+        <Tag {...rest} className={classes(false)}>
             {children}
-        </div>
+        </Tag>
     )
 }

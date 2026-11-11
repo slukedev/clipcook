@@ -1,1 +1,1 @@
-export { LinearProgress, LoadingIndicator } from './progress'
+export { CircularProgress, LinearProgress } from './progress'

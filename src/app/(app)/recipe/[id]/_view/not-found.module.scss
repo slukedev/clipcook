@@ -1,0 +1,8 @@
+.root {
+    display: grid;
+    place-items: center;
+    min-block-size: 100dvh;
+    padding: var(--md-sys-layout-margin);
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+}

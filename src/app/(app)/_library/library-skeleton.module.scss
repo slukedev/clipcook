@@ -1,0 +1,32 @@
+@use "../../../styles/mixins/typography" as type;
+
+// Placeholders borrow the real page, card and list classes for their geometry;
+// these only paint the boxes.
+.search {
+    display: block;
+    block-size: 56px;
+}
+
+.chip {
+    flex: none;
+}
+
+.media.media {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1;
+    border-radius: var(--md-sys-shape-corner-large-increased);
+
+    [data-view="list"] > & {
+        inline-size: 72px;
+        border-radius: var(--md-sys-shape-corner-medium);
+    }
+}
+
+.title {
+    @include type.role(title-medium);
+}
+
+.meta {
+    @include type.role(body-medium);
+}

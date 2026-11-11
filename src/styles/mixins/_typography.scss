@@ -1,18 +1,53 @@
-// M3 type roles. Usage: @include type.role(body-large);
-// Emphasized variants bump weight per M3 Expressive: @include type.role(title-medium, $emphasized: true);
+@use "sass:list";
+@use "sass:map";
+
+// M3 type roles. `@include type.role(body-large)`; `$emphasized: true` for the
+// Expressive emphasized style. Emphasized display and headline roles also open up
+// Google Sans Flex's ROND axis: softer terminals for the few moments that carry voice.
+
+$roles: display-large display-medium display-small headline-large headline-medium headline-small title-large
+    title-medium title-small body-large body-medium body-small label-large label-medium label-small;
+
+$_rond: (
+    display-large: 100,
+    display-medium: 100,
+    display-small: 100,
+    headline-large: 60,
+    headline-medium: 60,
+    headline-small: 60,
+);
 
 @mixin role($role, $emphasized: false) {
-    font-family: var(--md-sys-typescale-#{$role}-font-family-name);
-    font-style: var(--md-sys-typescale-#{$role}-font-family-style);
-    font-size: var(--md-sys-typescale-#{$role}-font-size);
-    letter-spacing: var(--md-sys-typescale-#{$role}-tracking);
-    line-height: var(--md-sys-typescale-#{$role}-height);
-    text-transform: var(--md-sys-typescale-#{$role}-text-transform);
-    text-decoration: var(--md-sys-typescale-#{$role}-text-decoration);
-
-    @if $emphasized {
-        font-weight: calc(var(--md-sys-typescale-#{$role}-font-weight) + 100);
-    } @else {
-        font-weight: var(--md-sys-typescale-#{$role}-font-weight);
+    @if not list.index($roles, $role) {
+        @error "Unknown type role #{$role}";
     }
+    $prefix: "";
+    $rond: 0;
+    @if $emphasized {
+        $prefix: "emphasized-";
+        $rond: map.get($_rond, $role) or 0;
+    }
+    font-family: var(--md-sys-typescale-#{$role}-font);
+    font-size: var(--md-sys-typescale-#{$role}-size);
+    line-height: var(--md-sys-typescale-#{$role}-line-height);
+    font-weight: var(--md-sys-typescale-#{$prefix}#{$role}-weight);
+    letter-spacing: var(--md-sys-typescale-#{$prefix}#{$role}-tracking);
+    font-variation-settings:
+        "ROND" #{$rond},
+        "GRAD" var(--md-sys-typescale-grade, 0);
+}
+
+// Quantities, timers and anything that ticks: digits stop jittering.
+@mixin numeric {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
+// Section subheads inside an ingredient or step list ("For the marinade"): one
+// style everywhere, sitting on the list's own edge with no extra inset.
+//   .subhead { @include type.subhead; }
+@mixin subhead {
+    @include role(title-small, $emphasized: true);
+    padding-inline: 0;
+    color: var(--md-sys-color-primary);
 }

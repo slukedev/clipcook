@@ -1,0 +1,144 @@
+@use "../../../../../styles/mixins/typography" as type;
+@use "../../../../../styles/mixins/state-layer";
+@use "../../../../../styles/mixins/focus-ring";
+
+// Inline in running text: an assist-chip look that sits on the line without breaking it.
+.chip {
+    @include state-layer.host;
+    @include focus-ring.ring;
+    @include type.role(label-large);
+    @include type.numeric;
+
+    --md-icon-size: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    vertical-align: middle;
+    block-size: 32px;
+    margin-block: -4px;
+    margin-inline: 2px;
+    padding-inline: 8px 12px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-small);
+    background-color: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default),
+        border-radius var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    // 48dp target without growing the line.
+    &::after {
+        content: "";
+        position: absolute;
+        inset: -8px -2px;
+    }
+
+    &:active {
+        border-radius: var(--md-sys-shape-corner-extra-small);
+    }
+
+    &[data-state="running"],
+    &[data-state="paused"] {
+        border-color: transparent;
+        background-color: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+        border-radius: var(--md-sys-shape-corner-large);
+    }
+
+    &[data-state="paused"] .label {
+        opacity: 0.72;
+    }
+
+    &[data-state="done"] {
+        border-color: transparent;
+        background-color: var(--md-sys-color-tertiary);
+        color: var(--md-sys-color-on-tertiary);
+        border-radius: var(--md-sys-shape-corner-large);
+        animation: timer-ring 1.2s var(--md-sys-motion-easing-emphasized) infinite;
+    }
+}
+
+.icon {
+    display: inline-grid;
+    color: var(--md-sys-color-primary);
+
+    .chip:not([data-state="idle"]) & {
+        color: inherit;
+    }
+}
+
+.label {
+    transition: opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+}
+
+.large {
+    @include type.role(title-medium);
+    --md-icon-size: 24px;
+    block-size: 56px;
+    margin: 0;
+    gap: 8px;
+    padding-inline: 16px 20px;
+    border-radius: var(--md-sys-shape-corner-large);
+
+    &::after {
+        inset: 0;
+    }
+
+    &[data-state="running"],
+    &[data-state="paused"],
+    &[data-state="done"] {
+        border-radius: var(--md-sys-shape-corner-extra-large);
+    }
+}
+
+@keyframes timer-ring {
+    0%,
+    100% {
+        scale: 1;
+    }
+    50% {
+        scale: 1.06;
+    }
+}
+
+// A chip and the punctuation after it wrap together, with no gap before the period.
+.run {
+    white-space: nowrap;
+
+    > .chip {
+        margin-inline-end: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chip[data-state="done"] {
+        animation: timer-ring-fade 1.6s ease-in-out infinite;
+    }
+}
+
+@keyframes timer-ring-fade {
+    50% {
+        opacity: 0.7;
+    }
+}
+
+@media print {
+    .chip {
+        display: inline;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        // biome-ignore lint/complexity/noImportantStyles: print beats the running, paused and done state colors
+        background: none !important;
+        // biome-ignore lint/complexity/noImportantStyles: print beats the running, paused and done state colors
+        color: inherit !important;
+        font: inherit;
+    }
+
+    .icon {
+        display: none;
+    }
+}

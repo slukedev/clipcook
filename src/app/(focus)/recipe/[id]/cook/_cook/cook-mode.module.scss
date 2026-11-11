@@ -1,0 +1,470 @@
+@use "../../../../../../styles/mixins/typography" as type;
+@use "../../../../../../styles/mixins/media";
+
+// Cook mode: one step at a time, readable at arm's length, and always one screen tall.
+// Rows: bar, progress, the step, the timer dock, Back and Next. On expanded windows the
+// ingredients sit beside the step and the dock. The layout is pure CSS, so the server
+// HTML is already the right one for the window.
+.root {
+    display: grid;
+    grid-template:
+        "bar" auto
+        "progress" auto
+        "stage" minmax(0, 1fr)
+        "dock" auto
+        "controls" auto / minmax(0, 1fr);
+    block-size: 100dvh;
+    overflow: hidden;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    padding-block-start: var(--safe-top);
+    padding-inline: var(--safe-left) var(--safe-right);
+
+    ::selection {
+        background-color: var(--md-sys-color-tertiary-container);
+        color: var(--md-sys-color-on-tertiary-container);
+    }
+
+    @include media.expanded-up {
+        grid-template:
+            "bar bar" auto
+            "progress progress" auto
+            "stage side" minmax(0, 1fr)
+            "dock side" auto
+            "controls controls" auto / minmax(0, 1fr) clamp(300px, 32vw, 420px);
+        column-gap: 24px;
+    }
+}
+
+// Compact-only controls: the ingredients button and the "Uses" chips (the pane replaces both).
+.root :is(.actions, .card) .compactOnly {
+    @include media.expanded-up {
+        display: none;
+    }
+}
+
+.bar {
+    grid-area: bar;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-block-size: 64px;
+    padding-inline: 4px 8px;
+}
+
+.heading {
+    flex: 1;
+    min-inline-size: 0;
+    padding-inline: 8px;
+}
+
+.recipeTitle {
+    @include type.role(title-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.counter {
+    @include type.role(label-medium);
+    @include type.numeric;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+// A soft ring breathes around the mic while it listens.
+.micWrap {
+    position: relative;
+    display: inline-flex;
+    border-radius: 9999px;
+
+    &[data-listening]::after {
+        content: "";
+        position: absolute;
+        inset: 2px;
+        border-radius: inherit;
+        border: 2px solid var(--md-sys-color-primary);
+        pointer-events: none;
+        animation: cook-listening 1.6s var(--md-sys-motion-easing-standard) infinite;
+    }
+}
+
+@keyframes cook-listening {
+    0% {
+        opacity: 0.9;
+        scale: 0.9;
+    }
+    100% {
+        opacity: 0;
+        scale: 1.35;
+    }
+}
+
+.progress {
+    grid-area: progress;
+    display: flex;
+    gap: 4px;
+    padding: 4px var(--md-sys-layout-margin) 8px;
+}
+
+.segment {
+    flex: 1;
+    block-size: 6px;
+    border-radius: 9999px;
+    background-color: var(--md-sys-color-secondary-container);
+    transition: background-color var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default);
+
+    &[data-state="done"] {
+        background-color: var(--md-sys-color-primary);
+    }
+
+    &[data-state="current"] {
+        background-color: var(--md-sys-color-primary);
+        block-size: 10px;
+        margin-block: -2px;
+    }
+}
+
+// The stage is a size container: type and the step number scale with its height as well
+// as its width, and use-fit-text steps the type down when a long step still overflows.
+.stage {
+    grid-area: stage;
+    container: stage / size;
+    min-block-size: 0;
+    padding: clamp(12px, 4cqb, 40px) var(--md-sys-layout-margin) 16px;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    outline: none;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+
+    @include media.expanded-up {
+        padding-inline: clamp(24px, 4vw, 80px) 0;
+    }
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(12px, 4cqb, 32px);
+
+    // A wide, short stage (a 1024x600 display, a phone on its side) puts the number beside the text.
+    @container stage (aspect-ratio > 1.3) {
+        flex-direction: row;
+        gap: clamp(20px, 3cqi, 40px);
+    }
+}
+
+.number {
+    display: grid;
+    place-items: center;
+    flex: none;
+    color: var(--md-sys-color-primary-container);
+
+    > * {
+        grid-area: 1 / 1;
+    }
+}
+
+.numberShape {
+    --md-shape-size: clamp(56px, min(12cqi, 18cqb), 128px);
+}
+
+.numberText {
+    @include type.role(display-small, $emphasized: true);
+    @include type.numeric;
+    font-size: clamp(1.625rem, min(5cqi, 8cqb), 3.5rem);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.card {
+    // The largest size the step may take; fitting only ever goes down from here, and the
+    // measure stays tied to it so smaller type does not mean shorter lines.
+    --_type: clamp(1.375rem, min(0.75rem + 4.4cqi, 14cqb), 3.25rem);
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: clamp(12px, 3cqb, 28px);
+    min-inline-size: 0;
+    max-inline-size: calc(var(--_type) * 21);
+    font-size: var(--_type);
+
+    &[data-enter="next"] {
+        animation:
+            cook-in-next var(--md-sys-motion-spring-spatial-default-duration)
+                var(--md-sys-motion-spring-spatial-default) both,
+            cook-fade var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
+                both;
+    }
+
+    &[data-enter="prev"] {
+        animation:
+            cook-in-prev var(--md-sys-motion-spring-spatial-default-duration)
+                var(--md-sys-motion-spring-spatial-default) both,
+            cook-fade var(--md-sys-motion-spring-effects-default-duration) var(--md-sys-motion-spring-effects-default)
+                both;
+    }
+}
+
+@keyframes cook-in-next {
+    from {
+        transform: translateX(56px);
+    }
+}
+
+@keyframes cook-in-prev {
+    from {
+        transform: translateX(-56px);
+    }
+}
+
+@keyframes cook-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+:dir(rtl) .card {
+    &[data-enter="next"] {
+        animation-name: cook-in-prev, cook-fade;
+    }
+
+    &[data-enter="prev"] {
+        animation-name: cook-in-next, cook-fade;
+    }
+}
+
+.section {
+    @include type.role(title-medium, $emphasized: true);
+    color: var(--md-sys-color-secondary);
+}
+
+.stepText {
+    font-family: var(--md-sys-typescale-headline-large-font);
+    font-size: 1em;
+    font-weight: 400;
+    line-height: 1.32;
+    letter-spacing: 0;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+    // The stage swallows drags for paging; the words themselves can still be selected and copied.
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.duration {
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+}
+
+.uses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 1rem;
+    list-style: none;
+}
+
+.use {
+    @include type.role(body-large);
+    padding: 8px 14px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.useAmount {
+    @include type.numeric;
+    font-weight: 600;
+}
+
+.side {
+    grid-area: side;
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    min-block-size: 0;
+    margin-block: 8px 16px;
+    padding: 20px 16px;
+    overflow-y: auto;
+    margin-inline-end: var(--md-sys-layout-margin);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    background-color: var(--md-sys-color-surface-container-low);
+    outline: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+
+    @include media.expanded-up {
+        display: flex;
+    }
+}
+
+.sideTitle {
+    @include type.role(title-large, $emphasized: true);
+    padding-inline: 4px;
+}
+
+.checklist {
+    --md-list-item-container: var(--md-sys-color-surface-container);
+}
+
+// The step's own timers and every running one, in one row that never scrolls away with
+// the step. A chip that starts docks into the tray beside it.
+.dock {
+    grid-area: dock;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px var(--md-sys-layout-margin) 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--md-sys-layout-margin);
+    scrollbar-width: none;
+
+    &:empty {
+        display: none;
+    }
+
+    @include media.expanded-up {
+        padding-inline-start: clamp(24px, 4vw, 80px);
+    }
+}
+
+.stepTimers {
+    display: flex;
+    flex: none;
+    gap: 12px;
+}
+
+.stepTimer {
+    display: contents;
+}
+
+.tray {
+    flex: none;
+}
+
+.controls {
+    grid-area: controls;
+    display: flex;
+    gap: 12px;
+    padding: 8px var(--md-sys-layout-margin) max(16px, var(--safe-bottom));
+}
+
+// Arm's-length targets where the window has the height for them: 56dp on short displays
+// (1024x600), growing to the 96dp large size on a tall tablet or desktop.
+// Reaches into the button's size tokens: Button has no per-breakpoint size yet.
+.controls > :is(.prev, .next)[data-size] {
+    @include media.expanded-up {
+        --_h: clamp(56px, 11dvh, 96px);
+        --_icon: clamp(24px, 4dvh, 32px);
+        --_pad: clamp(24px, 5dvh, 48px);
+        font-size: clamp(1rem, 0.5rem + 1.6dvh, 1.5rem);
+    }
+}
+
+.prev {
+    flex: 1;
+}
+
+.next {
+    flex: 2;
+}
+
+.live {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+// Finishing: shapes run through a quick morph and land on a check.
+.celebrate {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    background-color: color-mix(in srgb, var(--md-sys-color-surface) 86%, transparent);
+    animation: cook-fade var(--md-sys-motion-spring-effects-default-duration)
+        var(--md-sys-motion-spring-effects-default) both;
+}
+
+.celebrateShape {
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-primary);
+    animation: cook-pop var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast) both;
+
+    > * {
+        grid-area: 1 / 1;
+    }
+}
+
+.celebrateMorph {
+    --md-shape-size: clamp(160px, 32vmin, 280px);
+    animation: cook-spin 1.1s var(--md-sys-motion-easing-emphasized-decelerate) both;
+}
+
+.celebrateCheck {
+    --md-icon-size: clamp(64px, 12vmin, 112px);
+    color: var(--md-sys-color-on-primary);
+    opacity: 0;
+    scale: 0.6;
+    transition:
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
+        scale var(--md-sys-motion-spring-spatial-fast-duration) var(--md-sys-motion-spring-spatial-fast);
+
+    &[data-show] {
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+@keyframes cook-pop {
+    from {
+        scale: 0.6;
+    }
+}
+
+@keyframes cook-spin {
+    from {
+        rotate: -90deg;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card[data-enter="next"],
+    .card[data-enter="prev"] {
+        animation: cook-fade var(--md-sys-motion-spring-effects-default-duration)
+            var(--md-sys-motion-spring-effects-default) both;
+    }
+
+    .celebrateShape,
+    .celebrateMorph {
+        animation: none;
+    }
+
+    .micWrap[data-listening]::after {
+        animation: none;
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+// This surface never scrolls the page, so the page gives back the scrollbar gutter it
+// reserves elsewhere; otherwise classic scrollbars leave an empty strip at the right edge.
+:global(html):has(.root) {
+    scrollbar-gutter: auto;
+}

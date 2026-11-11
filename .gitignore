@@ -45,3 +45,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# local backend data (CLIPCOOK_BACKEND=local)
+/.data/
+
+# agent worktrees
+/.claude/worktrees/
+
+# end-to-end tests (Playwright)
+/.data-e2e/
+/playwright-report/
+/test-results/
+/state.json
+
+# Legacy export output
+/exports/

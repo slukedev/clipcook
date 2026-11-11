@@ -1,57 +1,78 @@
 import type { Metadata, Viewport } from 'next'
+import { Google_Sans_Flex } from 'next/font/google'
 import { headers } from 'next/headers'
-import { Roboto_Flex } from 'next/font/google'
 import { ServiceWorkerRegister } from '@/components/service-worker-register'
 import { ThemeProvider } from '@/components/theme/theme-provider'
-import { THEME_COOKIE } from '@/lib/theme/preference'
+import { SnackbarProvider } from '@/components/ui/snackbar'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { THEME_BOOTSTRAP } from '@/lib/theme/bootstrap'
+import { schemeFromSeed } from '@/lib/theme/scheme'
+import { BRAND_SEED } from '@/lib/theme/seed'
+import { getThemePreference } from '@/lib/theme/server'
 import '@/styles/globals.scss'
 
-const robotoFlex = Roboto_Flex({
-    subsets: ['latin'],
+const googleSansFlex = Google_Sans_Flex({
+    subsets: ['latin', 'latin-ext'],
     display: 'swap',
-    variable: '--font-roboto-flex',
-    axes: ['opsz', 'wdth', 'GRAD'],
+    variable: '--font-google-sans-flex',
+    axes: ['GRAD', 'ROND', 'opsz', 'wdth'],
 })
 
 export const metadata: Metadata = {
+    // Absolute URLs for the Open Graph image; without it Next points them at localhost:3000.
+    metadataBase: process.env.APP_URL ? new URL(process.env.APP_URL) : undefined,
     title: {
         default: 'ClipCook',
         template: '%s · ClipCook',
     },
-    description: 'Clip, keep, and cook your favorite recipes.',
+    description: 'Clip recipes from anywhere, keep them, and cook from them.',
+    applicationName: 'ClipCook',
     icons: {
         icon: '/favicon.ico',
         apple: '/apple-touch-icon.png',
     },
-    manifest: '/manifest.json',
+    formatDetection: { telephone: false },
+    appleWebApp: { capable: true, statusBarStyle: 'default', title: 'ClipCook' },
 }
+
+const lightSurface = schemeFromSeed(BRAND_SEED).surface
+const darkSurface = schemeFromSeed(BRAND_SEED, { dark: true }).surface
 
 export const viewport: Viewport = {
     width: 'device-width',
     initialScale: 1,
     viewportFit: 'cover',
+    interactiveWidget: 'resizes-content',
     themeColor: [
-        { media: '(prefers-color-scheme: light)', color: '#fdf7ff' },
-        { media: '(prefers-color-scheme: dark)', color: '#141218' },
+        { media: '(prefers-color-scheme: light)', color: lightSurface ?? '#ffffff' },
+        { media: '(prefers-color-scheme: dark)', color: darkSurface ?? '#000000' },
     ],
 }
 
-// Resolves the theme before first paint: explicit cookie choice wins,
-// otherwise the OS preference. Kept inline so it blocks paint, not load.
-const themeScript = `(function(){try{var m=document.cookie.match(/(?:^|; )${THEME_COOKIE}=(light|dark)/);var t=m?m[1]:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='dark'}})()`
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-    const nonce = (await headers()).get('x-nonce') ?? undefined
+    const [headerList, preference] = await Promise.all([headers(), getThemePreference()])
+    const nonce = headerList.get('x-nonce') ?? undefined
     return (
-        <html lang="en" className={robotoFlex.variable} suppressHydrationWarning>
+        <html
+            lang="en"
+            dir="ltr"
+            className={googleSansFlex.variable}
+            data-theme={preference.theme === 'system' ? undefined : preference.theme}
+            data-contrast={preference.contrast === 'standard' ? undefined : preference.contrast}
+            data-motion={preference.motion === 'standard' ? 'standard' : undefined}
+            suppressHydrationWarning
+        >
             <head>
-                {/* Browsers blank the nonce attribute on DOM reads (CSP spec), so the
-                    client always sees "" — suppress that known-benign hydration diff. */}
-                {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static pre-paint theme resolution */}
-                <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeScript }} />
+                {/* Browsers blank the nonce attribute on DOM reads (CSP), so the client sees "". */}
+                {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static pre-paint theme script */}
+                <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
             </head>
             <body>
-                <ThemeProvider>{children}</ThemeProvider>
+                <ThemeProvider initial={preference}>
+                    <TooltipProvider>
+                        <SnackbarProvider>{children}</SnackbarProvider>
+                    </TooltipProvider>
+                </ThemeProvider>
                 <ServiceWorkerRegister />
             </body>
         </html>

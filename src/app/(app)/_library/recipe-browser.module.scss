@@ -1,0 +1,88 @@
+@use "../../../styles/mixins/typography" as type;
+@use "../../../styles/mixins/media";
+
+// 2 columns on compact, 3 on medium, 4 on expanded, 5 on large, up to 6 beyond.
+.items {
+    --_cols: 2;
+    --_gap-x: 12px;
+    --_gap-y: 20px;
+
+    display: grid;
+    grid-template-columns: repeat(var(--_cols), minmax(0, 1fr));
+    gap: var(--_gap-y) var(--_gap-x);
+    list-style: none;
+
+    @include media.medium-up {
+        --_cols: 3;
+        --_gap-x: 16px;
+        --_gap-y: 24px;
+    }
+
+    @include media.expanded-up {
+        --_cols: 4;
+    }
+
+    @include media.large-up {
+        --_cols: 5;
+        --_gap-x: 20px;
+        --_gap-y: 28px;
+    }
+
+    @include media.extra-large-up {
+        --_cols: 6;
+    }
+
+    > li {
+        min-inline-size: 0;
+    }
+
+    // Segmented list: rows 2dp apart. Two columns once the window can hold them.
+    &[data-view="list"] {
+        --_cols: 1;
+
+        gap: 2px;
+
+        @include media.large-up {
+            --_cols: 2;
+
+            column-gap: 16px;
+        }
+    }
+}
+
+// Floats above the navigation bar on compact windows, near the bottom edge elsewhere.
+.selectionBar {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: calc(var(--cc-bottom-inset, var(--safe-bottom)) + 16px);
+    z-index: 30;
+    display: flex;
+    justify-content: center;
+    padding-inline: 16px;
+    pointer-events: none;
+    transition:
+        translate var(--md-sys-motion-spring-spatial-default-duration) var(--md-sys-motion-spring-spatial-default),
+        opacity var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast);
+
+    @starting-style {
+        translate: 0 24px;
+        opacity: 0;
+    }
+
+    > * {
+        pointer-events: auto;
+        max-inline-size: 100%;
+    }
+
+    @include media.medium-up {
+        inset-block-end: calc(24px + var(--safe-bottom));
+    }
+}
+
+.count {
+    @include type.role(label-large);
+    @include type.numeric;
+
+    padding-inline: 4px 8px;
+    white-space: nowrap;
+}

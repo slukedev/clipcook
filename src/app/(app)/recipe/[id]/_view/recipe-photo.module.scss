@@ -1,0 +1,38 @@
+.photo {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+// No photo: two overlapping MaterialShapes in the container roles, a dish glyph on top.
+.placeholder {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: hidden;
+    background-color: var(--md-sys-color-surface-container-high);
+
+    > * {
+        grid-area: 1 / 1;
+    }
+}
+
+.backShape {
+    --md-shape-size: min(66cqmin, 340px);
+    color: var(--md-sys-color-primary-container);
+    rotate: -8deg;
+}
+
+.frontShape {
+    --md-shape-size: min(28cqmin, 140px);
+    color: var(--md-sys-color-tertiary-container);
+    translate: 70% 55%;
+}
+
+.glyph {
+    --md-icon-size: min(22cqmin, 96px);
+    color: var(--md-sys-color-on-primary-container);
+}
