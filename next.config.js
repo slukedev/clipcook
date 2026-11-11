@@ -15,6 +15,8 @@ const nextConfig = {
             bodySizeLimit: '12mb',
         },
     },
+    // Starter recipe photos are read from disk by a server action.
+    outputFileTracingIncludes: { '/**': ['./src/server/starter/photos/*.webp'] },
     images: {
         remotePatterns: [
             { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
