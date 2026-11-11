@@ -1,7 +1,6 @@
 {
     "name": "clipcook",
     "version": "1.0.0",
-    "private": true,
     "engines": {
         "node": ">=24.12.0"
     },
@@ -12,6 +11,8 @@
         "lint": "biome lint .",
         "format": "biome format --write .",
         "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
         "generate:theme": "esbuild scripts/generate-theme.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/generate-theme.cjs --log-level=error && node node_modules/.cache/generate-theme.cjs",
         "generate:icons": "esbuild scripts/generate-icons.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/generate-icons.cjs --log-level=error && node node_modules/.cache/generate-icons.cjs"
     },
@@ -26,6 +27,7 @@
         "motion": "^14.12.0",
         "next": "^16.4.6",
         "parse-iso-duration": "^1.1.0",
+        "qrcode": "^1.5.4",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
         "sass": "^1.108.1",
@@ -40,6 +42,7 @@
         "@playwright/test": "1.63.0",
         "@types/js-quantities": "^1.6.6",
         "@types/node": "^26.6.6",
+        "@types/qrcode": "^1.5.6",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
         "babel-plugin-react-compiler": "^1.0.0",
@@ -58,5 +61,11 @@
         "protobufjs@7.6.5": true,
         "esbuild@0.28.1": true,
         "@parcel/watcher@2.5.6": true
-    }
+    },
+    "license": "GPL-3.0-only",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/slukedev/clipcook.git"
+    },
+    "private": true
 }
