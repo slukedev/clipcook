@@ -107,6 +107,7 @@ describe('settings data copy', () => {
     it('says what an export holds', () => {
         expect(exportSummary(18, 4)).toBe('18 recipes, 4 collections and grocery list')
         expect(exportSummary(1, 0)).toBe('1 recipe and grocery list')
+        expect(exportSummary(0, 0)).toBe('Recipes, collections and grocery list')
     })
 
     it('says what an import added', () => {
