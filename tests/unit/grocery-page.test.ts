@@ -105,17 +105,26 @@ describe('grocery aisles', () => {
 
 describe('settings data copy', () => {
     it('says what an export holds', () => {
-        expect(exportSummary(18, 4)).toBe('18 recipes, 4 collections and grocery list')
-        expect(exportSummary(1, 0)).toBe('1 recipe and grocery list')
-        expect(exportSummary(0, 0)).toBe('Recipes, collections and grocery list')
+        expect(exportSummary(18, 4)).toBe('18 recipes, 4 collections, meal plan and grocery list')
+        expect(exportSummary(1, 0)).toBe('1 recipe, meal plan and grocery list')
+        expect(exportSummary(0, 0)).toBe('Recipes, collections, meal plan and grocery list')
     })
 
     it('says what an import added', () => {
-        const none = { recipesAdded: 0, recipesSkipped: 0, collectionsAdded: 0, groceryItemsAdded: 0 }
+        const none = {
+            recipesAdded: 0,
+            recipesSkipped: 0,
+            collectionsAdded: 0,
+            groceryItemsAdded: 0,
+            planEntriesAdded: 0,
+        }
         expect(importedMessage({ ...none, recipesAdded: 3, collectionsAdded: 1 })).toBe(
             'Added 3 recipes and 1 collection',
         )
         expect(importedMessage({ ...none, recipesAdded: 1, recipesSkipped: 2 })).toBe('Added 1 recipe. 2 already here.')
+        expect(importedMessage({ ...none, recipesAdded: 2, planEntriesAdded: 4 })).toBe(
+            'Added 2 recipes and 4 planned meals',
+        )
         expect(importedMessage({ ...none, recipesSkipped: 5 })).toBe('Everything in that file is already here')
     })
 })
