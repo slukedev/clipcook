@@ -1,9 +1,11 @@
 'use client'
 
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
+import Link from 'next/link'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { RecipeImage } from '@/components/recipe-image'
 import { Button } from '@/components/ui/button'
+import { IconButton } from '@/components/ui/icon-button'
 import { useFitText } from '@/lib/cook/use-fit-text'
 import type { Recipe } from '@/lib/domain/types'
 import { useSpring } from '@/lib/motion'
@@ -26,6 +28,7 @@ export interface RecipeIcons {
     time: ReactNode
     servings: ReactNode
     check: ReactNode
+    home: ReactNode
 }
 
 interface Step {
@@ -157,11 +160,19 @@ export function DisplayRecipe({ recipe, icons }: { recipe: Recipe; icons: Recipe
                 <aside className={styles.side}>
                     {mode === 'overview' ? (
                         <>
-                            {recipe.image && (
-                                <div className={styles.photo}>
-                                    <RecipeImage src={recipe.image} alt="" sizes="40vw" priority />
-                                </div>
-                            )}
+                            {/* The way back to the home screen, where the household picks what to cook. */}
+                            <div className={recipe.image ? styles.photo : styles.homeRow}>
+                                {recipe.image && <RecipeImage src={recipe.image} alt="" sizes="40vw" priority />}
+                                <IconButton
+                                    label="Home"
+                                    icon={icons.home}
+                                    variant="tonal"
+                                    size="m"
+                                    className={styles.home}
+                                    render={<Link href="/display" />}
+                                    nativeButton={false}
+                                />
+                            </div>
                             <h1 className={styles.title}>{recipe.title}</h1>
                             {meta.length > 0 && (
                                 <ul className={styles.meta}>

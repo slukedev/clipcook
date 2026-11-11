@@ -37,6 +37,7 @@ export default async function DisplayRecipePage({ params }: { params: Promise<{ 
                     time: <Icon name="schedule" />,
                     servings: <Icon name="restaurant" />,
                     check: <Icon name="check" />,
+                    home: <Icon name="arrow_back" />,
                 }}
             />
         </>
