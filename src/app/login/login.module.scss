@@ -1,8 +1,14 @@
 @use "../../styles/mixins/typography" as type;
 @use "../../styles/mixins/media";
 
-// Compact: the shape table on top, wordmark and one action below.
-// Expanded: the table fills a tonal panel on the start side.
+// Compact and portrait tablets: the shape table on top, wordmark and one action below.
+// Wide, landscape windows: the table fills a tonal panel on the start side.
+@mixin split {
+    @media (width >= 840px) and (aspect-ratio >= 1) {
+        @content;
+    }
+}
+
 .page {
     --paprika: var(--md-sys-color-primary-container);
     --saffron: var(--md-sys-color-tertiary-container);
@@ -19,7 +25,7 @@
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
 
-    @include media.expanded-up {
+    @include split {
         grid-template-rows: none;
         grid-template-columns: minmax(0, 1.1fr) minmax(360px, 1fr);
         gap: 24px;
@@ -42,7 +48,7 @@
     inline-size: min(100%, 52dvh, 480px);
     aspect-ratio: 1;
 
-    @include media.expanded-up {
+    @include split {
         container-type: size;
         inline-size: auto;
         block-size: 100%;
@@ -70,7 +76,7 @@
     animation-delay: calc(var(--_i) * 70ms);
     rotate: var(--_r, 0deg);
 
-    @include media.expanded-up {
+    @include split {
         // The table sits centered in the panel at a size the panel can hold.
         --_unit: min(100cqi, 72cqb, 640px);
     }
@@ -178,7 +184,7 @@
     padding-block: 24px 8px;
     text-align: center;
 
-    @include media.expanded-up {
+    @include split {
         align-items: flex-start;
         justify-content: center;
         gap: 40px;
@@ -192,7 +198,7 @@
     gap: 12px;
     justify-items: center;
 
-    @include media.expanded-up {
+    @include split {
         justify-items: start;
     }
 }
@@ -204,7 +210,7 @@
     color: var(--md-sys-color-on-surface-variant);
     text-wrap: balance;
 
-    @include media.expanded-up {
+    @include split {
         @include type.role(title-large);
 
         max-inline-size: 26ch;
@@ -220,7 +226,7 @@
         "ROND" 100,
         "GRAD" var(--md-sys-typescale-grade, 0);
 
-    @include media.expanded-up {
+    @include split {
         @include type.role(display-large, $emphasized: true);
 
         font-size: clamp(57px, 6vw, 88px);
@@ -243,7 +249,7 @@
         inline-size: 100%;
     }
 
-    @include media.expanded-up {
+    @include split {
         align-items: flex-start;
     }
 }

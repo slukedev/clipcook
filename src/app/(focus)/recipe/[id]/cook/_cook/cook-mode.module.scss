@@ -39,7 +39,7 @@
             "progress progress" auto
             "stage side" minmax(0, 1fr)
             "dock side" auto
-            "controls side" auto / minmax(0, 1fr) clamp(300px, 30vw, 440px);
+            "controls controls" auto / minmax(0, 1fr) clamp(300px, 30vw, 440px);
         column-gap: 24px;
         padding-inline: max(var(--safe-left), calc((100% - var(--cc-page-max)) / 2))
             max(var(--safe-right), calc((100% - var(--cc-page-max)) / 2));
@@ -51,6 +51,19 @@
                 "stage" minmax(0, 1fr)
                 "dock" auto
                 "controls" auto / minmax(0, 1fr);
+        }
+    }
+
+    // Big windows: the pane runs to the bottom and Back and Next stay under the step.
+    // Tablets keep the full-width row, where the buttons need every bit of room.
+    @include media.large-up {
+        &:not([data-prepping]) {
+            grid-template-areas:
+                "bar bar"
+                "progress progress"
+                "stage side"
+                "dock side"
+                "controls side";
         }
     }
 }
@@ -240,16 +253,17 @@
     }
 }
 
-// Before you start: time, tools and ingredients, read top to bottom like a page. On wide
-// windows the overview takes the whole frame: what to know on the left, and the ingredients
-// to gather on the right, in as many columns as fit.
+// Before you start: time, tools and ingredients, read top to bottom like a page. Once the
+// stage is wide (landscape tablets and up) the overview takes the whole frame: what to know
+// on the left, the ingredients to gather on the right. Portrait tablets keep the page and
+// put the ingredients in two columns.
 .prep {
     display: flex;
     flex-direction: column;
     gap: 24px;
-    max-inline-size: 720px;
+    max-inline-size: 880px;
 
-    @include media.expanded-up {
+    @container stage (inline-size >= 900px) {
         display: grid;
         grid-template:
             "title title" auto
@@ -299,6 +313,7 @@
 
 .fact {
     @include type.role(title-medium);
+    white-space: nowrap;
     @include type.numeric;
     display: inline-flex;
     align-items: center;
@@ -327,10 +342,13 @@
 
 .prepIngredients {
     grid-area: ingredients;
-    align-self: start;
+
+    @container stage (inline-size >= 900px) {
+        align-self: start;
+    }
 
     // Columns read top to bottom, the way people gather down a list.
-    @include media.expanded-up {
+    @container stage (inline-size >= 640px) {
         ul[data-segmented] {
             display: block;
             columns: 2 280px;
@@ -520,7 +538,7 @@
     gap: 12px;
     padding: 8px var(--_edge) max(16px, var(--safe-bottom));
 
-    @include media.expanded-up {
+    @include media.large-up {
         padding-inline-end: 0;
 
         [data-prepping] > & {
