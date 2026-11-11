@@ -2,7 +2,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageTransition } from '@/components/ui/view-transition'
 import styles from './_sections/sections.module.scss'
 
-const GROUPS = [3, 1, 1, 2]
+// Rows per section, as on the page: appearance, displays, clipping, data, account, about.
+const GROUPS = [3, 1, 1, 2, 2, 3]
 
 function Placeholder() {
     return (

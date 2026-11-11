@@ -11,7 +11,6 @@ import {
     DialogClose,
     DialogContent,
 } from '@/components/ui/dialog'
-import { EmptyState } from '@/components/ui/empty-state'
 import { IconButton } from '@/components/ui/icon-button'
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
 import { Shape } from '@/components/ui/shape'
@@ -93,21 +92,21 @@ export function DisplaysList({
 
     return (
         <section className={styles.listPane} aria-label="Your displays">
-            <div className={styles.listHeader}>
-                <Button icon={icons.add} className={styles.addButton} onClick={() => setAdding(true)}>
-                    Add display
-                </Button>
-            </div>
-
             {list.length === 0 ? (
-                <EmptyState
-                    className={styles.empty}
-                    shape="cookie12"
-                    icon={icons.display}
-                    title="No Displays Yet"
-                    titleAs="h2"
-                />
+                // Nothing linked yet: the how-to is the whole page, at every width.
+                <div className={styles.setup}>
+                    <h2 className={styles.sideTitle}>Add a Display</h2>
+                    {steps}
+                </div>
             ) : (
+                <div className={styles.listHeader}>
+                    <Button icon={icons.add} className={styles.addButton} onClick={() => setAdding(true)}>
+                        Add display
+                    </Button>
+                </div>
+            )}
+
+            {list.length > 0 && (
                 <ul className={styles.list}>
                     {list.map((display) => {
                         const active = isActive(display.lastSeenAt, now)
