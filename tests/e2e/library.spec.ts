@@ -110,3 +110,15 @@ test('deleting a recipe can be undone, and the undo sticks', async ({ page }) =>
     const { recipes } = await exportLibrary(page)
     expect(recipes.filter((r) => r.title === title)).toHaveLength(1)
 })
+
+test('a card menu goes straight into cook mode', async ({ page }) => {
+    const title = 'Big Green Salad with Feta and Lemon'
+    await page.goto('/')
+    const card = recipeGrid(page)
+        .getByRole('listitem')
+        .filter({ has: page.getByRole('link', { name: title }) })
+    await card.getByRole('button', { name: `More for ${title}` }).click()
+    await page.getByRole('menuitem', { name: 'Cook' }).click()
+    await expect(page).toHaveURL(/\/recipe\/[^/]+\/cook$/)
+    await expect(page.getByRole('heading', { name: 'Before You Start' })).toBeVisible()
+})

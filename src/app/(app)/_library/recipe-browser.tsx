@@ -147,7 +147,8 @@ export function RecipeBrowser({
     const onAction = (action: CardAction, id: string) => {
         const recipe = shown.find((r) => r.id === id)
         if (!recipe) return
-        if (action === 'collections') fileInto([recipe])
+        if (action === 'cook') router.push(`/recipe/${id}/cook`)
+        else if (action === 'collections') fileInto([recipe])
         else if (action === 'duplicate') duplicate(id)
         else if (action === 'select') toggleSelect(id, false)
         else if (action === 'remove') removeFrom([id])
@@ -155,8 +156,8 @@ export function RecipeBrowser({
     }
 
     const actions: CardAction[] = collection
-        ? ['collections', 'remove', 'duplicate', 'select', 'delete']
-        : ['collections', 'duplicate', 'select', 'delete']
+        ? ['cook', 'collections', 'remove', 'duplicate', 'select', 'delete']
+        : ['cook', 'collections', 'duplicate', 'select', 'delete']
 
     return (
         <>
