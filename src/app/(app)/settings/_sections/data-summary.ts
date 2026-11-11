@@ -4,6 +4,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 /** What the export file will hold, so people know it is everything. */
 export function exportSummary(recipes: number, collections: number): string {
+    if (recipes === 0 && collections === 0) return 'Recipes, collections and grocery list'
     const parts = [plural(recipes, 'recipe', 'recipes')]
     if (collections > 0) parts.push(plural(collections, 'collection', 'collections'))
     parts.push('grocery list')
