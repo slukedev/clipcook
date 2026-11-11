@@ -110,6 +110,39 @@ describe('POST /api/clip', () => {
 })
 
 describe('display endpoints', () => {
+    it('stores the device id a display sends, ignores a malformed one, and retires its old cookie', async () => {
+        const deviceId = '6f1c2a9e-3b4d-4e5f-8a7b-0c1d2e3f4a5b'
+        const start = (body: unknown) =>
+            r.pair
+                .POST(req('/api/display/pair', { method: 'POST', body: JSON.stringify(body) }))
+                .then((res) => res.json())
+        const store = await r.db.getStore()
+        const bad = await start({ deviceId: '../../x' })
+        expect((await store.getPairing(bad.pairingId))?.deviceId).toBeNull()
+
+        const first = await start({ deviceId })
+        expect((await store.getPairing(first.pairingId))?.deviceId).toBe(deviceId)
+        const firstClaim = await r.displays.claimDisplayCode(store, 'carol', first.code, 'Kitchen')
+        if (!firstClaim.ok) throw new Error(firstClaim.error)
+        const firstPoll = await r.status.GET(
+            req(`/api/display/pair/status?pairingId=${first.pairingId}&pollToken=${first.pollToken}`),
+        )
+        const oldCookie = /clipcook_display=([^;]+)/.exec(firstPoll.headers.get('set-cookie') ?? '')?.[1] ?? ''
+
+        // Same screen, linked to another account while it still holds the old cookie.
+        const second = await start({ deviceId })
+        const secondClaim = await r.displays.claimDisplayCode(store, 'dave', second.code, null)
+        expect(secondClaim.ok).toBe(true)
+        const secondPoll = await r.status.GET(
+            req(`/api/display/pair/status?pairingId=${second.pairingId}&pollToken=${second.pollToken}`, {
+                headers: { cookie: `clipcook_display=${oldCookie}` },
+            }),
+        )
+        expect(secondPoll.status).toBe(200)
+        expect(await store.listDisplays('carol')).toHaveLength(0)
+        expect(await store.listDisplays('dave')).toHaveLength(1)
+    })
+
     it('pairs, polls, sets the cookie, serves state with ETags, and revokes', async () => {
         const pairRes = await r.pair.POST(req('/api/display/pair', { method: 'POST' }))
         const pairing = await pairRes.json()

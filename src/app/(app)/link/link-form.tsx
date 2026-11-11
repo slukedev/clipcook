@@ -44,7 +44,8 @@ export function LinkForm({
     icons: Icons
 }) {
     const [code, setCode] = useState(initialCode)
-    const [name, setName] = useState(() => freeName('Kitchen', taken))
+    const [suggested] = useState(() => freeName('Kitchen', taken))
+    const [name, setName] = useState(suggested)
     const [error, setError] = useState<string | null>(null)
     const [linked, setLinked] = useState<KitchenDisplay | null>(null)
     const [focused, setFocused] = useState(false)
@@ -57,7 +58,9 @@ export function LinkForm({
         if (!complete || pending || clash) return
         setError(null)
         startTransition(async () => {
-            const res = await claimDisplayCode(code, name.trim() || 'Kitchen')
+            // An untouched suggestion lets a display that was linked before keep its name.
+            const typed = name.trim()
+            const res = await claimDisplayCode(code, typed && typed !== suggested ? typed : null)
             if (res.ok) setLinked(res.data)
             else {
                 setError(res.error)

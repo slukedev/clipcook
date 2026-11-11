@@ -45,5 +45,20 @@
             "next": "recommended",
             "react": "recommended"
         }
-    }
+    },
+    "overrides": [
+        {
+            // SCSS nests state rules (`.card:has(:active) &`) above base rules for other
+            // properties of the same element; the rule cannot tell those apart from real
+            // overrides, so it stays a warning to review rather than a CI failure.
+            "includes": ["**/*.scss"],
+            "linter": { "rules": { "style": { "noDescendingSpecificity": "warn" } } }
+        },
+        {
+            "includes": ["**/*.yml", "**/*.yaml"],
+            "formatter": {
+                "indentWidth": 2
+            }
+        }
+    ]
 }

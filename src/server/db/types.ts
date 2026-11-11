@@ -28,6 +28,27 @@ export interface DisplayRecord {
     version: number
     /** Set for displays created by a Cast receiver, so re-casting reuses the same entry. */
     castDeviceId: string | null
+    /** The browser's own id from local storage, so re-pairing the same screen reuses its entry. */
+    deviceId: string | null
+}
+
+/** How long a pairing code lives, and how long a claimed display has to collect its token. */
+export const PAIRING_TTL_MS = 10 * 60_000
+
+/** Claimed on a phone, but the display never collected its token in time: it can never show anything. */
+export function isAbandonedDisplay(record: Pick<DisplayRecord, 'tokenHash' | 'createdAt'>, now: number): boolean {
+    return record.tokenHash === null && now - record.createdAt > PAIRING_TTL_MS
+}
+
+/** What a re-pairing changes on the display entry it reuses. */
+export function reusedDisplayFields(existing: DisplayRecord, incoming: DisplayRecord): Partial<DisplayRecord> {
+    return {
+        name: incoming.name,
+        deviceId: incoming.deviceId,
+        // An entry that never linked gets a fresh collection window from this claim.
+        createdAt: existing.tokenHash === null ? incoming.createdAt : existing.createdAt,
+        version: existing.version + 1,
+    }
 }
 
 export interface PairingRecord {
@@ -37,6 +58,8 @@ export interface PairingRecord {
     createdAt: number
     expiresAt: number
     claimedBy: { uid: string; displayId: string } | null
+    /** Sent by the display that asked for the code; null for older clients. */
+    deviceId: string | null
 }
 
 export interface ClipDraftRecord {
@@ -100,7 +123,11 @@ export interface Store {
     getGroceryItems(uid: string): Promise<GroceryItem[]>
     updateGroceryItems(uid: string, mutate: (items: GroceryItem[]) => GroceryItem[]): Promise<GroceryItem[]>
 
-    listDisplays(uid: string): Promise<DisplayRecord[]>
+    /**
+     * Leaves out displays that were claimed but never collected their token within
+     * the pairing window; those can never show anything.
+     */
+    listDisplays(uid: string, now?: number): Promise<DisplayRecord[]>
     /** Unscoped read for display-cookie auth; callers must verify the token hash. */
     getDisplay(id: string): Promise<DisplayRecord | null>
     findCastDisplay(uid: string, castDeviceId: string): Promise<DisplayRecord | null>
@@ -114,8 +141,12 @@ export interface Store {
     getPairing(id: string): Promise<PairingRecord | null>
     /** The newest pairing with this code that has not expired. */
     findActivePairing(code: string, now: number): Promise<PairingRecord | null>
-    /** Atomically marks the pairing claimed and creates the display. */
-    claimPairing(pairingId: string, display: DisplayRecord, now: number): Promise<ClaimPairingResult>
+    /**
+     * Atomically marks the pairing claimed and creates the display. With `reuse`, an
+     * existing display of the same owner and id only takes the new name, device id
+     * and createdAt, keeping what it shows and its current token until collection.
+     */
+    claimPairing(pairingId: string, display: DisplayRecord, now: number, reuse?: boolean): Promise<ClaimPairingResult>
     /** Atomically hands a claimed pairing's display its token hash and deletes the pairing. */
     collectPairing(
         pairingId: string,

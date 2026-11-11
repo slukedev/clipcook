@@ -10,9 +10,11 @@ import {
     type CollectionRecord,
     type CollectPairingResult,
     type DisplayRecord,
+    isAbandonedDisplay,
     type Mutator,
     type PairingRecord,
     type RecipeRecord,
+    reusedDisplayFields,
     type Store,
     StoreError,
 } from './types'
@@ -273,10 +275,10 @@ export class LocalStore implements Store {
 
     // ---- displays
 
-    listDisplays(uid: string): Promise<DisplayRecord[]> {
+    listDisplays(uid: string, now = Date.now()): Promise<DisplayRecord[]> {
         return this.read((d) =>
             Object.values(d.displays)
-                .filter((x) => x.uid === uid)
+                .filter((x) => x.uid === uid && !isAbandonedDisplay(x, now))
                 .sort(byNewest),
         )
     }
@@ -347,14 +349,18 @@ export class LocalStore implements Store {
         )
     }
 
-    claimPairing(pairingId: string, display: DisplayRecord, now: number): Promise<ClaimPairingResult> {
+    claimPairing(pairingId: string, display: DisplayRecord, now: number, reuse = false): Promise<ClaimPairingResult> {
         return this.write((d) => {
             const p = d.pairings[pairingId]
             if (!p) return 'not_found'
             if (p.expiresAt <= now) return 'expired'
             if (p.claimedBy) return 'claimed'
             p.claimedBy = { uid: display.uid, displayId: display.id }
-            d.displays[display.id] = clone(display)
+            const existing = d.displays[display.id]
+            d.displays[display.id] =
+                reuse && existing?.uid === display.uid
+                    ? { ...existing, ...reusedDisplayFields(existing, display) }
+                    : clone(display)
             return 'ok'
         })
     }
@@ -434,6 +440,7 @@ function pruneExpired(d: LocalData, now: number): boolean {
     }
     // Claimed pairings linger a little so a display that was offline can still collect its token.
     drop(d.pairings, (p) => p.expiresAt + 60 * 60_000 < now)
+    drop(d.displays, (x) => isAbandonedDisplay(x, now))
     drop(d.drafts, (x) => x.expiresAt < now)
     drop(d.castTokens, (x) => x.expiresAt < now)
     return removed

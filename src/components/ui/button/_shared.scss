@@ -123,6 +123,7 @@
     // Press squares the corners off; it wins over every resting shape.
     &:active:not(:disabled, [data-disabled]),
     &[data-ripple-pressed] {
+        // biome-ignore lint/complexity/noImportantStyles: the pressed corner wins over every resting and selected shape
         --_radius: var(--_pressed) !important;
     }
 

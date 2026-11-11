@@ -11,9 +11,11 @@ import {
     type CollectionRecord,
     type CollectPairingResult,
     type DisplayRecord,
+    isAbandonedDisplay,
     type Mutator,
     type PairingRecord,
     type RecipeRecord,
+    reusedDisplayFields,
     type Store,
     StoreError,
 } from './types'
@@ -119,6 +121,7 @@ function displayFromData(id: string, d: Data): DisplayRecord {
         current: displayContentFrom(d.current),
         version: typeof d.version === 'number' ? d.version : 0,
         castDeviceId: typeof d.castDeviceId === 'string' ? d.castDeviceId : null,
+        deviceId: typeof d.deviceId === 'string' ? d.deviceId : null,
     }
 }
 
@@ -139,6 +142,7 @@ function pairingFromData(id: string, d: Data): PairingRecord {
             claimed && typeof claimed.uid === 'string' && typeof claimed.displayId === 'string'
                 ? { uid: claimed.uid, displayId: claimed.displayId }
                 : null,
+        deviceId: typeof d.deviceId === 'string' ? d.deviceId : null,
     }
 }
 
@@ -315,9 +319,17 @@ export class FirestoreStore implements Store {
 
     // ---- displays
 
-    async listDisplays(uid: string): Promise<DisplayRecord[]> {
+    async listDisplays(uid: string, now = Date.now()): Promise<DisplayRecord[]> {
         const snap = await this.db.collection(DISPLAYS).where('uid', '==', uid).get()
-        return snap.docs.map((d) => displayFromData(d.id, d.data())).sort(byNewest)
+        const all = snap.docs.map((d) => displayFromData(d.id, d.data()))
+        const abandoned = all.filter((d) => isAbandonedDisplay(d, now))
+        if (abandoned.length > 0) {
+            // No TTL policy can express "token never collected", so listing cleans up.
+            const batch = this.db.batch()
+            for (const d of abandoned) batch.delete(this.db.collection(DISPLAYS).doc(d.id))
+            await batch.commit().catch(() => undefined)
+        }
+        return all.filter((d) => !isAbandonedDisplay(d, now)).sort(byNewest)
     }
 
     async getDisplay(id: string): Promise<DisplayRecord | null> {
@@ -400,18 +412,26 @@ export class FirestoreStore implements Store {
         )
     }
 
-    claimPairing(pairingId: string, display: DisplayRecord, now: number): Promise<ClaimPairingResult> {
+    claimPairing(pairingId: string, display: DisplayRecord, now: number, reuse = false): Promise<ClaimPairingResult> {
         const pairingRef = this.db.collection(PAIRINGS).doc(pairingId)
         const displayRef = this.db.collection(DISPLAYS).doc(display.id)
         return this.db.runTransaction(async (tx) => {
-            const snap = await tx.get(pairingRef)
+            const [snap, displaySnap] = await Promise.all([
+                tx.get(pairingRef),
+                reuse ? tx.get(displayRef) : Promise.resolve(null),
+            ])
             const data = snap.data()
             if (!snap.exists || !data) return 'not_found'
             const p = pairingFromData(pairingId, data)
             if (p.expiresAt <= now) return 'expired'
             if (p.claimedBy) return 'claimed'
             tx.update(pairingRef, { claimedBy: { uid: display.uid, displayId: display.id } })
-            tx.create(displayRef, displayToDoc(display))
+            const existingData = displaySnap?.exists ? displaySnap.data() : undefined
+            if (existingData && existingData.uid === display.uid) {
+                tx.update(displayRef, reusedDisplayFields(displayFromData(display.id, existingData), display))
+            } else {
+                tx.set(displayRef, displayToDoc(display))
+            }
             return 'ok'
         })
     }

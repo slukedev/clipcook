@@ -15,8 +15,11 @@ const CLAIM_ERRORS: Record<displays.ClaimError, string> = {
     too_many_displays: 'Remove a display before adding another.',
 }
 
-/** Links the display showing `code` to this account. Rate limited per user against guessing. */
-export async function claimDisplayCode(code: string, name: string): Promise<ActionResult<KitchenDisplay>> {
+/**
+ * Links the display showing `code` to this account. Rate limited per user against guessing.
+ * `name` is null when the cook kept the suggested name, so a re-paired display keeps its own.
+ */
+export async function claimDisplayCode(code: string, name: string | null): Promise<ActionResult<KitchenDisplay>> {
     return withUser(async ({ user, store }) => {
         const limit = rateLimit('pairClaim', user.uid)
         if (!limit.ok) return fail('Too many tries. Wait a few minutes and try again.')
@@ -25,7 +28,7 @@ export async function claimDisplayCode(code: string, name: string): Promise<Acti
             store,
             user.uid,
             typeof code === 'string' ? code : '',
-            cleanName.success ? cleanName.data : 'Kitchen display',
+            cleanName.success ? cleanName.data : null,
         )
         if (!result.ok) return fail(CLAIM_ERRORS[result.error])
         invalidateApp()

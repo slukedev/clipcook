@@ -151,6 +151,7 @@ textarea::placeholder {
 }
 
 [hidden] {
+    // biome-ignore lint/complexity/noImportantStyles: the hidden attribute must win over any display rule
     display: none !important;
 }
 
@@ -176,6 +177,7 @@ textarea::placeholder {
     *::before,
     *::after {
         animation-iteration-count: 1;
+        // biome-ignore lint/complexity/noImportantStyles: reduced motion overrides every smooth scroll
         scroll-behavior: auto !important;
     }
 }

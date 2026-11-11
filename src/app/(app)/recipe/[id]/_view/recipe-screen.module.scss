@@ -333,11 +333,12 @@
 
 @media (prefers-reduced-motion: reduce) {
     .photo {
-        animation: none !important;
+        animation: none;
     }
 }
 
 // Paper: no chrome, no controls, ingredients in two columns, steps full width.
+// biome-ignore-start lint/complexity/noImportantStyles: print must beat every screen rule, inline styles included
 @media print {
     :global(body):has(.root) *:not(:has(.root), .root, .root *) {
         display: none !important;
@@ -397,6 +398,7 @@
     .chips {
         display: none !important;
     }
+    // biome-ignore-end lint/complexity/noImportantStyles: print block above
 
     .summary {
         margin: 0;
