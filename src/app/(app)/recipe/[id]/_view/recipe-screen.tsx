@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ViewTransition } from 'react'
+import { CastButton } from '@/components/kitchen/cast-button'
 import { Button } from '@/components/ui/button'
 import { AssistChip, ChipSet } from '@/components/ui/chip'
 import { Icon } from '@/components/ui/icon'
@@ -72,6 +73,11 @@ export function RecipeScreen({
                                 notes: recipe.notes,
                             }}
                             displays={displays}
+                            castSlot={
+                                process.env.NEXT_PUBLIC_CAST_APP_ID ? (
+                                    <CastButton recipeId={recipe.id} icon={icons.cast} />
+                                ) : undefined
+                            }
                             collections={collections}
                             icons={{
                                 favorite: icons.favorite,
