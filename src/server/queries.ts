@@ -1,7 +1,15 @@
 import 'server-only'
 
 import { cache } from 'react'
-import type { Collection, GroceryItem, KitchenDisplay, Recipe, RecipeSummary, TagCount } from '@/lib/domain/types'
+import type {
+    Collection,
+    GroceryItem,
+    KitchenDisplay,
+    PlanEntry,
+    Recipe,
+    RecipeSummary,
+    TagCount,
+} from '@/lib/domain/types'
 import { runAfter } from './after'
 import { getStore } from './db'
 import { toKitchenDisplay } from './displays'
@@ -86,6 +94,10 @@ export const listTags = cache(async (uid: string): Promise<TagCount[]> => {
 
 export const getGroceryList = cache(async (uid: string): Promise<GroceryItem[]> => {
     return (await getStore()).getGroceryItems(uid)
+})
+
+export const getPlanEntries = cache(async (uid: string): Promise<PlanEntry[]> => {
+    return (await getStore()).getPlanEntries(uid)
 })
 
 export const listDisplays = cache(async (uid: string): Promise<KitchenDisplay[]> => {

@@ -25,6 +25,7 @@
         { "collectionGroup": "allRecipes", "fieldPath": "notes", "indexes": [] },
         { "collectionGroup": "allRecipes", "fieldPath": "description", "indexes": [] },
         { "collectionGroup": "groceryLists", "fieldPath": "items", "indexes": [] },
+        { "collectionGroup": "mealPlans", "fieldPath": "entries", "indexes": [] },
         { "collectionGroup": "clipDrafts", "fieldPath": "recipe", "indexes": [] },
         {
             "collectionGroup": "clipDrafts",

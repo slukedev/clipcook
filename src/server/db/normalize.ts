@@ -89,6 +89,7 @@ export function summaryOf(r: RecipeRecord): RecipeSummary {
     return {
         id: r.id,
         title: r.title,
+        servings: r.servings,
         thumbnail: r.thumbnail,
         seedColor: r.seedColor,
         tags: r.tags,

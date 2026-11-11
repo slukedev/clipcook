@@ -2,6 +2,7 @@ import 'server-only'
 
 import { z } from 'zod'
 import { EXPORT_SCHEMA, type ImportCounts, LIMITS } from '@/lib/domain/types'
+import { addEntries, planEntriesFrom, sameMeal } from '@/lib/plan/entries'
 import { lineToGroceryItem, MAX_GROCERY_ITEMS } from '@/lib/recipe/grocery'
 import { deriveTotalMinutes } from '@/lib/recipe/time'
 import { normalizeTags } from './db/normalize'
@@ -18,10 +19,11 @@ export function exportStream(store: Store, uid: string, now = new Date()): Reada
     return new ReadableStream<Uint8Array>({
         async start(controller) {
             try {
-                const [recipes, collections, grocery] = await Promise.all([
+                const [recipes, collections, grocery, plan] = await Promise.all([
                     store.listRecipes(uid),
                     store.listCollections(uid),
                     store.getGroceryItems(uid),
+                    store.getPlanEntries(uid),
                 ])
                 const push = (s: string) => controller.enqueue(encoder.encode(s))
                 push(
@@ -34,6 +36,18 @@ export function exportStream(store: Store, uid: string, now = new Date()): Reada
                 push(JSON.stringify(collections.map((c) => ({ id: c.id, name: c.name, createdAt: c.createdAt }))))
                 push(',"grocery":')
                 push(JSON.stringify(grocery))
+                push(',"plan":')
+                push(
+                    JSON.stringify(
+                        plan.map((e) => ({
+                            date: e.date,
+                            meal: e.meal,
+                            recipeId: e.recipeId,
+                            note: e.note,
+                            servings: e.servings,
+                        })),
+                    ),
+                )
                 push('}\n')
                 controller.close()
             } catch (err) {
@@ -98,6 +112,20 @@ const exportSchema = z.object({
         .max(MAX_GROCERY_ITEMS)
         .catch([])
         .default([]),
+    // Added after v1 shipped: older exports have no plan, and a damaged one is skipped.
+    plan: z
+        .array(
+            z.object({
+                date: z.string().max(10),
+                meal: z.string().max(20).catch('dinner'),
+                recipeId: z.string().max(128).nullable().catch(null).default(null),
+                note: z.string().max(LIMITS.shortText).catch('').default(''),
+                servings: z.number().nullable().catch(null).default(null),
+            }),
+        )
+        .max(LIMITS.planEntries)
+        .catch([])
+        .default([]),
 })
 
 export type ExportFile = z.infer<typeof exportSchema>
@@ -154,7 +182,13 @@ export async function importExport(
         store.listRecipes(uid),
         store.listCollections(uid),
     ])
-    const counts: ImportCounts = { recipesAdded: 0, recipesSkipped: 0, collectionsAdded: 0, groceryItemsAdded: 0 }
+    const counts: ImportCounts = {
+        recipesAdded: 0,
+        recipesSkipped: 0,
+        collectionsAdded: 0,
+        groceryItemsAdded: 0,
+        planEntriesAdded: 0,
+    }
 
     const collectionMap = new Map<string, string>()
     const byName = new Map(existingCollections.map((c) => [c.name.trim().toLowerCase(), c.id]))
@@ -180,6 +214,8 @@ export async function importExport(
 
     const ids = new Set(existingRecipes.map((r) => r.id))
     const keys = new Set(existingRecipes.map(dedupeKey))
+    // Where each recipe of the file lives after the import, for remapping the plan.
+    const idByKey = new Map(existingRecipes.map((r) => [dedupeKey(r), r.id]))
     const toCreate = file.recipes.filter((r) => {
         const key = dedupeKey(r)
         if ((r.id && ids.has(r.id)) || keys.has(key)) {
@@ -235,6 +271,7 @@ export async function importExport(
             updatedAt: now,
         }
         await store.createRecipe(record)
+        idByKey.set(dedupeKey(r), id)
         counts.recipesAdded++
     })
 
@@ -252,6 +289,35 @@ export async function importExport(
             // Assigned, not incremented: Firestore may run this callback more than once.
             counts.groceryItemsAdded = out.length - items.length
             return out
+        })
+    }
+
+    if (file.plan.length) {
+        const recipeIdMap = new Map<string, string>()
+        for (const r of file.recipes) {
+            if (!r.id) continue
+            const target = ids.has(r.id) ? r.id : idByKey.get(dedupeKey(r))
+            if (target) recipeIdMap.set(r.id, target)
+        }
+        const incoming = planEntriesFrom(
+            file.plan.map((e) => ({
+                ...e,
+                id: store.newId(),
+                // A recipe that did not come across drops out; notes always do.
+                recipeId: e.recipeId ? (recipeIdMap.get(e.recipeId) ?? 'missing') : null,
+                groceryAddedAt: null,
+                createdAt: now,
+            })),
+        ).filter((e) => e.recipeId !== 'missing')
+        await store.updatePlanEntries(uid, (entries) => {
+            const fresh: typeof incoming = []
+            for (const e of incoming) {
+                if (entries.length + fresh.length >= LIMITS.planEntries) break
+                if (entries.some((x) => sameMeal(x, e)) || fresh.some((x) => sameMeal(x, e))) continue
+                fresh.push(e)
+            }
+            counts.planEntriesAdded = fresh.length
+            return addEntries(entries, fresh)
         })
     }
     return counts

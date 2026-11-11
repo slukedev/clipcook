@@ -1,7 +1,9 @@
 import { randomBytes } from 'node:crypto'
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import type { GroceryItem, RecipeSummary } from '@/lib/domain/types'
+import type { GroceryItem, PlanEntry, RecipeSummary } from '@/lib/domain/types'
+import { finalizePlan, PlanLimitError, planEntriesFrom } from '@/lib/plan/entries'
+import { todayIn } from '@/lib/plan/week'
 import { byNewest, recipeFromData, summaryOf } from './normalize'
 import {
     type CastTokenRecord,
@@ -24,6 +26,8 @@ interface LocalData {
     recipes: Record<string, RecipeRecord>
     collections: Record<string, CollectionRecord>
     grocery: Record<string, GroceryItem[]>
+    /** Added after v1 shipped; older files load without it. */
+    plans: Record<string, PlanEntry[]>
     displays: Record<string, DisplayRecord>
     pairings: Record<string, PairingRecord>
     drafts: Record<string, ClipDraftRecord>
@@ -36,6 +40,7 @@ function emptyData(): LocalData {
         recipes: {},
         collections: {},
         grocery: {},
+        plans: {},
         displays: {},
         pairings: {},
         drafts: {},
@@ -269,6 +274,27 @@ export class LocalStore implements Store {
         return this.write((d) => {
             const next = mutate(clone(d.grocery[uid] ?? []))
             d.grocery[uid] = next
+            return next
+        })
+    }
+
+    // ---- meal plan
+
+    getPlanEntries(uid: string): Promise<PlanEntry[]> {
+        return this.read((d) => planEntriesFrom(d.plans[uid]))
+    }
+
+    updatePlanEntries(uid: string, mutate: (entries: PlanEntry[]) => PlanEntry[]): Promise<PlanEntry[]> {
+        return this.write((d) => {
+            const current = planEntriesFrom(d.plans[uid])
+            let next: PlanEntry[]
+            try {
+                next = finalizePlan(current, mutate(clone(current)), todayIn('UTC'))
+            } catch (err) {
+                if (err instanceof PlanLimitError) throw new StoreError('LIMIT', err.message)
+                throw err
+            }
+            d.plans[uid] = next
             return next
         })
     }

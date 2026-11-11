@@ -67,6 +67,7 @@ async function wipe(store: Store, uid: string): Promise<number> {
     for (const c of collections) await store.deleteCollection(uid, c.id)
     for (const d of displays) await store.deleteDisplay(uid, d.id)
     await store.updateGroceryItems(uid, () => [])
+    await store.updatePlanEntries(uid, () => [])
     return recipes.length
 }
 

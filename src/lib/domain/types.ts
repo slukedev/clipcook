@@ -35,6 +35,7 @@ export type RecipeSummary = Pick<
     Recipe,
     | 'id'
     | 'title'
+    | 'servings'
     | 'thumbnail'
     | 'seedColor'
     | 'tags'
@@ -87,6 +88,24 @@ export interface GroceryItem {
     checked: boolean
     recipeIds: string[]
     addedAt: number
+}
+
+export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+
+/** One meal on the plan: a recipe, or a note such as 'Leftovers' or 'Eat out'. */
+export interface PlanEntry {
+    id: string
+    /** A calendar date with no time zone, YYYY-MM-DD. */
+    date: string
+    meal: MealSlot
+    recipeId: string | null
+    /** Free text for entries without a recipe; '' for recipe entries. */
+    note: string
+    /** Servings to cook, which scales grocery quantities; null means the recipe's own. */
+    servings: number | null
+    /** When the entry's ingredients last went on the grocery list. */
+    groceryAddedAt: number | null
+    createdAt: number
 }
 
 export interface DisplayContent {
@@ -159,6 +178,7 @@ export interface ImportCounts {
     recipesSkipped: number
     collectionsAdded: number
     groceryItemsAdded: number
+    planEntriesAdded: number
 }
 
 export const EXPORT_SCHEMA = 'clipcook.export.v1' as const
@@ -173,6 +193,9 @@ export const LIMITS = {
     collectionName: 60,
     collections: 200,
     groceryItems: 500,
+    planEntries: 600,
+    planNote: 120,
+    planServings: 99,
     displayName: 40,
     displays: 20,
 } as const

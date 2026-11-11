@@ -133,8 +133,15 @@ export async function updateRecipe(
     return { record, removedStorage: photo.kind === 'remove' && existing.imagePath !== null }
 }
 
+/** Deletes the recipe, then takes it off the meal plan. */
 export async function deleteRecipe(store: Store, uid: string, id: string): Promise<RecipeRecord> {
-    return store.deleteRecipe(uid, id)
+    const deleted = await store.deleteRecipe(uid, id)
+    try {
+        await store.updatePlanEntries(uid, (entries) => entries.filter((e) => e.recipeId !== id))
+    } catch {
+        // The plan already renders a missing recipe as gone; never fail the delete over it.
+    }
+    return deleted
 }
 
 /** Best-effort Storage cleanup; an orphaned object costs pennies, a failed delete must not surface. */

@@ -161,7 +161,13 @@ describe('export and import', () => {
         await seed()
         const text = await exportText('alice')
         const first = await importExport(store, 'bob', parseExport(text))
-        expect(first).toEqual({ recipesAdded: 1, recipesSkipped: 0, collectionsAdded: 1, groceryItemsAdded: 1 })
+        expect(first).toEqual({
+            recipesAdded: 1,
+            recipesSkipped: 0,
+            collectionsAdded: 1,
+            groceryItemsAdded: 1,
+            planEntriesAdded: 0,
+        })
         const [bobRecipe] = await store.listRecipes('bob')
         const [bobCollection] = await store.listCollections('bob')
         expect(bobRecipe?.id).not.toBe('r1')
@@ -169,7 +175,13 @@ describe('export and import', () => {
         expect(bobRecipe?.favorite).toBe(true)
 
         const second = await importExport(store, 'bob', parseExport(text))
-        expect(second).toEqual({ recipesAdded: 0, recipesSkipped: 1, collectionsAdded: 0, groceryItemsAdded: 0 })
+        expect(second).toEqual({
+            recipesAdded: 0,
+            recipesSkipped: 1,
+            collectionsAdded: 0,
+            groceryItemsAdded: 0,
+            planEntriesAdded: 0,
+        })
         expect((await store.getRecipe('alice', 'r1'))?.title).toBe('Leek Soup')
     })
 
