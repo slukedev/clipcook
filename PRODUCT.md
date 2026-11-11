@@ -13,6 +13,7 @@ A household often shares one kitchen display (Echo Show, Nest Hub, an old tablet
 
 - Clips recipes from links, shares, a bookmarklet, or pasted text, and keeps the source.
 - Organizes them with favorites, collections and tags, with instant search.
+- Gives a first-time cook a starter set of recipes and an overview of what to gather before step one.
 - Cooks one step at a time with timers, scaling, and an awake screen.
 - Plans the week's meals, leads with tonight's dish, and shops for the week at the planned servings.
 - Builds a grocery list from recipes, merged and grouped by aisle.
