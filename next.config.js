@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Next 16.2's file tracing keeps sharp's loader but drops the libvips shared library
+    // it opens, so every server render failed on Vercel with ERR_DLOPEN_FAILED.
+    outputFileTracingIncludes: {
+        '/**': ['./node_modules/@img/sharp-libvips-linux-x64/lib/**/*'],
+    },
     reactStrictMode: true,
     poweredByHeader: false,
     reactCompiler: true,
