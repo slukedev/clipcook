@@ -54,7 +54,7 @@
 .selectionBar {
     position: fixed;
     inset-inline: 0;
-    inset-block-end: calc(64px + 16px + var(--safe-bottom));
+    inset-block-end: calc(var(--cc-bottom-inset, var(--safe-bottom)) + 16px);
     z-index: 30;
     display: flex;
     justify-content: center;

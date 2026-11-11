@@ -152,7 +152,6 @@ export function RecipeScreen({
                                                 <Link href={`/recipe/${recipe.id}/cook`} transitionTypes={['cook']} />
                                             }
                                             nativeButton={false}
-                                            role="link"
                                         >
                                             Cook
                                         </Button>
@@ -166,7 +165,6 @@ export function RecipeScreen({
                                                 icon={<Icon name="folder" />}
                                                 render={<Link href={`/collections/${c.id}`} />}
                                                 nativeButton={false}
-                                                role="link"
                                             >
                                                 {c.name}
                                             </AssistChip>
@@ -177,7 +175,6 @@ export function RecipeScreen({
                                                 icon={<Icon name="sell" />}
                                                 render={<Link href={`/?tag=${encodeURIComponent(tag)}`} />}
                                                 nativeButton={false}
-                                                role="link"
                                             >
                                                 {tag}
                                             </AssistChip>
@@ -216,7 +213,6 @@ export function RecipeScreen({
                                     trailingIcon={<Icon name="open_in_new" />}
                                     render={<a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" />}
                                     nativeButton={false}
-                                    role="link"
                                 >
                                     {source ? `Original on ${source}` : 'Original recipe'}
                                 </Button>

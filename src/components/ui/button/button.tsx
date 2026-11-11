@@ -4,6 +4,7 @@ import { Button as BaseButton } from '@base-ui/react/button'
 import { Toggle } from '@base-ui/react/toggle'
 import type { ComponentProps, ReactNode } from 'react'
 import { cx } from '../cx'
+import { linkSemantics } from '../internal/link-semantics'
 import { LoadingIndicator } from '../loading-indicator/loading-indicator'
 import { Ripple } from '../ripple/ripple'
 import styles from './button.module.scss'
@@ -126,6 +127,7 @@ export function Button(props: ButtonProps) {
         <BaseButton
             {...buttonRest}
             {...shared}
+            {...linkSemantics(buttonRest.render, buttonRest.role)}
             onClick={loading ? (event) => event.preventDefault() : onClick}
             focusableWhenDisabled={loading || buttonRest.focusableWhenDisabled}
         >

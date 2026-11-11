@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react'
 import { Icon } from '@/components/ui/icon'
-import { PrintIcon } from './print-icon'
 
 // Icons are drawn on the server and handed to client components as elements, so the
 // full Material Symbols map never reaches the browser.
@@ -18,7 +17,7 @@ export function recipeIcons() {
         copy: <Icon name="content_copy" />,
         folder: <Icon name="folder" />,
         share: <Icon name="share" />,
-        print: <PrintIcon />,
+        print: <Icon name="print" />,
         delete: <Icon name="delete" />,
         cart: <Icon name="add_shopping_cart" />,
         timer: <Icon name="timer" />,

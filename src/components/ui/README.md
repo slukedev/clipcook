@@ -50,9 +50,9 @@ schemeFromSeed('#C8321E', { dark: true, contrast: 'high', variant: 'content' }) 
 
 ## Theme preference
 
-- `getThemePreference()` (server, `@/lib/theme/server`) returns `{ theme: 'system' | 'light' | 'dark', contrast: 'standard' | 'medium' | 'high' }` from cookies.
-- `useThemePreference()` (client, `@/components/theme/theme-provider`) returns `{ theme, contrast, resolvedTheme, setTheme, setContrast }`. Changes write the cookie and crossfade with a view transition.
-- The root layout sets `data-theme` and `data-contrast` during SSR, and a nonce'd inline script repeats that before paint for cached HTML. System mode needs no script.
+- `getThemePreference()` (server, `@/lib/theme/server`) returns `{ theme: 'system' | 'light' | 'dark', contrast: 'standard' | 'medium' | 'high', motion: 'expressive' | 'standard' }` from cookies.
+- `useThemePreference()` (client, `@/components/theme/theme-provider`) returns `{ theme, contrast, motion, resolvedTheme, setTheme, setContrast, setMotion }`. Changes write the cookie; theme and contrast crossfade with a view transition.
+- The root layout sets `data-theme`, `data-contrast` and `data-motion` during SSR, and a nonce'd inline script repeats that before paint for cached HTML. System mode needs no script.
 
 ## Motion in JS
 
@@ -125,10 +125,10 @@ const router = useViewTransitionRouter(); router.push('/grocery', 'fade')
 `NavigationBar` (`label`) holds 3 to 5 `NavigationBarItem` (`href`, `icon`, `selectedIcon`, `label`, `badge`, `selected`). Selection follows the pathname unless `selected` is set. Compact windows stack the icon over the label; 600px and up put them side by side.
 
 ### NavigationRail `@/components/ui/navigation-rail`
-`expanded` / `defaultExpanded` / `onExpandedChange`, `modal` (expanded rail floats with a scrim), `expandable`, `fab` (use `RailFab` with `icon`, `label`, `href` | `onClick`; it collapses with the rail). Items: `NavigationRailItem` (same props as NavigationBarItem). `useRailExpanded()`.
+`expanded` / `defaultExpanded` / `onExpandedChange`, `modal` (expanded rail floats with a scrim), `expandable`, `fab` (use `RailFab` with `icon`, `label`, `href` | `onClick`; it collapses with the rail). Items: `NavigationRailItem` (same props as NavigationBarItem). `useRailExpanded()`. The modal expanded rail traps focus, closes on Escape, the scrim or a destination, and returns focus to the menu button. Counts move to the end of the pill while expanded.
 
 ### TopAppBar `@/components/ui/top-app-bar`
-`title`, `subtitle`, `variant`: small | medium | large, `centered`, `leading`, `trailing`, `titleAs` (h1 default). The row pins while the medium and large titles scroll away under it. This is a scroll-driven animation on window scroll, with a JS fallback.
+`title`, `subtitle`, `variant`: small | medium | large, `centered`, `leading`, `trailing`, `titleAs` (h1 default). Without `leading`, the title starts at `--md-sys-layout-margin` so it lines up with the page body. The row pins while the medium and large titles scroll away under it. This is a scroll-driven animation on window scroll, with a JS fallback.
 
 ### Search, SearchBar `@/components/ui/search`
 `SearchBar`: an inline filter field in the bar shape (`value`, `onValueChange`, `onSubmit`, `placeholder`, `leading`, `trailing`). `Search`: a bar that opens a search view, full screen below 840px and docked above. Takes the same props plus `children` (suggestions or results), `open`, `onOpenChange`.
@@ -178,7 +178,7 @@ const router = useViewTransitionRouter(); router.push('/grocery', 'fade')
 `@/components/ui/bottom-sheet`: `BottomSheet` (Base UI Drawer root: `open`, `onOpenChange`, `modal`, `snapPoints`, `snapPoint`) holds `BottomSheetTrigger` and `BottomSheetContent` (`title`, `hideTitle`, `standard`). Dragging dismisses with velocity. `@/components/ui/side-sheet`: `SideSheet`, `SideSheetTrigger`, `SideSheetContent` (`title`, `actions`).
 
 ### Snackbar `@/components/ui/snackbar`
-`SnackbarProvider` is mounted in the root layout. `const snackbar = useSnackbar()` takes either a string or an options object: `snackbar('Saved')` or `snackbar({ message, action, onAction, closable, duration, urgent })`. Snackbars queue and show one at a time. Swipe dismisses them. Timers pause on hover, focus and a hidden tab. Lift them above a bottom bar with `--md-snackbar-offset`.
+`SnackbarProvider` is mounted in the root layout. `const snackbar = useSnackbar()` takes either a string or an options object: `snackbar('Saved')` or `snackbar({ message, action, onAction, onClose, closable, duration, urgent })`. Pressing the action runs `onAction` and dismisses the snackbar. `onClose(reason)` runs once with `'timeout' | 'action' | 'dismiss' | 'swipe'`. Snackbars queue and show one at a time. Swipe dismisses them. Timers pause on hover, focus and a hidden tab. Lift them above a bottom bar with `--md-snackbar-offset`.
 
 ### Tooltip, RichTooltip `@/components/ui/tooltip`
 `<Tooltip content="Share"><IconButton .../></Tooltip>`. After the first tooltip opens, its neighbors open instantly. `RichTooltip` takes `subhead`, `text` and `actions`; it is a popover that opens on hover or press.
@@ -197,6 +197,6 @@ const router = useViewTransitionRouter(); router.push('/grocery', 'fade')
 - `Avatar`: `src`, `name`, `size`, `shape` (any MaterialShape).
 - `Divider`: `vertical`, `inset`. Full width only.
 - `Skeleton`: `width`, `height`, `shape`: text | rect | circle | pill | small | medium | large | extra-large, `lines`. Mark the loading region `aria-busy`.
-- `EmptyState`: `shape`, `icon`, `title`, `description`, `action`, `titleAs`.
+- `EmptyState`: `shape`, `icon`, `title`, `description`, `action`, `titleAs` (h1, h2 default, h3, p).
 - `Kbd`, `VisuallyHidden`.
 - `Ripple`: drop it in any `position: relative` interactive element for the M3 press ripple. It also sets `data-ripple-pressed` on that element.

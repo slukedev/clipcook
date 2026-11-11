@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { createContext, type ReactNode, use, useEffect, useState } from 'react'
+import { createContext, type ReactNode, use, useEffect, useRef, useState } from 'react'
 import { Badge } from '../badge/badge'
 import { cx } from '../cx'
 import { ExtendedFab } from '../fab/fab'
@@ -11,6 +11,8 @@ import { type NavItemProps, useNavSelected } from '../navigation-bar/navigation-
 import styles from './navigation-rail.module.scss'
 
 const RailContext = createContext(false)
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /** Whether the surrounding rail is expanded. */
 export function useRailExpanded(): boolean {
@@ -51,17 +53,59 @@ export function NavigationRail({
         onExpandedChange?.(next)
     }
     const floating = modal && expanded
+    const navRef = useRef<HTMLElement>(null)
+    const menuRef = useRef<HTMLButtonElement>(null)
 
+    // The floating rail is modal: Tab cycles inside it, Escape closes it, and focus
+    // goes back to the menu button when it closes.
     useEffect(() => {
         if (!floating) return
+        const nav = navRef.current
+        if (!nav) return
+        const close = () => {
+            setUncontrolled(false)
+            onExpandedChange?.(false)
+        }
+        const focusables = () =>
+            [...nav.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.getClientRects().length > 0)
         const onKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                setUncontrolled(false)
-                onExpandedChange?.(false)
+                event.preventDefault()
+                close()
+                return
+            }
+            if (event.key !== 'Tab') return
+            const list = focusables()
+            const first = list[0]
+            const last = list[list.length - 1]
+            if (!first || !last) return
+            const current = document.activeElement
+            if (event.shiftKey && (current === first || !nav.contains(current))) {
+                event.preventDefault()
+                last.focus()
+            } else if (!event.shiftKey && (current === last || !nav.contains(current))) {
+                event.preventDefault()
+                first.focus()
             }
         }
-        window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
+        // Picking a destination closes the floating rail, like a modal drawer.
+        const onClick = (event: MouseEvent) => {
+            if (event.target instanceof Element && event.target.closest('a[href]')) close()
+        }
+        const onFocusIn = (event: FocusEvent) => {
+            if (event.target instanceof Node && !nav.contains(event.target)) focusables()[0]?.focus()
+        }
+        if (!nav.contains(document.activeElement)) focusables()[0]?.focus()
+        document.addEventListener('keydown', onKey)
+        document.addEventListener('focusin', onFocusIn)
+        nav.addEventListener('click', onClick)
+        return () => {
+            nav.removeEventListener('click', onClick)
+            document.removeEventListener('keydown', onKey)
+            document.removeEventListener('focusin', onFocusIn)
+            const active = document.activeElement
+            if (!active || active === document.body || nav.contains(active)) menuRef.current?.focus()
+        }
     }, [floating, onExpandedChange])
 
     return (
@@ -69,6 +113,7 @@ export function NavigationRail({
             {floating && <div className={styles.placeholder} aria-hidden />}
             {floating && <div className={styles.scrim} onClick={() => setExpanded(false)} aria-hidden />}
             <nav
+                ref={navRef}
                 aria-label={label}
                 className={cx(styles.rail, className)}
                 data-expanded={expanded || undefined}
@@ -77,6 +122,7 @@ export function NavigationRail({
                 <div className={styles.header}>
                     {expandable && (
                         <IconButton
+                            ref={menuRef}
                             label={expanded ? 'Collapse navigation' : 'Expand navigation'}
                             icon={<Glyph name={expanded ? 'menu_open' : 'menu'} />}
                             onClick={() => setExpanded(!expanded)}
@@ -102,16 +148,21 @@ export function NavigationRailItem({
     ...rest
 }: NavItemProps) {
     const active = useNavSelected(href, selected)
+    const expanded = useRailExpanded()
+    const count = typeof badge === 'number' ? badge : undefined
+    // A count beside the expanded label sits at the end of the pill; dots stay on the icon.
+    const trailingCount = expanded && count !== undefined
     return (
         <Link href={href} aria-current={active ? 'page' : undefined} className={cx(styles.item, className)} {...rest}>
             <span className={styles.indicator}>
                 <span className={styles.icons}>
                     {active && selectedIcon ? selectedIcon : icon}
-                    {badge !== undefined && badge !== false && (
-                        <Badge className={styles.badge} value={badge === true ? undefined : badge} />
+                    {badge !== undefined && badge !== false && !trailingCount && (
+                        <Badge className={styles.badge} value={count} />
                     )}
                 </span>
                 <span className={styles.innerLabel}>{label}</span>
+                {trailingCount && <Badge className={styles.trailingBadge} value={count} />}
             </span>
             <span className={styles.label}>{label}</span>
         </Link>

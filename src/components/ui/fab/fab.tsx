@@ -4,6 +4,7 @@ import { Button as BaseButton } from '@base-ui/react/button'
 import { Menu as BaseMenu } from '@base-ui/react/menu'
 import type { ComponentProps, CSSProperties, ReactNode } from 'react'
 import { cx } from '../cx'
+import { linkSemantics } from '../internal/link-semantics'
 import { Glyph } from '../icon/glyph'
 import { useScrollHidden } from '../internal/use-scroll-hidden'
 import { Ripple } from '../ripple/ripple'
@@ -46,6 +47,7 @@ export function Fab({
             data-vibrant={vibrant || undefined}
             data-lowered={lowered || undefined}
             {...rest}
+            {...linkSemantics(rest.render, rest.role)}
         >
             <Ripple />
             <span className={styles.icon}>{icon}</span>
@@ -87,6 +89,7 @@ export function ExtendedFab({
             data-collapsed={isCollapsed || undefined}
             style={{ '--_h': height } as CSSProperties}
             {...rest}
+            {...linkSemantics(rest.render, rest.role)}
         >
             <Ripple />
             <span className={styles.icon}>{icon}</span>

@@ -7,6 +7,7 @@ import { exportStream, ImportError, importExport, parseExport } from '@/server/d
 import { LocalStore } from '@/server/db/local'
 import { clientIp, rateLimit, resetRateLimits } from '@/server/rate-limit'
 import { saveClipDraft, loadClipDraft, CLIP_DRAFT_TTL_MS } from '@/server/clip-drafts'
+import { pickSeedColor } from '@/server/images'
 
 describe('local session cookie', () => {
     const secret = 's'.repeat(32)
@@ -193,5 +194,36 @@ describe('export and import', () => {
             }),
         )
         expect(file.recipes[0]).toMatchObject({ servings: '4', sourceUrl: null, tags: [], cookCount: 0 })
+    })
+})
+
+describe('pickSeedColor', () => {
+    const argb = (hex: string) => (0xff000000 | Number.parseInt(hex.slice(1), 16)) >>> 0
+    const hex = (value: number) => `#${(value & 0xffffff).toString(16).padStart(6, '0')}`
+
+    it('prefers the food over a large dark, low-chroma pan', () => {
+        const shakshuka = new Map([
+            [argb('#3e434a'), 5200],
+            [argb('#aea699'), 1500],
+            [argb('#cf3c21'), 1800],
+            [argb('#fafef4'), 600],
+        ])
+        expect(hex(pickSeedColor(shakshuka))).toBe('#cf3c21')
+    })
+
+    it('keeps the top scored color when it is already chromatic', () => {
+        const curry = new Map([
+            [argb('#c87a15'), 4000],
+            [argb('#235254'), 1200],
+        ])
+        expect(hex(pickSeedColor(curry))).toBe('#c87a15')
+    })
+
+    it('falls back to the most common color for a gray photo, not a stock blue', () => {
+        const gray = new Map([
+            [argb('#808080'), 3000],
+            [argb('#202020'), 1000],
+        ])
+        expect(hex(pickSeedColor(gray))).toBe('#808080')
     })
 })

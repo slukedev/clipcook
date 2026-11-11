@@ -59,6 +59,7 @@ const ICONS = [
     'send',
     'share',
     'ios_share',
+    'print',
     'content_copy',
     'content_paste',
     'link',
