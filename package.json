@@ -23,8 +23,8 @@
         "@base-ui/react": "^1.9.0",
         "@material/material-color-utilities": "^0.4.0",
         "cheerio": "^1.2.0",
-        "firebase": "^13.2.0",
-        "firebase-admin": "^14.5.0",
+        "firebase": "^13.4.0",
+        "firebase-admin": "^14.5.1",
         "fraction.js": "^5.3.4",
         "js-quantities": "^1.8.0",
         "motion": "^14.12.0",
@@ -55,7 +55,8 @@
         "vitest": "^5.1.0"
     },
     "overrides": {
-        "jose": "^5.10.0"
+        "jose": "^5.10.0",
+        "@grpc/grpc-js": "^1.14.7"
     },
     "allowScripts": {
         "sharp@0.34.5": true,
