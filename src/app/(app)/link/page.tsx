@@ -8,8 +8,8 @@ import { requireSession } from '@/server/auth'
 import { listDisplays } from '@/server/queries'
 import { requestOrigin } from '../settings/_sections/origin'
 import { CODE_LENGTH, normalizeCode } from './code'
-import { LinkForm } from './link-form'
 import styles from './link.module.scss'
+import { LinkForm } from './link-form'
 
 export const metadata: Metadata = { title: 'Link a Display' }
 

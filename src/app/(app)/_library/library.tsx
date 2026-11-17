@@ -2,7 +2,16 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { type ReactNode, startTransition, useDeferredValue, useEffect, useRef, useState, useTransition, ViewTransition } from 'react'
+import {
+    type ReactNode,
+    startTransition,
+    useDeferredValue,
+    useEffect,
+    useRef,
+    useState,
+    useTransition,
+    ViewTransition,
+} from 'react'
 import { addStarterRecipes, searchRecipes } from '@/actions/recipes'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'

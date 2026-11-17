@@ -184,8 +184,8 @@
 }
 
 ::view-transition-old(.cc-cook) {
-    animation: var(--cc-vt-fade-out) var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
-        both;
+    animation: var(--cc-vt-fade-out) var(--md-sys-motion-spring-effects-fast-duration)
+        var(--md-sys-motion-spring-effects-fast) both;
 }
 
 ::view-transition-new(.cc-cook) {
@@ -235,8 +235,8 @@
 
 // Skeleton to content: a straight crossfade with no gap between them.
 ::view-transition-old(.cc-reveal) {
-    animation: var(--cc-vt-fade-out) var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast)
-        both;
+    animation: var(--cc-vt-fade-out) var(--md-sys-motion-spring-effects-fast-duration)
+        var(--md-sys-motion-spring-effects-fast) both;
 }
 
 ::view-transition-new(.cc-reveal) {
