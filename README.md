@@ -10,38 +10,30 @@
   <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fslukedev%2Fclipcook&env=FIREBASE_ADMIN_PROJECT_ID,FIREBASE_ADMIN_CLIENT_EMAIL,FIREBASE_ADMIN_PRIVATE_KEY,NEXT_PUBLIC_FIREBASE_API_KEY,NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,NEXT_PUBLIC_FIREBASE_PROJECT_ID,NEXT_PUBLIC_FIREBASE_APP_ID&envDescription=Firebase%20service%20account%20and%20web%20app%20config.%20See%20the%20README%20for%20setup.&envLink=https%3A%2F%2Fgithub.com%2Fslukedev%2Fclipcook%23deploying-with-firebase&project-name=clipcook&repository-name=clipcook"><img src="https://vercel.com/button" alt="Deploy with Vercel"></a>
 </p>
 
-ClipCook is an open-source recipe keeper built on Material 3 Expressive. Paste a link, share from your phone, or use the bookmarklet, and ClipCook pulls out the ingredients, steps, photo and times without the life story. Then cook from a full-screen step view, build a grocery list, and put the recipe on the kitchen display in one tap.
-
-## Screenshots
+ClipCook is an open-source recipe keeper built on Material 3 Expressive. Paste a link, share from your phone, or use the bookmarklet, and ClipCook pulls out the ingredients, steps, photo and times without the life story. Then cook from a full-screen step view, build a grocery list, and send the recipe to your kitchen display in one tap.
 
 <p align="center">
-  <img src="docs/screenshots/desktop-library.png" alt="The ClipCook library on desktop" width="900">
+  <img src="docs/screenshots/desktop-library.png" alt="The ClipCook library on desktop" width="880">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/mobile-library.png" alt="Library on a phone" width="180">
-  <img src="docs/screenshots/mobile-recipe.png" alt="A recipe on a phone" width="180">
-  <img src="docs/screenshots/mobile-plan.png" alt="Meal plan on a phone" width="180">
-  <img src="docs/screenshots/mobile-grocery.png" alt="Grocery list on a phone" width="180">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/desktop-recipe.png" alt="A recipe on desktop" width="440">
-  <img src="docs/screenshots/desktop-collections.png" alt="Collections on desktop" width="440">
+  <img src="docs/screenshots/mobile-recipe.png" alt="A recipe on a phone" width="240">
+  <img src="docs/screenshots/mobile-collections.png" alt="Collections on a phone" width="240">
+  <img src="docs/screenshots/mobile-grocery.png" alt="The grocery list on a phone" width="240">
 </p>
 
 ## Features
 
-- **Clip from anywhere.** Paste a link, share to ClipCook from Android or desktop Chrome (it installs as an app), use the bookmarklet on sites that block servers, or paste the recipe as text. Reads schema.org JSON-LD, microdata, the common WordPress recipe plugins, and falls back to heading detection.
-- **Cook mode.** Opens on what to gather and when you'll be done, then one step at a time in large type, swipe or tap to move, the screen stays awake, timers start from the step text, ingredients for the current step are highlighted, and optional hands-free voice control.
-- **Kitchen displays.** Open ClipCook once on an Echo Show, a tablet, or any browser and pair it with a short code. After that, send a recipe from your phone in one tap, and cook mode keeps the display on the same step. Google Cast to a Nest Hub works when a Cast app id is configured.
-- **Meal plan.** Plan the week by day and meal, see tonight's dish first with a Cook button, move meals by menu or drag and drop, and put the whole week on the grocery list scaled to the servings you plan.
-- **Grocery list.** Add ingredients from any recipe at the scale you are cooking. Items merge, group by aisle in store order, re-add in one tap, and check off offline.
-- **Library.** Starter recipes for a new, empty library, instant search, favorites, collections, tags, and sorting by recent, cooked or quickest.
-- **Scaling.** Servings scale every quantity, with proper fractions.
-- **Dynamic color.** Every recipe page takes its colors from the photo.
+- **Clip from anywhere.** Paste a link, share from Android or desktop Chrome (ClipCook installs as an app), use the bookmarklet on sites that block servers, or paste the recipe as text. The clipper reads schema.org JSON-LD, microdata and the common WordPress recipe plugins, and falls back to heading detection.
+- **Cook mode.** Starts with what to gather and when you'll be done, then shows one step at a time in large type. Swipe or tap to move, timers start from the step text, the current step's ingredients are highlighted, and the screen stays awake. Hands-free voice control is optional.
+- **Kitchen displays.** Open ClipCook once on an Echo Show, a tablet or any browser and pair it with a short code. After that, send a recipe from your phone in one tap, and the display follows along as you cook. Google Cast to a Nest Hub works when a Cast app id is configured.
+- **Meal plan.** Plan the week by day and meal, see tonight's dish first, move meals by menu or drag and drop, and add the whole week to the grocery list at the servings you planned.
+- **Grocery list.** Add ingredients from any recipe at the scale you're cooking. Items merge, group by aisle in store order, and check off offline.
+- **Library.** Instant search, favorites, collections, tags, and sorting by recent, most cooked or quickest. New accounts start with a few starter recipes.
+- **Scaling.** Change the servings and every quantity follows, with proper fractions.
+- **Dynamic color.** Each recipe page takes its colors from the photo.
 - **Your data.** Export everything as JSON and import it back.
-- **Light, dark, contrast and motion settings**, keyboard support throughout, and layouts designed for phones, tablets, desktops and smart displays.
+- **Accessible everywhere.** Light, dark, contrast and motion settings, keyboard support throughout, and layouts for phones, tablets, desktops and smart displays.
 
 ## Quick start
 
@@ -60,7 +52,7 @@ Open http://localhost:3000. Without Firebase configured, ClipCook runs on a loca
 ClipCook stores data in Firestore and signs people in with Google through Firebase Auth. Photos go to Firebase Storage when the project has a bucket, and are stored inline otherwise.
 
 1. Create a Firebase project. Enable **Authentication > Google**, and **Firestore** in production mode. Storage is optional.
-2. Copy `.env.example` to `.env.local` (or your host's environment settings) and fill in the `FIREBASE_ADMIN_*` service account values and the `NEXT_PUBLIC_FIREBASE_*` web app config. Set `APP_URL` to your public origin.
+2. Copy `.env.example` to `.env.local`, or use your host's environment settings, and fill in the `FIREBASE_ADMIN_*` service account values and the `NEXT_PUBLIC_FIREBASE_*` web app config. Set `APP_URL` to your public origin.
 3. Deploy the security rules and indexes:
 
    ```bash
@@ -77,7 +69,9 @@ ClipCook stores data in Firestore and signs people in with Google through Fireba
    npm start
    ```
 
-   On Vercel, use the Deploy button at the top of this README, which clones the repository and asks for the Firebase variables. Or import the repository yourself and set the same environment variables. Either way, set `APP_URL` once you know the deployment URL, and finish steps 3 to 5 for the Firebase project.
+### Vercel
+
+The Deploy button at the top clones the repository and asks for the Firebase variables. You can also import the repository yourself and set the same variables. Either way, set `APP_URL` once you know the deployment URL, and do steps 3 to 5 above for the Firebase project.
 
 ### Moving from an older ClipCook
 
