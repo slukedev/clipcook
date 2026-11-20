@@ -65,7 +65,7 @@ ClipCook stores data in Firestore and signs people in with Google through Fireba
 
    Skip `storage` if the project has no bucket. All data access goes through the server, so the rules deny every client.
 
-4. In the Firestore console, add TTL policies on the `expiresAt` field for the `clipDrafts`, `displayPairings` and `castTokens` collections so expired records are cleaned up.
+4. Optional, on the Blaze plan: in the Firestore console, add TTL policies on the `expiresAt` field for the `clipDrafts`, `displayPairings` and `castTokens` collections so expired records are deleted. Without them they stay, and the app ignores them once expired.
 5. Add your domain under **Authentication > Settings > Authorized domains**.
 6. Build and run:
 

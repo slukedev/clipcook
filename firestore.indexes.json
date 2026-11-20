@@ -26,24 +26,6 @@
         { "collectionGroup": "allRecipes", "fieldPath": "description", "indexes": [] },
         { "collectionGroup": "groceryLists", "fieldPath": "items", "indexes": [] },
         { "collectionGroup": "mealPlans", "fieldPath": "entries", "indexes": [] },
-        { "collectionGroup": "clipDrafts", "fieldPath": "recipe", "indexes": [] },
-        {
-            "collectionGroup": "clipDrafts",
-            "fieldPath": "expiresAt",
-            "ttl": true,
-            "indexes": []
-        },
-        {
-            "collectionGroup": "displayPairings",
-            "fieldPath": "expiresAt",
-            "ttl": true,
-            "indexes": []
-        },
-        {
-            "collectionGroup": "castTokens",
-            "fieldPath": "expiresAt",
-            "ttl": true,
-            "indexes": []
-        }
+        { "collectionGroup": "clipDrafts", "fieldPath": "recipe", "indexes": [] }
     ]
 }
