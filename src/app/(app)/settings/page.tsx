@@ -21,7 +21,8 @@ import { UpdatesSection } from './_sections/updates'
 export const metadata: Metadata = { title: 'Settings' }
 
 // Installing an update copies files to GitHub from a server action on this page.
-export const maxDuration = 300
+// 60 seconds is the most Vercel Hobby allows without Fluid compute.
+export const maxDuration = 60
 
 const SOURCE_URL = 'https://github.com/slukedev/clipcook'
 const LICENSE_URL = 'https://www.gnu.org/licenses/gpl-3.0.html'

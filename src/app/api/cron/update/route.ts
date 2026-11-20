@@ -3,8 +3,9 @@ import { safeEqual } from '@/server/crypto'
 import { json, jsonError } from '@/server/http'
 import { autoUpdate } from '@/server/updater'
 
-// Copying a large update file by file takes a while; this is Vercel Hobby's ceiling.
-export const maxDuration = 300
+// Vercel Hobby without Fluid compute allows 60 seconds. A run cut short pushes
+// nothing (the branch only moves at the end), and the next run starts over.
+export const maxDuration = 60
 
 /**
  * Daily auto update, scheduled in vercel.json. With CRON_SECRET set (Vercel sends
