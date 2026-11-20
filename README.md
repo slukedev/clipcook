@@ -6,6 +6,10 @@
 
 <p align="center">Save recipes from anywhere, cook from any screen.</p>
 
+<p align="center">
+  <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fslukedev%2Fclipcook&env=FIREBASE_ADMIN_PROJECT_ID,FIREBASE_ADMIN_CLIENT_EMAIL,FIREBASE_ADMIN_PRIVATE_KEY,NEXT_PUBLIC_FIREBASE_API_KEY,NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,NEXT_PUBLIC_FIREBASE_PROJECT_ID,NEXT_PUBLIC_FIREBASE_APP_ID&envDescription=Firebase%20service%20account%20and%20web%20app%20config.%20See%20the%20README%20for%20setup.&envLink=https%3A%2F%2Fgithub.com%2Fslukedev%2Fclipcook%23deploying-with-firebase&project-name=clipcook&repository-name=clipcook"><img src="https://vercel.com/button" alt="Deploy with Vercel"></a>
+</p>
+
 ClipCook is an open-source recipe keeper built on Material 3 Expressive. Paste a link, share from your phone, or use the bookmarklet, and ClipCook pulls out the ingredients, steps, photo and times without the life story. Then cook from a full-screen step view, build a grocery list, and put the recipe on the kitchen display in one tap.
 
 ## Features
@@ -55,7 +59,7 @@ ClipCook stores data in Firestore and signs people in with Google through Fireba
    npm start
    ```
 
-   On Vercel, import the repository and set the same environment variables.
+   On Vercel, use the Deploy button at the top of this README, which clones the repository and asks for the Firebase variables. Or import the repository yourself and set the same environment variables. Either way, set `APP_URL` once you know the deployment URL, and finish steps 3 to 5 for the Firebase project.
 
 ### Moving from an older ClipCook
 
