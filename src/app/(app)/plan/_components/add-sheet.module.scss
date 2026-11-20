@@ -148,7 +148,9 @@
     flex: none;
     inline-size: 40px;
     block-size: 40px;
-    border-radius: var(--md-sys-shape-corner-full);
+    // Half the size, not corner-full: springing from 9999px down to 12px overshoots
+    // past zero and flashes a sharp square before it settles.
+    border-radius: 20px;
     color: var(--md-sys-color-on-surface-variant);
     transition:
         background-color var(--md-sys-motion-spring-effects-fast-duration) var(--md-sys-motion-spring-effects-fast),
