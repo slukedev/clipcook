@@ -35,6 +35,10 @@ export const RATE_LIMITS = {
     displayRead: { capacity: 120, refillPerSecond: 2 },
     /** Data import, per user. */
     importData: { capacity: 3, refillPerSecond: 3 / 600 },
+    /** Update checks against GitHub, per user. */
+    updateCheck: { capacity: 4, refillPerSecond: 4 / 60 },
+    /** Update installs, per user. */
+    updateInstall: { capacity: 2, refillPerSecond: 2 / 600 },
 } satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitName = keyof typeof RATE_LIMITS

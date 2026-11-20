@@ -60,6 +60,7 @@ ClipCook stores data in Firestore and signs people in with Google through Fireba
    ```
 
    Skip `storage` if the project has no bucket. All data access goes through the server, so the rules deny every client.
+
 4. In the Firestore console, add TTL policies on the `expiresAt` field for the `clipDrafts`, `displayPairings` and `castTokens` collections so expired records are cleaned up.
 5. Add your domain under **Authentication > Settings > Authorized domains**.
 6. Build and run:
@@ -72,6 +73,20 @@ ClipCook stores data in Firestore and signs people in with Google through Fireba
 ### Vercel
 
 The Deploy button at the top clones the repository and asks for the Firebase variables. You can also import the repository yourself and set the same variables. Either way, set `APP_URL` once you know the deployment URL, and do steps 3 to 5 above for the Firebase project.
+
+### Updates
+
+A deployment made from your own copy of the repository can update itself from this one. The first account created on the deployment manages it under Settings > Updates, and auto update is on by default.
+
+1. Create a [fine-grained GitHub token](https://github.com/settings/personal-access-tokens/new) for your copy with **Contents: Read and write**. Settings > Updates has a link that fills in the form.
+2. Add it to your host as `CLIPCOOK_UPDATE_TOKEN` and redeploy.
+3. Optional: add `CRON_SECRET` (any random string) so only Vercel's scheduler can start the daily run. Without it the schedule endpoint runs at most once every six hours.
+
+An update is one commit pushed to your copy's default branch, and your host builds it like any other push. Only files that changed upstream are touched, so your own edits to other files stay. When upstream and you changed the same file, upstream's version wins. `.github/` is never touched, and update commits say `[skip ci]` so GitHub Actions doesn't run on them.
+
+To hand updates to another account, set `CLIPCOOK_OWNER` to that account's Firebase user ID or its email address and redeploy. An email only counts once Google has verified it, and a disabled account never counts. If the value matches no such account, nobody can manage updates until it is fixed. Remove the variable to hand updates back to the first account.
+
+On Vercel the repository comes from the deployment itself. Elsewhere, also set `CLIPCOOK_UPDATE_REPO` to `owner/name`. Auto update runs from Vercel Cron (`vercel.json`); on another host, call `GET /api/cron/update` once a day with `Authorization: Bearer <CRON_SECRET>`.
 
 ### Moving from an older ClipCook
 
@@ -94,16 +109,20 @@ Nest Hubs have no browser, so they need Cast. Register a custom receiver in the 
 
 ## Environment variables
 
-| Variable                                        | Purpose                                                                                                                                              |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CLIPCOOK_BACKEND`                              | `firebase` or `local`. Defaults to Firebase when its admin variables exist, otherwise local in development. Production refuses to start without one. |
-| `CLIPCOOK_DATA_DIR`, `LOCAL_AUTH_SECRET`        | Local backend storage folder and session signing key.                                                                                                |
-| `FIREBASE_ADMIN_*`                              | Service account for server-side Firestore, Auth and Storage.                                                                                         |
-| `NEXT_PUBLIC_FIREBASE_*`                        | Web app config used by the Google sign-in popup.                                                                                                     |
-| `SESSION_COOKIE_NAME`, `SESSION_COOKIE_MAX_AGE` | Session cookie settings.                                                                                                                             |
-| `APP_URL`                                       | Public origin for QR codes, the bookmarklet and redirects.                                                                                           |
-| `TRUST_PROXY_HOPS`                              | Reverse proxies in front of the app, for per-IP rate limits.                                                                                         |
-| `NEXT_PUBLIC_CAST_APP_ID`                       | Optional Google Cast receiver app id.                                                                                                                |
+| Variable                                         | Purpose                                                                                                                                              |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLIPCOOK_BACKEND`                               | `firebase` or `local`. Defaults to Firebase when its admin variables exist, otherwise local in development. Production refuses to start without one. |
+| `CLIPCOOK_DATA_DIR`, `LOCAL_AUTH_SECRET`         | Local backend storage folder and session signing key.                                                                                                |
+| `FIREBASE_ADMIN_*`                               | Service account for server-side Firestore, Auth and Storage.                                                                                         |
+| `NEXT_PUBLIC_FIREBASE_*`                         | Web app config used by the Google sign-in popup.                                                                                                     |
+| `SESSION_COOKIE_NAME`, `SESSION_COOKIE_MAX_AGE`  | Session cookie settings.                                                                                                                             |
+| `APP_URL`                                        | Public origin for QR codes, the bookmarklet and redirects.                                                                                           |
+| `TRUST_PROXY_HOPS`                               | Reverse proxies in front of the app, for per-IP rate limits.                                                                                         |
+| `NEXT_PUBLIC_CAST_APP_ID`                        | Optional Google Cast receiver app id.                                                                                                                |
+| `CLIPCOOK_UPDATE_TOKEN`                          | GitHub token with Contents read and write on your copy of the repository. Turns on [updates](#updates).                                              |
+| `CLIPCOOK_UPDATE_REPO`, `CLIPCOOK_UPDATE_BRANCH` | Your copy as `owner/name`, and the branch to update. Vercel provides the repository; the branch defaults to the repository's default branch.         |
+| `CRON_SECRET`                                    | Optional. Required on the daily update request when set.                                                                                             |
+| `CLIPCOOK_OWNER`                                 | Optional. The account that manages updates, by Firebase user ID or verified email. Defaults to the first account created.                            |
 
 ## Scripts
 

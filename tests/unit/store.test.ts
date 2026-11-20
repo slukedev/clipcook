@@ -266,3 +266,19 @@ describe('LocalStore writes', () => {
         expect(await stampOf()).not.toBe(before)
     })
 })
+
+describe('LocalStore instance settings', () => {
+    it('defaults auto update on, persists changes, and loads files written before it existed', async () => {
+        expect(await store.getInstance()).toEqual({
+            ownerUid: null,
+            autoUpdate: true,
+            lastUpdate: null,
+            lastScheduledAt: null,
+        })
+        await store.createCollection({ id: 'c1', uid: 'u', name: 'Old file', createdAt: 1, updatedAt: 1 })
+        await store.updateInstance(() => ({ autoUpdate: false, ownerUid: 'u' }))
+        const fresh = new LocalStore(dir)
+        expect(await fresh.getInstance()).toMatchObject({ autoUpdate: false, ownerUid: 'u', lastUpdate: null })
+        expect(await fresh.getCollection('u', 'c1')).toMatchObject({ name: 'Old file' })
+    })
+})

@@ -129,3 +129,18 @@
         display: inline;
     }
 }
+
+// Environment variable names in setup rows: monospace, and allowed to break on a phone.
+.code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.92em;
+    overflow-wrap: anywhere;
+    color: var(--md-sys-color-on-surface);
+}
+
+// Placeholder rows while the update check streams in; same gaps as a segmented list.
+.skeletonRows {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}

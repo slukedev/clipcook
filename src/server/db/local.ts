@@ -11,7 +11,9 @@ import {
     type ClipDraftRecord,
     type CollectionRecord,
     type CollectPairingResult,
+    DEFAULT_INSTANCE,
     type DisplayRecord,
+    type InstanceRecord,
     isAbandonedDisplay,
     type Mutator,
     type PairingRecord,
@@ -32,6 +34,8 @@ interface LocalData {
     pairings: Record<string, PairingRecord>
     drafts: Record<string, ClipDraftRecord>
     castTokens: Record<string, CastTokenRecord>
+    /** Added after v1 shipped; older files load without it. */
+    instance?: InstanceRecord
 }
 
 function emptyData(): LocalData {
@@ -442,6 +446,25 @@ export class LocalStore implements Store {
             }
             delete d.castTokens[id]
             return token.expiresAt > now ? token.uid : null
+        })
+    }
+
+    // ---- instance
+
+    getInstance(): Promise<InstanceRecord> {
+        return this.read((d) => ({ ...DEFAULT_INSTANCE, ...d.instance }))
+    }
+
+    updateInstance(mutate: Mutator<InstanceRecord>): Promise<InstanceRecord> {
+        return this.write((d, unchanged) => {
+            const current = { ...DEFAULT_INSTANCE, ...d.instance }
+            const patch = mutate(clone(current))
+            if (!patch) {
+                unchanged()
+                return current
+            }
+            d.instance = { ...current, ...patch }
+            return d.instance
         })
     }
 }

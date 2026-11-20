@@ -12,7 +12,9 @@ import {
     type ClipDraftRecord,
     type CollectionRecord,
     type CollectPairingResult,
+    DEFAULT_INSTANCE,
     type DisplayRecord,
+    type InstanceRecord,
     isAbandonedDisplay,
     type Mutator,
     type PairingRecord,
@@ -30,6 +32,8 @@ const DISPLAYS = 'displays'
 const PAIRINGS = 'displayPairings'
 const DRAFTS = 'clipDrafts'
 const CAST_TOKENS = 'castTokens'
+const INSTANCE = 'instance'
+const INSTANCE_DOC = 'config'
 
 // Everything a library card needs, and never the legacy inline `image` (up to ~900 KB per doc).
 const SUMMARY_FIELDS = [
@@ -527,5 +531,45 @@ export class FirestoreStore implements Store {
             tx.delete(ref)
             return (millis(data.expiresAt) ?? 0) > now && typeof data.uid === 'string' ? data.uid : null
         })
+    }
+
+    // ---- instance
+
+    async getInstance(): Promise<InstanceRecord> {
+        const doc = await this.db.collection(INSTANCE).doc(INSTANCE_DOC).get()
+        return instanceFromData(doc.data())
+    }
+
+    updateInstance(mutate: Mutator<InstanceRecord>): Promise<InstanceRecord> {
+        const ref = this.db.collection(INSTANCE).doc(INSTANCE_DOC)
+        return this.db.runTransaction(async (tx) => {
+            const current = instanceFromData((await tx.get(ref)).data())
+            const patch = mutate(structuredClone(current))
+            if (!patch) return current
+            const next = { ...current, ...patch }
+            tx.set(ref, next)
+            return next
+        })
+    }
+}
+
+function instanceFromData(d: Record<string, unknown> | undefined): InstanceRecord {
+    if (!d) return { ...DEFAULT_INSTANCE }
+    const log = d.lastUpdate as Record<string, unknown> | null | undefined
+    const outcome = log?.outcome
+    return {
+        ownerUid: typeof d.ownerUid === 'string' ? d.ownerUid : null,
+        autoUpdate: typeof d.autoUpdate === 'boolean' ? d.autoUpdate : DEFAULT_INSTANCE.autoUpdate,
+        lastUpdate:
+            log && (outcome === 'current' || outcome === 'installed' || outcome === 'failed')
+                ? {
+                      at: typeof log.at === 'number' ? log.at : 0,
+                      outcome,
+                      upstreamSha: typeof log.upstreamSha === 'string' ? log.upstreamSha : null,
+                      commitSha: typeof log.commitSha === 'string' ? log.commitSha : null,
+                      error: typeof log.error === 'string' ? log.error : null,
+                  }
+                : null,
+        lastScheduledAt: typeof d.lastScheduledAt === 'number' ? d.lastScheduledAt : null,
     }
 }

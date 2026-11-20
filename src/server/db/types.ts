@@ -76,6 +76,35 @@ export interface CastTokenRecord {
     expiresAt: number
 }
 
+/** What the last update check or install found; shown in Settings. */
+export interface UpdateLog {
+    at: number
+    /** `installed`: a commit was pushed for the host to deploy. */
+    outcome: 'current' | 'installed' | 'failed'
+    /** Upstream commit installed, for `installed`. */
+    upstreamSha: string | null
+    /** Commit pushed to this deployment's repository, for `installed`. */
+    commitSha: string | null
+    error: string | null
+}
+
+/** Settings for this ClipCook instance as a whole, not any one cook. */
+export interface InstanceRecord {
+    /** The first account created here; the only one that manages updates. */
+    ownerUid: string | null
+    autoUpdate: boolean
+    lastUpdate: UpdateLog | null
+    /** When a scheduled run last started; spaces out runs nobody authenticated. */
+    lastScheduledAt: number | null
+}
+
+export const DEFAULT_INSTANCE: InstanceRecord = {
+    ownerUid: null,
+    autoUpdate: true,
+    lastUpdate: null,
+    lastScheduledAt: null,
+}
+
 export type ClaimPairingResult = 'ok' | 'not_found' | 'expired' | 'claimed'
 export type CollectPairingResult =
     | { status: 'pending' }
@@ -166,6 +195,10 @@ export interface Store {
 
     createClipDraft(record: ClipDraftRecord): Promise<void>
     getClipDraft(id: string, now: number): Promise<ClipDraftRecord | null>
+
+    getInstance(): Promise<InstanceRecord>
+    /** Read-modify-write under a transaction; `mutate` may run more than once. */
+    updateInstance(mutate: Mutator<InstanceRecord>): Promise<InstanceRecord>
 
     createCastToken(record: CastTokenRecord): Promise<void>
     /** Deletes the token and returns its owner when it exists and has not expired. */
