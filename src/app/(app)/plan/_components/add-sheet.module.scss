@@ -8,6 +8,13 @@
     block-size: min(760px, calc(100dvh - 48px));
 }
 
+// The dialog's scrolling body has no side padding, so the rows' bleed below would
+// make it scroll sideways. Widen it by the bleed and pad it back: the layout stays put.
+.dialog :has(> .picker) {
+    margin-inline: calc(-1 * var(--md-sys-space-3));
+    padding-inline: var(--md-sys-space-3);
+}
+
 // The sheet keeps its height while results change, so it never jumps under a thumb.
 .sheet {
     block-size: calc(100dvh - 72px);
