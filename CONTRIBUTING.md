@@ -53,5 +53,6 @@ ClipCook follows Material 3 Expressive closely. Before changing UI, read `DESIGN
 - Add or update tests for logic changes. Bugs in the clipper should come with an HTML fixture in `tests/fixtures/clip/`.
 - Include screenshots for UI changes, phone and desktop, light and dark.
 - Follow the [code of conduct](CODE_OF_CONDUCT.md).
+- Never include secrets, `.env` files or personal data. Report security problems privately through [SECURITY.md](SECURITY.md).
 
 By contributing, you agree that your contributions are licensed under the GPL-3.0 license.

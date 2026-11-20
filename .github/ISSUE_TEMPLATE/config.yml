@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security issue
-    url: https://github.com/slukedev/clipcook/security/advisories/new
-    about: Please report vulnerabilities privately.
+    url: https://github.com/slukedev/clipcook/blob/main/SECURITY.md
+    about: Please report vulnerabilities privately as described in SECURITY.md, not in a public issue.

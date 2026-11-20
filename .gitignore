@@ -59,3 +59,11 @@ next-env.d.ts
 
 # Legacy export output
 /exports/
+
+# Firebase CLI and service account keys
+/.firebase/
+.firebaserc
+firebase-debug*.log
+firestore-debug.log
+*-firebase-adminsdk-*.json
+service-account*.json

@@ -2,6 +2,9 @@ name: Bug report
 description: Something is broken or behaves unexpectedly.
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: Security problems go through [SECURITY.md](https://github.com/slukedev/clipcook/blob/main/SECURITY.md), not a public issue.
   - type: textarea
     id: what
     attributes:
@@ -32,3 +35,13 @@ body:
     attributes:
       label: Backend
       options: [Firebase, Local]
+  - type: input
+    id: version
+    attributes:
+      label: Commit
+      description: The commit your deployment runs, if you know it.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Remove keys, tokens, emails and other personal data first.

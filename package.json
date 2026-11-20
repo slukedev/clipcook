@@ -1,6 +1,29 @@
 {
     "name": "clipcook",
     "version": "1.0.0",
+    "description": "Self-hostable recipe keeper: clip recipes from any site, cook step by step, plan meals and send recipes to a kitchen display.",
+    "keywords": [
+        "recipes",
+        "recipe-manager",
+        "cooking",
+        "meal-planner",
+        "grocery-list",
+        "nextjs",
+        "pwa",
+        "material-design",
+        "firebase",
+        "self-hosted"
+    ],
+    "homepage": "https://github.com/slukedev/clipcook#readme",
+    "bugs": {
+        "url": "https://github.com/slukedev/clipcook/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/slukedev/clipcook.git"
+    },
+    "license": "GPL-3.0-only",
+    "private": true,
     "engines": {
         "node": ">=24.12.0"
     },
@@ -65,11 +88,5 @@
         "protobufjs@7.6.5": true,
         "esbuild@0.28.1": true,
         "@parcel/watcher@2.5.6": true
-    },
-    "license": "GPL-3.0-only",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/slukedev/clipcook.git"
-    },
-    "private": true
+    }
 }
