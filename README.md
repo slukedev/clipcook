@@ -12,6 +12,24 @@
 
 ClipCook is an open-source recipe keeper built on Material 3 Expressive. Paste a link, share from your phone, or use the bookmarklet, and ClipCook pulls out the ingredients, steps, photo and times without the life story. Then cook from a full-screen step view, build a grocery list, and put the recipe on the kitchen display in one tap.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/desktop-library.png" alt="The ClipCook library on desktop" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/mobile-library.png" alt="Library on a phone" width="180">
+  <img src="docs/screenshots/mobile-recipe.png" alt="A recipe on a phone" width="180">
+  <img src="docs/screenshots/mobile-plan.png" alt="Meal plan on a phone" width="180">
+  <img src="docs/screenshots/mobile-grocery.png" alt="Grocery list on a phone" width="180">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/desktop-recipe.png" alt="A recipe on desktop" width="440">
+  <img src="docs/screenshots/desktop-collections.png" alt="Collections on desktop" width="440">
+</p>
+
 ## Features
 
 - **Clip from anywhere.** Paste a link, share to ClipCook from Android or desktop Chrome (it installs as an app), use the bookmarklet on sites that block servers, or paste the recipe as text. Reads schema.org JSON-LD, microdata, the common WordPress recipe plugins, and falls back to heading detection.
