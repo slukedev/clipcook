@@ -7,8 +7,15 @@ import { checkForUpdate, installUpdate, recordUpdate, type UpdateStatus, updateE
 
 /** Everything the Updates section in Settings renders. */
 export type UpdatesView =
-    | { kind: 'missing'; needsToken: boolean; needsRepo: boolean; tokenUrl: string }
-    | { kind: 'ready'; autoUpdate: boolean; status: UpdateStatus; lastError: string | null }
+    | { kind: 'missing'; needsToken: boolean; needsRepo: boolean; needsBranch: boolean; tokenUrl: string }
+    | {
+          kind: 'ready'
+          autoUpdate: boolean
+          status: UpdateStatus
+          lastError: string | null
+          /** Files that differed here and that the last installed update replaced or removed. */
+          lastReplaced: number
+      }
 
 /** Checks are cached per process so Settings and its prefetches don't hit GitHub each time. */
 const STATUS_TTL_MS = 5 * 60_000
@@ -53,6 +60,7 @@ export async function updatesView(uid: string, { fresh = false } = {}): Promise<
             kind: 'missing',
             needsToken: s.missing.includes('token'),
             needsRepo: s.missing.includes('repo'),
+            needsBranch: s.missing.includes('branch'),
             tokenUrl: tokenFormUrl(s.repo),
         }
     }
@@ -63,6 +71,7 @@ export async function updatesView(uid: string, { fresh = false } = {}): Promise<
         autoUpdate: instance.autoUpdate,
         status,
         lastError: log?.outcome === 'failed' ? log.error : null,
+        lastReplaced: log?.outcome === 'installed' ? log.overwritten.length : 0,
     }
 }
 
@@ -91,30 +100,46 @@ export async function setAutoUpdate(uid: string, on: boolean): Promise<void> {
     await store.updateInstance(() => ({ autoUpdate: on }))
 }
 
-/** Installs now. Returns the error sentence on failure rather than throwing. */
+/**
+ * Installs now, as the owner asked from Settings; that press is the go-ahead for an
+ * update that replaces files changed here. Returns the error sentence on failure.
+ */
 export async function installNow(uid: string): Promise<string | null> {
     const config = await ownerConfig(uid)
-    return install(config)
+    return install(config, true)
 }
 
-async function install(config: UpdaterConfig): Promise<string | null> {
+async function install(config: UpdaterConfig, reviewed: boolean): Promise<string | null> {
     const store = await getStore()
     const at = Date.now()
     forgetUpdateStatus()
     try {
-        const result = await installUpdate(config)
+        const result = await installUpdate(config, { reviewed })
         await recordUpdate(store, {
             at,
             outcome: result.outcome,
             upstreamSha: result.upstreamSha,
             commitSha: result.commitSha,
             error: null,
+            overwritten: result.overwritten,
         })
+        if (result.overwritten.length > 0 && process.env.NODE_ENV !== 'test') {
+            console.warn(`Update replaced or removed ${result.overwritten.length} files changed here.`)
+        }
         return null
     } catch (err) {
         const message = updateErrorMessage(err, config)
-        await recordUpdate(store, { at, outcome: 'failed', upstreamSha: null, commitSha: null, error: message })
+        await recordUpdate(store, {
+            at,
+            outcome: 'failed',
+            upstreamSha: null,
+            commitSha: null,
+            error: message,
+            overwritten: [],
+        })
         return message
+    } finally {
+        forgetUpdateStatus()
     }
 }
 
@@ -143,5 +168,6 @@ export async function autoUpdate({ throttle }: { throttle: boolean }): Promise<A
         return claim.outcome === 'run' ? { lastScheduledAt: now } : null
     })
     if (claim.outcome !== 'run') return { ran: false, reason: claim.outcome }
-    return { ran: true, error: await install(s.config) }
+    // Never unattended: an update that would replace files changed here waits for the owner.
+    return { ran: true, error: await install(s.config, false) }
 }

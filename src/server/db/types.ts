@@ -86,6 +86,8 @@ export interface UpdateLog {
     /** Commit pushed to this deployment's repository, for `installed`. */
     commitSha: string | null
     error: string | null
+    /** Files that differed here and that the update replaced or removed (first 50). */
+    overwritten: string[]
 }
 
 /** Settings for this ClipCook instance as a whole, not any one cook. */

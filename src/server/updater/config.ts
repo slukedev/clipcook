@@ -1,4 +1,4 @@
-import { REPO_PATTERN } from './github'
+import { isBranchName, REPO_PATTERN } from './github'
 
 /** The repository every deployment updates from. */
 export const UPSTREAM = { repo: 'slukedev/clipcook', branch: 'main' } as const
@@ -14,7 +14,7 @@ export interface UpdaterConfig {
 export type UpdaterSetup =
     /** The upstream project itself, or a plain local checkout: nothing to update from. */
     | { kind: 'hidden' }
-    | { kind: 'missing'; missing: ('token' | 'repo')[]; repo: string | null }
+    | { kind: 'missing'; missing: ('token' | 'repo' | 'branch')[]; repo: string | null }
     | { kind: 'ready'; config: UpdaterConfig }
 
 type Env = Record<string, string | undefined>
@@ -37,11 +37,12 @@ export function resolveUpdaterSetup(env: Env = process.env, backend: 'firebase' 
     if (repo && repo.toLowerCase() === UPSTREAM.repo) return { kind: 'hidden' }
     // A local checkout with nothing set is development, not a deployment.
     if (!repo && !token && backend === 'local') return { kind: 'hidden' }
-    const missing: ('token' | 'repo')[] = []
+    const branch = env.CLIPCOOK_UPDATE_BRANCH?.trim() || null
+    const missing: ('token' | 'repo' | 'branch')[] = []
     if (!token) missing.push('token')
     if (!repo) missing.push('repo')
-    if (!token || !repo) return { kind: 'missing', missing, repo }
-    const branch = env.CLIPCOOK_UPDATE_BRANCH?.trim() || null
+    if (branch && !isBranchName(branch)) missing.push('branch')
+    if (!token || !repo || missing.length > 0) return { kind: 'missing', missing, repo }
     return { kind: 'ready', config: { token, repo, branch } }
 }
 

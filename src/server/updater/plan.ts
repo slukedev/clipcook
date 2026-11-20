@@ -7,10 +7,12 @@ export type FileMap = Map<string, FileRef>
 export interface TreePlan {
     /** Files to add or replace with upstream's version. */
     writes: TreeEntry[]
-    /** Files upstream deleted. */
-    deletes: string[]
-    /** Files edited on this deployment that upstream also changed; upstream's version wins. */
+    /** Files to remove, with the mode and type they have in this deployment. */
+    deletes: TreeEntry[]
+    /** Files that differ from upstream's last version here, and that this plan replaces or removes. */
     overwritten: string[]
+    /** No known base: the plan makes this deployment match upstream exactly. */
+    mirror: boolean
 }
 
 /**
@@ -39,24 +41,30 @@ function same(a: FileRef | undefined, b: FileRef | undefined): boolean {
 /**
  * What to change in this deployment's tree to bring in upstream.
  *
- * With `base` (the upstream snapshot the last update synced), only files upstream
- * changed since then are touched, so edits made on this deployment to other files
- * survive. Without it (the first update, or history we cannot trace) the result
- * mirrors upstream exactly: a file left over from an older version can break the build.
+ * With `base` (the upstream version this deployment was last in step with), only
+ * files upstream changed since then are touched, so edits made here to other files
+ * survive. Without it the result mirrors upstream exactly, replacing local edits and
+ * removing local files; callers must not do that without the owner's go-ahead.
  */
 export function planTree({ base, head, current }: { base: FileMap | null; head: FileMap; current: FileMap }): TreePlan {
     const writes: TreeEntry[] = []
-    const deletes: string[] = []
+    const deletes: TreeEntry[] = []
     const overwritten: string[] = []
 
     if (!base) {
         for (const [path, file] of head) {
-            if (!same(current.get(path), file)) writes.push({ path, ...file })
+            const mine = current.get(path)
+            if (same(mine, file)) continue
+            writes.push({ path, ...file })
+            if (mine) overwritten.push(path)
         }
-        for (const path of current.keys()) {
-            if (!head.has(path)) deletes.push(path)
+        for (const [path, mine] of current) {
+            if (!head.has(path)) {
+                deletes.push({ path, ...mine })
+                overwritten.push(path)
+            }
         }
-        return { writes, deletes, overwritten }
+        return { writes, deletes, overwritten, mirror: true }
     }
 
     for (const path of new Set([...base.keys(), ...head.keys()])) {
@@ -67,9 +75,9 @@ export function planTree({ base, head, current }: { base: FileMap | null; head: 
         if (same(mine, after)) continue
         if (!same(mine, before)) overwritten.push(path)
         if (after) writes.push({ path, ...after })
-        else if (mine) deletes.push(path)
+        else if (mine) deletes.push({ path, ...mine })
     }
-    return { writes, deletes, overwritten }
+    return { writes, deletes, overwritten, mirror: false }
 }
 
 const TRAILER = /^Upstream-Commit: ([0-9a-f]{40})$/m
@@ -83,7 +91,10 @@ export function lastSyncedCommit(messages: string[]): string | null {
     return null
 }
 
-/** `[skip ci]` keeps GitHub Actions from running on the update; the host still deploys it. */
+/**
+ * `[skip actions]` keeps GitHub Actions from running on the update. It is the
+ * GitHub-only spelling: hosts such as Netlify skip builds for `[skip ci]`.
+ */
 export function updateCommitMessage(upstreamSha: string): string {
-    return `Update ClipCook to ${upstreamSha.slice(0, 7)} [skip ci]\n\nUpstream-Commit: ${upstreamSha}\n`
+    return `Update ClipCook to ${upstreamSha.slice(0, 7)} [skip actions]\n\nUpstream-Commit: ${upstreamSha}\n`
 }

@@ -76,15 +76,16 @@ The Deploy button at the top clones the repository and asks for the Firebase var
 
 ### Updates
 
-A deployment made from your own copy of the repository can update itself from this one. The first account created on the deployment manages it under Settings > Updates, and auto update is on by default.
+A deployment made from your own copy of the repository can update itself from this one. One account manages it under Settings > Updates, and auto update is on by default.
 
-1. Create a [fine-grained GitHub token](https://github.com/settings/personal-access-tokens/new) for your copy with **Contents: Read and write**. Settings > Updates has a link that fills in the form.
-2. Add it to your host as `CLIPCOOK_UPDATE_TOKEN` and redeploy.
-3. Optional: add `CRON_SECRET` (any random string) so only Vercel's scheduler can start the daily run. Without it the schedule endpoint runs at most once every six hours.
+1. Set `CLIPCOOK_OWNER` to your Firebase user ID or your Google email, so the right account manages updates. Without it, the first account created on the deployment does.
+2. Create a [fine-grained GitHub token](https://github.com/settings/personal-access-tokens/new) for your copy with **Contents: Read and write**. Settings > Updates has a link that fills in the form.
+3. Add it to your host as `CLIPCOOK_UPDATE_TOKEN` and redeploy.
+4. Optional: add `CRON_SECRET` (any random string) so only Vercel's scheduler can start the daily run. Without it the schedule endpoint runs at most once every six hours and answers nothing about your setup.
 
-An update is one commit pushed to your copy's default branch, and your host builds it like any other push. Only files that changed upstream are touched, so your own edits to other files stay. When upstream and you changed the same file, upstream's version wins. `.github/` is never touched, and update commits say `[skip ci]` so GitHub Actions doesn't run on them.
+An update is one commit pushed to your copy's default branch, and your host builds it like any other push. Only files that changed upstream are touched, so your own changes to other files stay. If an update would replace or remove a file you changed, auto update leaves it alone and Settings asks you first. `.github/` is never touched, and update commits say `[skip actions]` so GitHub Actions doesn't run on them.
 
-To hand updates to another account, set `CLIPCOOK_OWNER` to that account's Firebase user ID or its email address and redeploy. An email only counts once Google has verified it, and a disabled account never counts. If the value matches no such account, nobody can manage updates until it is fixed. Remove the variable to hand updates back to the first account.
+`CLIPCOOK_OWNER` takes a Firebase user ID or an email address. An email only counts once Google has verified it, and a disabled account never counts. If the value matches no such account, nobody can manage updates until it is fixed. Remove the variable to hand updates back to the first account.
 
 On Vercel the repository comes from the deployment itself. Elsewhere, also set `CLIPCOOK_UPDATE_REPO` to `owner/name`. Auto update runs from Vercel Cron (`vercel.json`); on another host, call `GET /api/cron/update` once a day with `Authorization: Bearer <CRON_SECRET>`.
 

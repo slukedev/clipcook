@@ -18,6 +18,8 @@ export async function GET(req: NextRequest) {
         if (!safeEqual(header, `Bearer ${secret}`)) return jsonError(401, 'Unauthorized.')
     }
     const result = await autoUpdate({ throttle: !secret })
+    // Callers without the secret learn nothing about this deployment's setup.
+    if (!secret) return json({ ok: true })
     if (result.ran && result.error) return jsonError(502, result.error)
     return json(result)
 }

@@ -7,9 +7,14 @@ import { fileMap, lastSyncedCommit, planTree, type TreePlan, updateCommitMessage
 
 /** How far back to look for the commit the last update made. */
 const HISTORY_DEPTH = 100
-const BLOB_CONCURRENCY = 6
+/** Upstream pages searched for the version a deployment without update commits started from. */
+const UPSTREAM_SEARCH_PAGES = 5
+// GitHub caps content creation at about 80 requests a minute; stay well under it.
+const BLOB_CONCURRENCY = 4
 /** After pushing, how long Settings shows the host building it. */
-const DEPLOY_WINDOW_MS = 20 * 60_000
+export const DEPLOY_WINDOW_MS = 20 * 60_000
+/** Paths kept in the log of what an update replaced. */
+const LOGGED_PATHS = 50
 
 export type UpdateStatus =
     | { state: 'current'; checkedAt: number }
@@ -18,9 +23,15 @@ export type UpdateStatus =
           checkedAt: number
           upstreamSha: string
           upstreamDate: string
-          /** Upstream commits since the last update; null on a first update. */
+          /** Upstream commits since the last update; null when unknown. */
           commits: number | null
           compareUrl: string
+          /**
+           * Files here that differ from upstream's last version and would be replaced or
+           * removed. With `review`, the update needs the owner to press Update.
+           */
+          replaces: number
+          review: boolean
       }
     | { state: 'deploying'; checkedAt: number; upstreamSha: string }
     | { state: 'error'; checkedAt: number; message: string }
@@ -29,13 +40,32 @@ interface Snapshot {
     branch: string
     current: CommitInfo
     upstream: CommitInfo
-    synced: string | null
+    /** The upstream commit this deployment was last in step with, when it can be told. */
+    base: string | null
+    /** Whether `base` comes from an update commit's trailer (rather than a matching tree). */
+    synced: boolean
 }
 
 export function clientFor(config: UpdaterConfig): GitHubClient {
     // Development only: point at a stand-in API to try every state of the Updates section.
     const baseUrl = process.env.NODE_ENV === 'production' ? undefined : process.env.CLIPCOOK_GITHUB_API_URL?.trim()
     return new GitHubClient({ token: config.token, ...(baseUrl ? { baseUrl } : {}) })
+}
+
+/**
+ * The newest upstream commit whose files this deployment once matched exactly.
+ * A deploy-button clone starts as a copy of some upstream commit with fresh
+ * history, so its first commit's tree is one of upstream's.
+ */
+async function matchingUpstream(client: GitHubClient, history: CommitInfo[]): Promise<string | null> {
+    const trees = new Set(history.map((c) => c.treeSha))
+    for (let page = 1; page <= UPSTREAM_SEARCH_PAGES; page++) {
+        const commits = await client.recentCommits(UPSTREAM.repo, UPSTREAM.branch, 100, page)
+        const match = commits.find((c) => trees.has(c.treeSha))
+        if (match) return match.sha
+        if (commits.length < 100) break
+    }
+    return null
 }
 
 async function snapshot(client: GitHubClient, config: UpdaterConfig): Promise<Snapshot> {
@@ -47,15 +77,23 @@ async function snapshot(client: GitHubClient, config: UpdaterConfig): Promise<Sn
     const history = await client.recentCommits(config.repo, branch, HISTORY_DEPTH)
     const current = history[0]
     if (!current) throw new GitHubError('not_found', 404, `${config.repo} has no commits on ${branch}.`)
-    return { branch, current, upstream, synced: lastSyncedCommit(history.map((c) => c.message)) }
+    const synced = lastSyncedCommit(history.map((c) => c.message))
+    if (synced) return { branch, current, upstream, base: synced, synced: true }
+    return { branch, current, upstream, base: await matchingUpstream(client, history), synced: false }
 }
 
-async function planFor(client: GitHubClient, config: UpdaterConfig, snap: Snapshot): Promise<TreePlan> {
-    const baseTree = snap.synced
+interface Planned {
+    plan: TreePlan
+    /** Blob ids this deployment already has, so they need no copying. */
+    present: Set<string>
+}
+
+async function planFor(client: GitHubClient, config: UpdaterConfig, snap: Snapshot): Promise<Planned> {
+    const baseTree = snap.base
         ? await client
-              .commit(UPSTREAM.repo, snap.synced)
+              .commit(UPSTREAM.repo, snap.base)
               .then((c) => c.treeSha)
-              // Upstream history was rewritten: fall back to mirroring it.
+              // Upstream history was rewritten; the plan falls back to a reviewed mirror.
               .catch((err: unknown) => {
                   if (err instanceof GitHubError && (err.kind === 'not_found' || err.kind === 'conflict')) return null
                   throw err
@@ -66,10 +104,13 @@ async function planFor(client: GitHubClient, config: UpdaterConfig, snap: Snapsh
         client.tree(config.repo, snap.current.treeSha),
         baseTree ? client.tree(UPSTREAM.repo, baseTree) : null,
     ])
-    return planTree({ base: base && fileMap(base), head: fileMap(head), current: fileMap(current) })
+    const plan = planTree({ base: base && fileMap(base), head: fileMap(head), current: fileMap(current) })
+    return { plan, present: new Set(current.map((entry) => entry.sha)) }
 }
 
 const isEmpty = (plan: TreePlan) => plan.writes.length === 0 && plan.deletes.length === 0
+/** An update that would replace or remove anything changed here waits for the owner. */
+const needsReview = (plan: TreePlan) => plan.overwritten.length > 0
 
 /** A push from the last update that the running deployment is not built from yet. */
 function pendingDeploy(log: UpdateLog | null, now: number): UpdateLog | null {
@@ -87,10 +128,10 @@ export async function checkForUpdate(
     if (deploying?.upstreamSha) return { state: 'deploying', checkedAt: now, upstreamSha: deploying.upstreamSha }
     try {
         const snap = await snapshot(client, config)
-        if (snap.synced === snap.upstream.sha) return { state: 'current', checkedAt: now }
-        const [plan, commits] = await Promise.all([
+        if (snap.synced && snap.base === snap.upstream.sha) return { state: 'current', checkedAt: now }
+        const [{ plan }, commits] = await Promise.all([
             planFor(client, config, snap),
-            snap.synced ? client.aheadBy(UPSTREAM.repo, snap.synced, snap.upstream.sha) : null,
+            snap.base ? client.aheadBy(UPSTREAM.repo, snap.base, snap.upstream.sha) : null,
         ])
         if (isEmpty(plan)) return { state: 'current', checkedAt: now }
         return {
@@ -99,52 +140,71 @@ export async function checkForUpdate(
             upstreamSha: snap.upstream.sha,
             upstreamDate: snap.upstream.date,
             commits,
-            compareUrl: snap.synced
-                ? `https://github.com/${UPSTREAM.repo}/compare/${snap.synced.slice(0, 12)}...${snap.upstream.sha.slice(0, 12)}`
+            compareUrl: snap.base
+                ? `https://github.com/${UPSTREAM.repo}/compare/${snap.base.slice(0, 12)}...${snap.upstream.sha.slice(0, 12)}`
                 : `https://github.com/${UPSTREAM.repo}/commits/${UPSTREAM.branch}`,
+            replaces: plan.overwritten.length,
+            review: needsReview(plan),
         }
     } catch (err) {
         return { state: 'error', checkedAt: now, message: updateErrorMessage(err, config) }
     }
 }
 
+/** Runs `fn` over `items` with at most `limit` in flight; the first failure stops new work. */
 async function pool<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
     let next = 0
+    let failed = false
     const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-        while (next < items.length) {
+        while (!failed && next < items.length) {
             const item = items[next++] as T
-            await fn(item)
+            try {
+                await fn(item)
+            } catch (err) {
+                failed = true
+                throw err
+            }
         }
     })
     await Promise.all(workers)
+}
+
+export class ReviewRequiredError extends Error {
+    readonly replaces: number
+    constructor(replaces: number) {
+        super('REVIEW_REQUIRED')
+        this.name = 'ReviewRequiredError'
+        this.replaces = replaces
+    }
 }
 
 export interface InstallResult {
     outcome: 'current' | 'installed'
     upstreamSha: string
     commitSha: string | null
-    /** Files edited on this deployment that the update replaced. */
+    /** Files that differed here and that the update replaced or removed. */
     overwritten: string[]
 }
 
 /**
  * Brings upstream into the deployment's branch as one new commit on top of it.
  * Blobs are copied from upstream, the tree is built on the branch's own tree, and
- * the branch only fast-forwards, so a push made meanwhile is never lost.
+ * the branch only fast-forwards, so a push made meanwhile is never lost. An update
+ * that would replace work done here throws ReviewRequiredError unless `reviewed`.
  */
 export async function installUpdate(
     config: UpdaterConfig,
-    { client = clientFor(config) }: { client?: GitHubClient } = {},
+    { client = clientFor(config), reviewed = false }: { client?: GitHubClient; reviewed?: boolean } = {},
 ): Promise<InstallResult> {
     const snap = await snapshot(client, config)
-    if (snap.synced === snap.upstream.sha) {
-        return { outcome: 'current', upstreamSha: snap.upstream.sha, commitSha: null, overwritten: [] }
-    }
-    const plan = await planFor(client, config, snap)
-    if (isEmpty(plan)) return { outcome: 'current', upstreamSha: snap.upstream.sha, commitSha: null, overwritten: [] }
+    const none = { outcome: 'current' as const, upstreamSha: snap.upstream.sha, commitSha: null, overwritten: [] }
+    if (snap.synced && snap.base === snap.upstream.sha) return none
+    const { plan, present } = await planFor(client, config, snap)
+    if (isEmpty(plan)) return none
+    if (needsReview(plan) && !reviewed) throw new ReviewRequiredError(plan.overwritten.length)
 
     await pool(
-        plan.writes.filter((w) => w.type === 'blob'),
+        plan.writes.filter((w) => w.type === 'blob' && !present.has(w.sha)),
         BLOB_CONCURRENCY,
         async (write) => {
             const copied = await client.createBlob(config.repo, await client.blob(UPSTREAM.repo, write.sha))
@@ -153,10 +213,23 @@ export async function installUpdate(
             }
         },
     )
-    const tree = await client.createTree(config.repo, snap.current.treeSha, [
-        ...plan.writes.map(({ path, mode, type, sha }) => ({ path, mode, type, sha })),
-        ...plan.deletes.map((path) => ({ path, mode: '100644', type: 'blob' as const, sha: null })),
-    ])
+    // Deletes first, writes on top: a file that became a folder (or the other way
+    // round) would otherwise collide inside one tree request.
+    let tree = snap.current.treeSha
+    if (plan.deletes.length > 0) {
+        tree = await client.createTree(
+            config.repo,
+            tree,
+            plan.deletes.map(({ path, mode, type }) => ({ path, mode, type, sha: null })),
+        )
+    }
+    if (plan.writes.length > 0) {
+        tree = await client.createTree(
+            config.repo,
+            tree,
+            plan.writes.map(({ path, mode, type, sha }) => ({ path, mode, type, sha })),
+        )
+    }
     const commit = await client.createCommit(
         config.repo,
         updateCommitMessage(snap.upstream.sha),
@@ -169,6 +242,7 @@ export async function installUpdate(
 
 /** One sentence: what went wrong and what to do. */
 export function updateErrorMessage(err: unknown, config: Pick<UpdaterConfig, 'repo'>): string {
+    if (err instanceof ReviewRequiredError) return 'This update replaces files changed here. Install it from Settings.'
     if (!(err instanceof GitHubError)) {
         if (process.env.NODE_ENV !== 'test') console.error(err)
         return "The update didn't finish. Try again."
@@ -192,6 +266,15 @@ export function updateErrorMessage(err: unknown, config: Pick<UpdaterConfig, 're
     }
 }
 
+/**
+ * Saves what a run did. A run that found nothing to do, or lost a race with
+ * another run, never hides an install that is still deploying.
+ */
 export async function recordUpdate(store: Store, log: UpdateLog): Promise<void> {
-    await store.updateInstance(() => ({ lastUpdate: log }))
+    await store.updateInstance((current) => {
+        const previous = current.lastUpdate
+        const deploying = previous?.outcome === 'installed' && log.at - previous.at < DEPLOY_WINDOW_MS
+        if (deploying && log.outcome !== 'installed') return null
+        return { lastUpdate: { ...log, overwritten: log.overwritten.slice(0, LOGGED_PATHS) } }
+    })
 }

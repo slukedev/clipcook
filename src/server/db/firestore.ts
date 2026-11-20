@@ -568,6 +568,9 @@ function instanceFromData(d: Record<string, unknown> | undefined): InstanceRecor
                       upstreamSha: typeof log.upstreamSha === 'string' ? log.upstreamSha : null,
                       commitSha: typeof log.commitSha === 'string' ? log.commitSha : null,
                       error: typeof log.error === 'string' ? log.error : null,
+                      overwritten: Array.isArray(log.overwritten)
+                          ? log.overwritten.filter((p): p is string => typeof p === 'string')
+                          : [],
                   }
                 : null,
         lastScheduledAt: typeof d.lastScheduledAt === 'number' ? d.lastScheduledAt : null,

@@ -138,8 +138,10 @@ export class FakeGitHub {
         if (method === 'GET' && rest === '/commits') {
             const ref = url.searchParams.get('sha') ?? repo.defaultBranch
             const limit = Number(url.searchParams.get('per_page') ?? 30)
+            const skip = (Number(url.searchParams.get('page') ?? 1) - 1) * limit
             const list: Commit[] = []
             let sha = repo.branches.get(ref) ?? ref
+            for (let i = 0; i < skip && sha; i++) sha = repo.commits.get(sha)?.parents[0] ?? ''
             while (sha && list.length < limit) {
                 const commit = repo.commits.get(sha)
                 if (!commit) break

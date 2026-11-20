@@ -13,7 +13,7 @@ async function adminAuth() {
     return mod.adminAuth()
 }
 
-/** The oldest account in Firebase Auth, by creation time. */
+/** The oldest active, verified account in Firebase Auth, by creation time. */
 async function oldestFirebaseUser(): Promise<string | null> {
     const auth = await adminAuth()
     let oldest: { uid: string; created: number } | null = null
@@ -21,6 +21,8 @@ async function oldestFirebaseUser(): Promise<string | null> {
     do {
         const page = await auth.listUsers(1000, pageToken)
         for (const user of page.users) {
+            // Only an active account Google has verified can hold updates.
+            if (user.disabled || !user.emailVerified) continue
             const created = Date.parse(user.metadata.creationTime)
             if (Number.isNaN(created)) continue
             if (!oldest || created < oldest.created) oldest = { uid: user.uid, created }
@@ -30,10 +32,11 @@ async function oldestFirebaseUser(): Promise<string | null> {
     return oldest?.uid ?? null
 }
 
-async function stillExists(uid: string): Promise<boolean> {
+/** Whether the stored owner can still hold updates; a disabled account hands them on. */
+async function stillActive(uid: string): Promise<boolean> {
     try {
-        await (await adminAuth()).getUser(uid)
-        return true
+        const user = await (await adminAuth()).getUser(uid)
+        return !user.disabled
     } catch (err) {
         if ((err as { code?: string }).code === 'auth/user-not-found') return false
         throw err
@@ -105,7 +108,7 @@ export async function instanceOwner(now = Date.now()): Promise<string | null> {
             // The local backend has one account.
             uid = DEMO_USER.uid
             if (ownerUid !== uid) await store.updateInstance(() => ({ ownerUid: uid }))
-        } else if (ownerUid && (await stillExists(ownerUid))) {
+        } else if (ownerUid && (await stillActive(ownerUid))) {
             uid = ownerUid
         } else {
             const oldest = await oldestFirebaseUser()
@@ -113,6 +116,11 @@ export async function instanceOwner(now = Date.now()): Promise<string | null> {
                 current.ownerUid === ownerUid ? { ownerUid: oldest } : null,
             )
             uid = saved.ownerUid
+            if (ownerUid && uid !== ownerUid && process.env.NODE_ENV !== 'test') {
+                console.warn(
+                    `Updates passed from account ${ownerUid} to ${uid ?? 'nobody'}. Set CLIPCOOK_OWNER to choose.`,
+                )
+            }
         }
     }
     holder.__clipcookOwner = { uid, at: now }

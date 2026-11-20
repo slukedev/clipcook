@@ -53,6 +53,7 @@ const { instanceOwner, isInstanceOwner, ownerOverride, resetInstanceOwnerCache }
 const user = (uid: string, created: string, extra: Partial<FakeUser> = {}): FakeUser => ({
     uid,
     metadata: { creationTime: new Date(created).toUTCString() },
+    emailVerified: true,
     ...extra,
 })
 
@@ -81,6 +82,18 @@ describe('instanceOwner', () => {
         users = users.filter((u) => u.uid !== 'first')
         expect(await instanceOwner()).toBe('second')
         expect(record.ownerUid).toBe('second')
+    })
+
+    it('skips unverified and disabled accounts, and hands on from a disabled owner', async () => {
+        users.push(
+            user('squatter', '2026-01-01', { emailVerified: false }),
+            user('old-banned', '2026-01-02', { disabled: true }),
+        )
+        expect(await instanceOwner()).toBe('first')
+        resetInstanceOwnerCache()
+        const first = users.find((u) => u.uid === 'first')
+        if (first) first.disabled = true
+        expect(await instanceOwner()).toBe('second')
     })
 
     it('has no owner before anyone signs up', async () => {

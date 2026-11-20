@@ -58,7 +58,16 @@ const toCommit = (raw: RawCommit): CommitInfo => ({
 })
 
 /** owner/name, each part restricted to the characters GitHub allows. */
-export const REPO_PATTERN = /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/
+export const REPO_PATTERN = /^[A-Za-z0-9-]{1,39}\/(?!\.\.?$)[A-Za-z0-9._-]{1,100}$/
+
+/** A branch name git accepts, without `.`/`..` segments that would rewrite the API path. */
+export function isBranchName(name: string): boolean {
+    return (
+        /^[A-Za-z0-9._/-]{1,200}$/.test(name) &&
+        !name.split('/').some((part) => part === '' || part === '.' || part === '..' || part.endsWith('.lock')) &&
+        !name.includes('..')
+    )
+}
 
 function encodeRef(ref: string): string {
     return ref.split('/').map(encodeURIComponent).join('/')
@@ -104,7 +113,7 @@ export class GitHubClient {
         if (res.ok) return (res.status === 204 ? undefined : await res.json()) as T
         const detail = await res.text().catch(() => '')
         throw new GitHubError(
-            classify(res),
+            classify(res, detail),
             res.status,
             `GitHub ${method} ${path}: ${res.status} ${detail.slice(0, 300)}`,
         )
@@ -122,10 +131,10 @@ export class GitHubClient {
         return toCommit(await this.request<RawCommit>('GET', `/repos/${repo}/commits/${encodeRef(ref)}`))
     }
 
-    async recentCommits(repo: string, ref: string, count: number): Promise<CommitInfo[]> {
+    async recentCommits(repo: string, ref: string, count: number, page = 1): Promise<CommitInfo[]> {
         const list = await this.request<RawCommit[]>(
             'GET',
-            `/repos/${repo}/commits?sha=${encodeURIComponent(ref)}&per_page=${Math.min(100, count)}`,
+            `/repos/${repo}/commits?sha=${encodeURIComponent(ref)}&per_page=${Math.min(100, count)}&page=${page}`,
         )
         return list.map(toCommit)
     }
@@ -196,10 +205,18 @@ export class GitHubClient {
     }
 }
 
-function classify(res: Response): GitHubErrorKind {
+function classify(res: Response, detail: string): GitHubErrorKind {
     if (res.status === 401) return 'unauthorized'
-    if (res.status === 429 || (res.status === 403 && res.headers.get('x-ratelimit-remaining') === '0'))
+    // Primary limits zero the remaining count; secondary limits send retry-after or say so.
+    if (
+        res.status === 429 ||
+        (res.status === 403 &&
+            (res.headers.get('x-ratelimit-remaining') === '0' ||
+                res.headers.has('retry-after') ||
+                /rate limit/i.test(detail)))
+    ) {
         return 'rate_limited'
+    }
     if (res.status === 403) return 'forbidden'
     if (res.status === 404) return 'not_found'
     if (res.status === 409 || res.status === 422) return 'conflict'

@@ -5,9 +5,9 @@ import { NextRequest } from 'next/server'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_INSTANCE } from '@/server/db/types'
 import { resolveUpdaterSetup, tokenFormUrl, UPSTREAM } from '@/server/updater/config'
-import { GitHubClient } from '@/server/updater/github'
+import { GitHubClient, isBranchName } from '@/server/updater/github'
 import { fileMap, lastSyncedCommit, planTree, updateCommitMessage } from '@/server/updater/plan'
-import { checkForUpdate, installUpdate } from '@/server/updater/service'
+import { checkForUpdate, installUpdate, ReviewRequiredError, recordUpdate } from '@/server/updater/service'
 import { FakeGitHub } from './fake-github'
 
 const MINE = 'cook/my-clipcook'
@@ -26,8 +26,10 @@ describe('planTree', () => {
             current: map({ 'a.ts': 'A1', 'b.ts': 'B', 'gone.ts': 'G', '.github/workflows/ci.yml': 'CI1' }),
         })
         expect(plan.writes.map((w) => [w.path, w.sha])).toEqual([['a.ts', 'A2']])
-        expect(plan.deletes).toEqual(['gone.ts'])
-        expect(plan.overwritten).toEqual([])
+        expect(plan.deletes).toEqual([{ path: 'gone.ts', ...f('G') }])
+        // With no base, anything that differs counts as replaced, so the owner is asked first.
+        expect(plan.overwritten).toEqual(['a.ts', 'gone.ts'])
+        expect(plan.mirror).toBe(true)
     })
 
     it('with a known base, touches only what upstream changed and keeps local edits elsewhere', () => {
@@ -44,7 +46,7 @@ describe('planTree', () => {
             }),
         })
         expect(plan.writes.map((w) => w.path).sort()).toEqual(['a.ts', 'edited.ts', 'new.ts'])
-        expect(plan.deletes).toEqual(['old.ts'])
+        expect(plan.deletes.map((d) => d.path)).toEqual(['old.ts'])
         // b.ts and mine.ts are local changes upstream never touched; edited.ts was changed on both sides.
         expect(plan.overwritten).toEqual(['edited.ts'])
     })
@@ -59,7 +61,9 @@ describe('planTree', () => {
     it('reads the newest Upstream-Commit trailer and marks update commits to skip CI', () => {
         const sha = 'a'.repeat(40)
         const message = updateCommitMessage(sha)
-        expect(message.split('\n')[0]).toContain('[skip ci]')
+        // GitHub Actions honors [skip actions]; hosts that skip builds look for [skip ci].
+        expect(message.split('\n')[0]).toContain('[skip actions]')
+        expect(message).not.toContain('[skip ci]')
         expect(lastSyncedCommit(['Fix my typo', message, updateCommitMessage('b'.repeat(40))])).toBe(sha)
         expect(lastSyncedCommit(['Initial commit'])).toBeNull()
     })
@@ -99,6 +103,21 @@ describe('resolveUpdaterSetup', () => {
         expect(setup.kind).toBe('missing')
     })
 
+    it('accepts only branch names that keep the API path intact', () => {
+        for (const ok of ['main', 'release/2026', 'v1.2']) expect(isBranchName(ok), ok).toBe(true)
+        for (const bad of ['../main', 'a/../b', 'a//b', '/main', 'main/', 'x.lock', 'a..b', 'sp ace', '']) {
+            expect(isBranchName(bad), bad).toBe(false)
+        }
+        const setup = resolveUpdaterSetup(
+            { CLIPCOOK_UPDATE_TOKEN: 't', CLIPCOOK_UPDATE_REPO: MINE, CLIPCOOK_UPDATE_BRANCH: '../x' },
+            'firebase',
+        )
+        expect(setup).toMatchObject({ kind: 'missing', missing: ['branch'] })
+        expect(
+            resolveUpdaterSetup({ CLIPCOOK_UPDATE_TOKEN: 't', CLIPCOOK_UPDATE_REPO: 'cook/..' }, 'firebase').kind,
+        ).toBe('missing')
+    })
+
     it('prefills the token form for the repository owner', () => {
         const url = new URL(tokenFormUrl(MINE))
         expect(url.searchParams.get('target_name')).toBe('cook')
@@ -135,7 +154,7 @@ describe('update flow against GitHub', () => {
         expect((await checkForUpdate(config, instance, { client })).state).toBe('current')
     })
 
-    it('installs twice in a row: mirrors first, then merges while keeping local edits', async () => {
+    it('installs twice in a row, keeping local edits and leaving .github alone', async () => {
         const { 'src/old.ts': _removed, ...kept } = V1
         gh.commitFiles(
             UPSTREAM.repo,
@@ -143,7 +162,8 @@ describe('update flow against GitHub', () => {
             'v2',
         )
         const status = await checkForUpdate(config, instance, { client })
-        expect(status).toMatchObject({ state: 'available', commits: null })
+        // The clone's files match upstream v1, so v1 is the base even without update commits.
+        expect(status).toMatchObject({ state: 'available', commits: 1, review: false, replaces: 0 })
 
         const first = await installUpdate(config, { client })
         expect(first.outcome).toBe('installed')
@@ -153,7 +173,7 @@ describe('update flow against GitHub', () => {
         expect(afterFirst['src/old.ts']).toBeUndefined()
         // The deployment's own workflow file is never touched.
         expect(afterFirst['.github/workflows/ci.yml']).toBe('ci1')
-        expect(gh.head(MINE).message).toContain('[skip ci]')
+        expect(gh.head(MINE).message).toContain('[skip actions]')
         expect((await checkForUpdate(config, instance, { client })).state).toBe('current')
 
         // The owner customizes the deployment, then upstream moves on.
@@ -167,6 +187,59 @@ describe('update flow against GitHub', () => {
         expect(afterSecond['src/a.ts']).toBe('a3')
         expect(afterSecond['src/b.ts']).toBe('b-mine')
         expect(afterSecond['src/mine.ts']).toBe('mine')
+    })
+
+    it('keeps what the owner added to a fresh clone before the first update', async () => {
+        gh.commitFiles(MINE, { ...V1, 'src/b.ts': 'b-mine', 'src/app/custom/page.tsx': 'mine' }, 'My page')
+        gh.commitFiles(UPSTREAM.repo, { ...V1, 'src/a.ts': 'a2' }, 'v2')
+        const auto = await installUpdate(config, { client })
+        expect(auto.outcome).toBe('installed')
+        expect(gh.files(MINE)).toMatchObject({
+            'src/a.ts': 'a2',
+            'src/b.ts': 'b-mine',
+            'src/app/custom/page.tsx': 'mine',
+        })
+    })
+
+    it('waits for the owner before mirroring a copy whose starting version is unknown', async () => {
+        gh.createRepo('cook/odd')
+        gh.tokens.set(TOKEN, new Set(['cook/odd']))
+        gh.commitFiles('cook/odd', { ...V1, 'src/a.ts': 'from somewhere else', 'notes.md': 'mine' }, 'Initial commit')
+        const odd = { ...config, repo: 'cook/odd' }
+        expect(await checkForUpdate(odd, instance, { client })).toMatchObject({
+            state: 'available',
+            review: true,
+            replaces: 2,
+            commits: null,
+        })
+        await expect(installUpdate(odd, { client })).rejects.toBeInstanceOf(ReviewRequiredError)
+        expect(gh.files('cook/odd')['notes.md']).toBe('mine')
+        const done = await installUpdate(odd, { client, reviewed: true })
+        expect(done.overwritten.sort()).toEqual(['notes.md', 'src/a.ts'])
+        expect(gh.files('cook/odd')).toEqual(gh.files(UPSTREAM.repo, 'main'))
+    })
+
+    it('handles a file becoming a folder and copies no blob the deployment already has', async () => {
+        const { 'src/a.ts': a, 'src/b.ts': b, ...rest } = V1
+        const v2 = { ...rest, 'src/a.ts/index.ts': a, 'src/lib/b.ts': b }
+        gh.commitFiles(UPSTREAM.repo, v2, 'v2')
+        gh.calls.length = 0
+        await installUpdate(config, { client })
+        expect(gh.files(MINE)).toEqual({ ...v2, '.github/workflows/ci.yml': 'ci1' })
+        // Both new files hold content the deployment already stores.
+        expect(gh.calls.filter((c) => c === `POST /repos/${MINE}/git/blobs`)).toEqual([])
+    })
+
+    it("reads GitHub's secondary rate limit as a rate limit, not a permissions problem", async () => {
+        const limited = new GitHubClient({
+            token: TOKEN,
+            fetch: async () =>
+                new Response(JSON.stringify({ message: 'You have exceeded a secondary rate limit.' }), {
+                    status: 403,
+                    headers: { 'retry-after': '60', 'x-ratelimit-remaining': '4000' },
+                }),
+        })
+        await expect(limited.repo(MINE)).rejects.toMatchObject({ kind: 'rate_limited' })
     })
 
     it('never overwrites a push that lands during the update', async () => {
@@ -199,6 +272,7 @@ describe('update flow against GitHub', () => {
             upstreamSha: 'u'.repeat(40),
             commitSha: 'c'.repeat(40),
             error: null,
+            overwritten: [],
         }
         vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'old')
         expect((await checkForUpdate(config, { ...instance, lastUpdate: log }, { client, now })).state).toBe(
@@ -264,17 +338,45 @@ describe('GET /api/cron/update', () => {
         expect(gh.files(MINE)['a.ts']).toBe('a2')
     })
 
-    it('without CRON_SECRET, runs at most once per interval however often it is called', async () => {
+    it('without CRON_SECRET, runs at most once per interval and tells callers nothing', async () => {
         const results = await Promise.all([call(), call(), call()])
-        const bodies = await Promise.all(results.map((r) => r.json()))
-        expect(bodies.filter((b) => b.ran)).toHaveLength(1)
-        expect(bodies.filter((b) => b.reason === 'too_soon')).toHaveLength(2)
+        expect(await Promise.all(results.map((r) => r.json()))).toEqual([{ ok: true }, { ok: true }, { ok: true }])
+        expect(gh.calls.filter((c) => c.startsWith('PATCH'))).toHaveLength(1)
+        expect(gh.files(MINE)['a.ts']).toBe('a2')
     })
 
     it('does nothing when the owner turned auto update off', async () => {
         const store = await db.getStore()
         await store.updateInstance(() => ({ autoUpdate: false }))
-        expect(await (await call()).json()).toEqual({ ran: false, reason: 'off' })
+        vi.stubEnv('CRON_SECRET', 's')
+        expect(await (await call('Bearer s')).json()).toEqual({ ran: false, reason: 'off' })
         expect(gh.calls).toEqual([])
+    })
+
+    it('leaves an update that replaces local files for the owner, and says so in Settings', async () => {
+        gh.commitFiles(MINE, { 'a.ts': 'unknown version' }, 'Diverged')
+        vi.stubEnv('CRON_SECRET', 's')
+        const body = await (await call('Bearer s')).json()
+        expect(body.error).toMatch(/Install it from Settings/)
+        expect(gh.files(MINE)['a.ts']).toBe('unknown version')
+        const store = await db.getStore()
+        expect((await store.getInstance()).lastUpdate).toMatchObject({ outcome: 'failed' })
+    })
+
+    it('never lets a quiet run hide an install that is still deploying', async () => {
+        const store = await db.getStore()
+        const at = Date.now()
+        const installed = {
+            at,
+            outcome: 'installed' as const,
+            upstreamSha: 'u',
+            commitSha: 'c',
+            error: null,
+            overwritten: [],
+        }
+        await recordUpdate(store, installed)
+        await recordUpdate(store, { ...installed, at: at + 1000, outcome: 'failed', error: 'lost the race' })
+        await recordUpdate(store, { ...installed, at: at + 2000, outcome: 'current' })
+        expect((await store.getInstance()).lastUpdate).toMatchObject({ outcome: 'installed', commitSha: 'c' })
     })
 })
