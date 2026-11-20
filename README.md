@@ -17,6 +17,10 @@ ClipCook is an open-source recipe keeper built on Material 3 Expressive. Paste a
 </p>
 
 <p align="center">
+  <img src="docs/screenshots/desktop-recipe.png" alt="A recipe on desktop, with servings scaling and step timers" width="880">
+</p>
+
+<p align="center">
   <img src="docs/screenshots/mobile-recipe.png" alt="A recipe on a phone" width="240">
   <img src="docs/screenshots/mobile-collections.png" alt="Collections on a phone" width="240">
   <img src="docs/screenshots/mobile-grocery.png" alt="The grocery list on a phone" width="240">
