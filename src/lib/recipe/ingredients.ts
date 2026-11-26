@@ -306,11 +306,15 @@ const GLYPH_BY_ASCII = new Map(
     }),
 )
 
+const KITCHEN_GLYPHS = GLYPHS.filter(([value]) =>
+    [8, 3].some((d) => Math.abs(Math.round(value * d) - value * d) < 1e-9),
+)
+
 function trimDecimal(n: number, places: number): string {
     return String(Number(n.toFixed(places)))
 }
 
-/** 1.5 → '1½', 0.333 → '⅓', 2 → '2', 1.37 → '1.37'. Metric units get decimals. */
+/** 1.5 → '1½', 0.333 → '⅓', 2 → '2', 0.3 → '⅓'. Metric units get decimals. */
 export function formatQuantity(n: number, unit?: string | null): string {
     if (!Number.isFinite(n)) return ''
     const def = unitDef(unit ?? null)
@@ -332,8 +336,15 @@ export function formatQuantity(n: number, unit?: string | null): string {
         const diff = Math.abs(value - frac)
         if (diff <= 0.02 && (!best || diff < Math.abs(best[0] - frac))) best = [value, glyph]
     }
-    if (best) return whole ? `${whole}${best[1]}` : best[1]
-    return trimDecimal(n, 2)
+    // No close match: round to the nearest measure a cook has (eighths and thirds), never a decimal.
+    if (!best) {
+        const options: Array<[number, string]> = [...KITCHEN_GLYPHS, [1, '']]
+        if (whole) options.push([0, ''])
+        for (const option of options) if (!best || Math.abs(option[0] - frac) < Math.abs(best[0] - frac)) best = option
+    }
+    if (!best) return trimDecimal(n, 2)
+    if (best[0] === 1) return String(whole + 1)
+    return whole ? `${whole}${best[1]}` : best[1]
 }
 
 /** Replaces ASCII fractions with vulgar fraction glyphs for display: '1 1/2 cups' → '1½ cups'. */
@@ -377,13 +388,15 @@ export function scaleIngredient(line: string, factor: number): string {
     const { parsed, qtySpan, unitSpan, equivalentSpan, text } = analyze(line)
     if (parsed.isHeading || !qtySpan || parsed.quantity === null) return prettifyFractions(text)
     if (!Number.isFinite(factor) || factor <= 0) return prettifyFractions(text)
-    if (factor === 1) return prettifyFractions(text)
+    // At scale 1 only decimals need rewriting ('0.5 cups' → '½ cup'); everything else stays as written.
+    const def = unitDef(parsed.unit)
+    if (factor === 1 && (def?.metric || !text.slice(qtySpan[0], qtySpan[1]).includes('.')))
+        return prettifyFractions(text)
 
     const min = parsed.quantity * factor
     const max = parsed.quantityMax === null ? null : parsed.quantityMax * factor
     const pieces: string[] = [rangeText(min, max, parsed.unit)]
     let cursor = qtySpan[1]
-    const def = unitDef(parsed.unit)
     if (unitSpan && def) {
         pieces.push(text.slice(cursor, unitSpan[0]))
         pieces.push(pluralizeUnit(text.slice(unitSpan[0], unitSpan[1]), def, max ?? min))

@@ -115,6 +115,12 @@ describe('scaleIngredient', () => {
         expect(scaleIngredient('1 1/2 cups milk', 1)).toBe('1½ cups milk')
         expect(scaleIngredient('1 cup milk', Number.NaN)).toBe('1 cup milk')
     })
+
+    it('turns decimal amounts into fractions at scale 1, except metric', () => {
+        expect(scaleIngredient('0.5 cups sugar', 1)).toBe('½ cup sugar')
+        expect(scaleIngredient('0.3 tbsp salt', 1)).toBe('⅓ tbsp salt')
+        expect(scaleIngredient('1.5 kg potatoes', 1)).toBe('1.5 kg potatoes')
+    })
 })
 
 describe('formatQuantity', () => {
@@ -124,7 +130,11 @@ describe('formatQuantity', () => {
         [2.25, '2¼'],
         [0.666, '⅔'],
         [1.99, '2'],
-        [1.43, '1.43'],
+        [1.43, '1⅜'],
+        [0.3, '⅓'],
+        [0.95, '1'],
+        [2.06, '2'],
+        [0.04, '⅛'],
         [0.125, '⅛'],
         [24.4, '24'],
     ])('%s → %s', (n, expected) => {
