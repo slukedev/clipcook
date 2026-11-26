@@ -26,6 +26,7 @@ interface ReceiverContext {
 interface ReceiverFramework {
     CastReceiverContext: { getInstance(): ReceiverContext }
     CastReceiverOptions: new () => Record<string, unknown>
+    ui?: { UiConfig?: new () => Record<string, unknown> }
     system: { MessageType: { JSON: string } }
 }
 interface ReceiverWindow {
@@ -119,8 +120,11 @@ function startReceiver() {
 
     const options = new framework.CastReceiverOptions()
     options.disableIdleTimeout = true
-    // Nest Hub: the app handles taps and swipes itself, so keep targets off the edges.
-    options.touchScreenOptimizedApp = true
+    // Smart displays only pass touches to the page when the UI config says it is interactive;
+    // set on the options themselves, the flag is ignored and the Nest Hub screen stays dead.
+    const uiConfig = framework.ui?.UiConfig ? new framework.ui.UiConfig() : {}
+    uiConfig.touchScreenOptimizedApp = true
+    options.uiConfig = uiConfig
     options.skipPlayersLoad = true
     options.customNamespaces = { [CAST_NAMESPACE]: framework.system.MessageType.JSON }
     context.start(options)
