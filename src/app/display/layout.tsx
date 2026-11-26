@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import { Icon } from '@/components/ui/icon'
-import { schemeDeclarations, schemeFromSeed } from '@/lib/theme/scheme'
+import { schemeDeclarations } from '@/lib/theme/scheme'
 import { BRAND_PRIMARY_CHROMA, BRAND_SEED } from '@/lib/theme/seed'
 import { getDisplaySession } from '@/server/display-auth'
 import styles from './display.module.scss'
 import { DisplayProvider } from './display-provider'
+import { displayScheme } from './scheme'
 
 export const metadata: Metadata = {
     title: 'Kitchen Display',
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 // Displays live on a counter all day: always dark, so they glow less and burn in less.
-const brandDark = schemeFromSeed(BRAND_SEED, { dark: true, primaryChroma: BRAND_PRIMARY_CHROMA })
+const brandDark = displayScheme(BRAND_SEED, { primaryChroma: BRAND_PRIMARY_CHROMA })
 // On body as well: menus and dialogs portal out of the display root and need its palette.
 const DISPLAY_CSS = `[data-display-root], body:has([data-display-root]) {\n${schemeDeclarations(brandDark)}\n    color-scheme: dark;\n}\nhtml:has([data-display-root]), body:has([data-display-root]) {\n    background-color: ${brandDark.surface};\n}`
 

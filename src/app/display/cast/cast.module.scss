@@ -13,3 +13,12 @@
     font-size: clamp(1.25rem, 0.75rem + 2.4vmin, 2rem);
     color: var(--md-sys-color-on-surface-variant);
 }
+
+.settled {
+    color: var(--md-sys-color-secondary-container);
+}
+
+.host {
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+}

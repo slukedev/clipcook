@@ -108,7 +108,7 @@
     flex-wrap: wrap;
     gap: 8px 20px;
     list-style: none;
-    font-size: clamp(1.0625rem, 0.875rem + 0.8vmin, 1.375rem);
+    font-size: clamp(1.125rem, 0.875rem + 1vmin, 1.5rem);
     color: var(--md-sys-color-on-surface-variant);
     --md-icon-size: 24px;
 
@@ -185,7 +185,7 @@
     @include type.subhead;
     // Lines up with the checkboxes; the shared subhead style, a size up for arm's length.
     padding-inline: 14px;
-    font-size: 1.125rem;
+    font-size: clamp(1.125rem, 0.875rem + 1vmin, 1.375rem);
 
     &:first-child {
         margin-block-start: 0;
@@ -283,7 +283,7 @@
 .stepSection {
     @include type.subhead;
     padding: 16px 8px 6px;
-    font-size: clamp(1rem, 0.875rem + 0.6vmin, 1.25rem);
+    font-size: clamp(1.125rem, 0.875rem + 1vmin, 1.375rem);
 }
 
 .stepRow {

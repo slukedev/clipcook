@@ -3,15 +3,19 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { IconButton } from '@/components/ui/icon-button'
 import { useSnackbar } from '@/components/ui/snackbar'
+import { CAST_NAMESPACE, type CastReply, parseCastReply } from '@/lib/cast'
 
-/** Custom message channel shared with the receiver at /display/cast. */
-export const CAST_NAMESPACE = 'urn:x-cast:app.clipcook'
 const APP_ID = process.env.NEXT_PUBLIC_CAST_APP_ID
 const SENDER_SDK = 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1'
+/** The receiver answers within a second or two; this also covers a cold server start. */
+const REPLY_TIMEOUT_MS = 20_000
 
 // The slice of the Cast Web Sender framework this file touches.
+type MessageListener = (namespace: string, message: string) => void
 interface CastSession {
     sendMessage(namespace: string, message: unknown): Promise<unknown>
+    addMessageListener(namespace: string, listener: MessageListener): void
+    removeMessageListener(namespace: string, listener: MessageListener): void
 }
 interface CastContext {
     setOptions(options: { receiverApplicationId: string; autoJoinPolicy: string }): void
@@ -60,6 +64,28 @@ function loadSender(): Promise<CastFramework | null> {
         document.head.appendChild(script)
     })
     return sdk
+}
+
+/** Sends the claim and waits for the receiver's answer (null when it never comes). */
+function claim(session: CastSession, message: object): Promise<CastReply | null> {
+    return new Promise((resolve, reject) => {
+        const finish = (reply: CastReply | null) => {
+            clearTimeout(timer)
+            session.removeMessageListener(CAST_NAMESPACE, listener)
+            resolve(reply)
+        }
+        const listener: MessageListener = (_namespace, raw) => {
+            const reply = parseCastReply(raw)
+            if (reply) finish(reply)
+        }
+        const timer = setTimeout(() => finish(null), REPLY_TIMEOUT_MS)
+        session.addMessageListener(CAST_NAMESPACE, listener)
+        session.sendMessage(CAST_NAMESPACE, message).catch((err: unknown) => {
+            clearTimeout(timer)
+            session.removeMessageListener(CAST_NAMESPACE, listener)
+            reject(err)
+        })
+    })
 }
 
 export interface CastButtonProps {
@@ -124,12 +150,16 @@ export function CastButton({ recipeId, icon, className }: CastButtonProps) {
             const res = await fetch('/api/display/cast-token', { method: 'POST' })
             if (!res.ok) throw new Error(`cast-token ${res.status}`)
             const { token } = (await res.json()) as { token: string }
-            await session.sendMessage(CAST_NAMESPACE, {
+            const reply = await claim(session, {
                 type: 'claim',
                 token,
                 origin: window.location.origin,
                 ...(recipeId ? { recipeId } : {}),
             })
+            if (reply?.type === 'claimed') return
+            if (reply?.reason === 'origin') snackbar(`Open ${new URL(reply.origin).host} to cast to this display.`)
+            else if (reply?.reason === 'expired') snackbar('That cast link expired. Cast again.')
+            else snackbar('The display did not respond. Cast again.')
         } catch {
             snackbar('Could not cast. Check the device and try again.')
         } finally {

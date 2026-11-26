@@ -14,6 +14,12 @@
     --md-display-target: 64px;
     // Every screen lines its content up with the corner menu's edges.
     --display-edge: clamp(20px, 3.5vw, 48px);
+
+    // Light text on a dark 1x screen (a Nest Hub) renders thin and soft, so body text
+    // steps up a little in weight there.
+    @media (max-resolution: 1.5dppx) {
+        font-weight: 450;
+    }
 }
 
 // Inset from the edges (Nest Hub keeps edge swipes for the system).

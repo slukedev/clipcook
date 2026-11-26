@@ -193,7 +193,7 @@
 
 .tileTitle {
     padding-inline: 8px;
-    font-size: clamp(1.0625rem, 0.875rem + 0.8vmin, 1.375rem);
+    font-size: clamp(1.125rem, 0.875rem + 1vmin, 1.5rem);
     font-weight: 500;
     line-height: 1.25;
     // Two lines reserved, so a one-line title does not lift the time under it.
@@ -210,9 +210,9 @@
     align-items: center;
     gap: 6px;
     padding-inline: 8px;
-    font-size: 1rem;
+    font-size: clamp(1.0625rem, 0.875rem + 0.8vmin, 1.25rem);
     color: var(--md-sys-color-on-surface-variant);
-    --md-icon-size: 18px;
+    --md-icon-size: 20px;
 }
 
 .empty {

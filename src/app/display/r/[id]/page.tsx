@@ -1,8 +1,9 @@
 import { notFound, redirect } from 'next/navigation'
 import { Icon } from '@/components/ui/icon'
-import { schemeDeclarations, schemeFromSeed } from '@/lib/theme/scheme'
+import { schemeDeclarations } from '@/lib/theme/scheme'
 import { getDisplaySession } from '@/server/display-auth'
 import { getRecipe } from '@/server/queries'
+import { displayScheme } from '../../scheme'
 import { DisplayRecipe } from './display-recipe'
 
 export default async function DisplayRecipePage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +17,7 @@ export default async function DisplayRecipePage({ params }: { params: Promise<{ 
     const css =
         recipe.seedColor === null
             ? ''
-            : `[data-display-recipe] {\n${schemeDeclarations(schemeFromSeed(recipe.seedColor, { dark: true, variant: 'content' }))}\n}`
+            : `[data-display-recipe] {\n${schemeDeclarations(displayScheme(recipe.seedColor, { variant: 'content' }))}\n}`
 
     return (
         <>
