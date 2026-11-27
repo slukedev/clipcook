@@ -120,15 +120,26 @@ function startReceiver() {
 
     const options = new framework.CastReceiverOptions()
     options.disableIdleTimeout = true
-    // Smart displays only pass touches to the page when the UI config says it is interactive;
-    // set on the options themselves, the flag is ignored and the Nest Hub screen stays dead.
+    // Tells smart displays the page is interactive (the documented half of touch support).
     const uiConfig = framework.ui?.UiConfig ? new framework.ui.UiConfig() : {}
     uiConfig.touchScreenOptimizedApp = true
     options.uiConfig = uiConfig
     options.skipPlayersLoad = true
     options.customNamespaces = { [CAST_NAMESPACE]: framework.system.MessageType.JSON }
     context.start(options)
+    hideTouchControls()
     report?.({ kind: 'waiting' })
+}
+
+/**
+ * On a Nest Hub the SDK lays its own <touch-controls> media overlay over the page, and it
+ * swallows every tap whatever uiConfig says (Home Assistant's receiver hides it the same
+ * way). A style outside React, so it holds after the client-side move to /display.
+ */
+function hideTouchControls() {
+    const style = document.createElement('style')
+    style.textContent = 'touch-controls { display: none !important; }'
+    document.head.append(style)
 }
 
 function statusText(status: Status): ReactNode {
